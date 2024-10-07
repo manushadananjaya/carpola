@@ -6,6 +6,7 @@ import { CardContent, Card } from "@/components/ui/card";
 import { Search, Car, DollarSign, CheckCircle, Menu } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { FeaturedItemsComponent } from "./FeaturedItemsComponent";
 
 export function LandingPageComponent() {
   return (
@@ -76,29 +77,7 @@ export function LandingPageComponent() {
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-8">
               Featured Vehicles
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
-                    <Image
-                      alt="Car Image"
-                      className="rounded-lg object-cover w-full aspect-video mb-4"
-                      height="200"
-                      src={`/placeholder.svg?height=200&width=300`}
-                      width="300"
-                    />
-                    <h3 className="text-lg font-bold mb-2">2023 Model Car</h3>
-                    <p className="text-sm text-gray-500 mb-2">
-                      30,000 miles • Excellent condition
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold">$25,000</span>
-                      <Button variant="outline">View Details</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <FeaturedItemsComponent />
           </div>
         </section>
         <section className="w-full py-12 md:py-24 lg:py-32 justify-center items-center flex">
