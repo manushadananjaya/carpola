@@ -12,21 +12,63 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+model User {
+  userId      Int      @id @default(autoincrement())
+  username    String   @db.VarChar(50)
+  userEmail   String   @db.VarChar(50)
+  userphoneNo String   @db.VarChar(50)  // Contact number for user
+  userCity    String   @db.VarChar(50)
+  vehicles    Vehicle[]
+  bikes       Bike[]
+}
+
 model Vehicle {
-  id         Int      @id @default(autoincrement())
-  contactNo  String
-  price      Float
-  brand      String
-  model      String
-  year       Int
-  mileage    Int
-  gear       String
-  fuelType   String
-  options    String[]
-  engine     String?
-  details    String?
-  posted     Boolean  @default(false) 
-  postedAt   DateTime @default(now())
-  promoted   Boolean @default(false) 
+  vehicleId   Int      @id @default(autoincrement())
+  price       Float
+  brand       String   @db.VarChar(100)
+  model       String   @db.VarChar(100)
+  year        Int
+  mileage     Float
+  gear        String   @db.VarChar(50)
+  fuelType    String   @db.VarChar(50)
+  options     String   @db.Text
+  engine      String   @db.VarChar(100)
+  details     String   @db.Text
+  posted      Boolean
+  postedAt    DateTime @default(now())
+  promoted    Boolean
+  featured    Boolean
+  vehicleType String   @db.VarChar(50)  // car, van, bus
+  imgUrl1     String?  @db.Text
+  imgUrl2     String?  @db.Text
+  imgUrl3     String?  @db.Text
+  imgUrl4     String?  @db.Text
+  imgUrl5     String?  @db.Text
+  userId      Int
+  user        User     @relation(fields: [userId], references: [userId])
+}
+
+model Bike {
+  bikeId      Int      @id @default(autoincrement())
+  price       Float
+  brand       String   @db.VarChar(100)
+  model       String   @db.VarChar(100)
+  year        Int
+  mileage     Float
+  startType   String   @db.VarChar(50)
+  bikeType    String   @db.VarChar(50)  // electric, fuel
+  engine      String   @db.VarChar(100)
+  details     String   @db.Text
+  posted      Boolean
+  postedAt    DateTime @default(now())
+  promoted    Boolean
+  featured    Boolean
+  imgUrl1     String?  @db.Text
+  imgUrl2     String?  @db.Text
+  imgUrl3     String?  @db.Text
+  imgUrl4     String?  @db.Text
+  imgUrl5     String?  @db.Text
+  userId      Int
+  user        User     @relation(fields: [userId], references: [userId])
 }
 
