@@ -1,21 +1,31 @@
-// components/FeaturedItemsComponent.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { fetchFeaturedItems } from "@/services/fetchFeaturedItems";
 
+// Type definitions
 type Vehicle = {
-  vehicleid: number;
+  vehicleId: number;
   model: string;
   price: number;
   brand: string;
+  year: number;
+  postedAt: string;
+  user: {
+    userCity: string;
+  };
 };
 
 type Bike = {
-  bikeid: number;
+  bikeId: number;
   model: string;
   price: number;
-  brand: string; 
+  brand: string;
+  year: number;
+  postedAt: string;
+  user: {
+    userCity: string;
+  };
 };
 
 type FeaturedItems = {
@@ -47,26 +57,46 @@ export function FeaturedItemsComponent() {
 
   return (
     <div className="container mx-auto">
+      {/* Featured Vehicles Section */}
       <h2 className="text-3xl font-bold mb-6">Featured Vehicles</h2>
-      <ul className="space-y-4">
+      <ul className="space-y-6">
         {items.vehicles.map((vehicle) => (
-          <li key={vehicle.vehicleid}>
-            <h3 className="text-xl font-semibold">
-              {vehicle.brand} {vehicle.model}
+          <li
+            key={vehicle.vehicleId}
+            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow"
+          >
+            <h3 className="text-2xl font-semibold">
+              {vehicle.brand} {vehicle.model} ({vehicle.year})
             </h3>
-            <p>Price: ${vehicle.price}</p>
+            <p className="text-lg">Price: ${vehicle.price}</p>
+            <p className="text-sm text-gray-600">
+              Location: {vehicle.user.userCity}
+            </p>
+            <p className="text-sm text-gray-500">
+              Posted on: {new Date(vehicle.postedAt).toLocaleDateString()}
+            </p>
           </li>
         ))}
       </ul>
 
+      {/* Featured Bikes Section */}
       <h2 className="text-3xl font-bold mt-12 mb-6">Featured Bikes</h2>
-      <ul className="space-y-4">
+      <ul className="space-y-6">
         {items.bikes.map((bike) => (
-          <li key={bike.bikeid}>
-            <h3 className="text-xl font-semibold">
-              {bike.brand} {bike.model}
+          <li
+            key={bike.bikeId}
+            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow"
+          >
+            <h3 className="text-2xl font-semibold">
+              {bike.brand} {bike.model} ({bike.year})
             </h3>
-            <p>Price: ${bike.price}</p>
+            <p className="text-lg">Price: ${bike.price}</p>
+            <p className="text-sm text-gray-600">
+              Location: {bike.user.userCity}
+            </p>
+            <p className="text-sm text-gray-500">
+              Posted on: {new Date(bike.postedAt).toLocaleDateString()}
+            </p>
           </li>
         ))}
       </ul>

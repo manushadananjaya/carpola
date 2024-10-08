@@ -1,10 +1,16 @@
-// services/fetchFeaturedItems.ts
 export async function fetchFeaturedItems() {
-  const response = await fetch("/api/featured");
+  const res = await fetch("/api/vehicles/featured");
+  const vehicleData = await res.json();
 
-  if (!response.ok) {
+  const bikeRes = await fetch("/api/bikes/featured");
+  const bikeData = await bikeRes.json();
+
+  if (!res.ok || !bikeRes.ok) {
     throw new Error("Failed to fetch featured items");
   }
 
-  return await response.json();
+  return {
+    vehicles: vehicleData,
+    bikes: bikeData,
+  };
 }
