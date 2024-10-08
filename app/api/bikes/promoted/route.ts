@@ -3,7 +3,7 @@ import {prisma} from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const featuredBikes = await prisma.featuredItem.findMany({
+    const promotedBikes = await prisma.promotedItem.findMany({
       where: { bikeId: { not: null } },
       include: {
         bike: true, // Fetch the full bike details
@@ -11,10 +11,10 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(featuredBikes);
+    return NextResponse.json(promotedBikes);
   } catch (error) {
     return NextResponse.json(
-      { error: "Error fetching featured bikes" },
+      { error: "Error fetching promoted bikes" },
       { status: 500 }
     );
   }

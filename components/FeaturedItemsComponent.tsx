@@ -15,7 +15,7 @@ type Bike = {
   bikeid: number;
   model: string;
   price: number;
-  brand: string;
+  brand: string; 
 };
 
 type FeaturedItems = {

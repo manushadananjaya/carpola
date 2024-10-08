@@ -1,25 +1,25 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import {prisma} from "@/lib/prisma";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { vehicleid: string } }
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
+  const { id } = params;
+
   try {
     const vehicle = await prisma.vehicle.findUnique({
-      where: {
-        vehicleid: parseInt(params.vehicleid),
-      },
+      where: { vehicleId: Number(id) },
     });
+
     if (!vehicle) {
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
-    return NextResponse.json(vehicle, { status: 200 });
+
+    return NextResponse.json(vehicle);
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch vehicle" },
+      { error: "Error fetching vehicle" },
       { status: 500 }
     );
   }

@@ -3,18 +3,18 @@ import {prisma} from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const featuredBikes = await prisma.featuredItem.findMany({
-      where: { bikeId: { not: null } },
+    const promotedVehicles = await prisma.promotedItem.findMany({
+      where: { vehicleId: { not: null } },
       include: {
-        bike: true, // Fetch the full bike details
+        vehicle: true, // Fetch the full vehicle details
       },
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(featuredBikes);
+    return NextResponse.json(promotedVehicles);
   } catch (error) {
     return NextResponse.json(
-      { error: "Error fetching featured bikes" },
+      { error: "Error fetching promoted vehicles" },
       { status: 500 }
     );
   }

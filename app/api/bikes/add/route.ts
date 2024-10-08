@@ -1,16 +1,29 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import {prisma} from "@/lib/prisma";
 
-const prisma = new PrismaClient();
-
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const data = await req.json();
+    const body = await request.json();
+
     const newBike = await prisma.bike.create({
-      data,
+      data: {
+        contactNo: body.contactNo,
+        price: body.price,
+        brand: body.brand,
+        model: body.model,
+        year: body.year,
+        mileage: body.mileage,
+        startType: body.startType,
+        bikeType: body.bikeType,
+        engine: body.engine,
+        details: body.details,
+        posted: body.posted ?? true,
+        userId: body.userId,
+      },
     });
-    return NextResponse.json(newBike, { status: 201 });
+
+    return NextResponse.json(newBike);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to add bike" }, { status: 500 });
+    return NextResponse.json({ error: "Error adding bike" }, { status: 500 });
   }
 }

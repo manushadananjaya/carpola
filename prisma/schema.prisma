@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,55 +6,109 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Enums for standardized fields
+enum GearType {
+  AUTOMATIC
+  MANUAL
+  SEMI_AUTOMATIC
+}
+
+enum FuelType {
+  PETROL
+  DIESEL
+  ELECTRIC
+  HYBRID
+}
+
+enum StartType {
+  ELECTRIC
+  KICK
+}
+
+enum BikeType {
+  FUEL
+  ELECTRIC
+}
+
 model Vehicle {
-  vehicleid    Int     @id @default(autoincrement())
-  contactNo    String
-  price        Int
-  brand        String
-  model        String
-  year         Int
-  mileage      Int
-  gear         String
-  fuelType     String
-  options      String
-  engine       String
-  details      String
-  posted       Boolean
-  postedAt     DateTime @default(now())
-  promoted     Boolean
-  featured     Boolean 
-  userId       Int
+  vehicleId   Int     @id @default(autoincrement())
+  contactNo   String  @db.VarChar(15)
+  price       Int
+  brand       String  @db.VarChar(50)
+  model       String  @db.VarChar(50)
+  year        Int
+  mileage     Int
+  gear        GearType
+  fuelType    FuelType
+  engine      String  @db.VarChar(100)
+  details     String? @db.Text
+  posted      Boolean
+  postedAt    DateTime @default(now())
+  userId      Int
+  user        User @relation(fields: [userId], references: [userId])
   
-  user         User @relation(fields: [userId], references: [userId])
+  // Index for frequently queried fields
+  @@index([postedAt])
+  @@index([price])
+  PromotedItem PromotedItem[]
+  FeaturedItem FeaturedItem[]
 }
 
 model Bike {
-  bikeid    Int     @id @default(autoincrement())
-  contactNo String
-  price     Int
-  brand     String
-  model     String
-  year      Int
-  mileage   Int
-  startType String
-  bikeType  String
-  engine    String
-  details   String
-  posted    Boolean
-  postedAt  DateTime @default(now())
-  promoted  Boolean
-  featured  Boolean 
-  userId    Int
-  user      User @relation(fields: [userId], references: [userId])
+  bikeId      Int     @id @default(autoincrement())
+  contactNo   String  @db.VarChar(15)
+  price       Int
+  brand       String  @db.VarChar(50)
+  model       String  @db.VarChar(50)
+  year        Int
+  mileage     Int
+  startType   StartType
+  bikeType    BikeType
+  engine      String  @db.VarChar(100)
+  details     String? @db.Text
+  posted      Boolean
+  postedAt    DateTime @default(now())
+  userId      Int
+  user        User @relation(fields: [userId], references: [userId])
+
+  // Index for frequently queried fields
+  @@index([postedAt])
+  @@index([price])
+  PromotedItem PromotedItem[]
+  FeaturedItem FeaturedItem[]
 }
 
 model User {
   userId     Int      @id @default(autoincrement())
-  username   String
-  userEmail  String
-  userphoneNo String
-  userCity   String
-  vehicle    Vehicle[]
-  bike       Bike[]
+  username   String   @db.VarChar(50)
+  userEmail  String   @unique @db.VarChar(100)
+  userPhone  String   @db.VarChar(15)
+  userCity   String   @db.VarChar(50)
+  vehicles   Vehicle[]
+  bikes      Bike[]
 }
 
+model PromotedItem {
+  id         Int      @id @default(autoincrement())
+  vehicleId  Int?
+  bikeId     Int?
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [vehicleId])
+  bike       Bike?    @relation(fields: [bikeId], references: [bikeId])
+  createdAt  DateTime @default(now())
+
+  // Index for sorting/filtering promoted items
+  @@index([createdAt])
+}
+
+model FeaturedItem {
+  id         Int      @id @default(autoincrement())
+  vehicleId  Int?
+  bikeId     Int?
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [vehicleId])
+  bike       Bike?    @relation(fields: [bikeId], references: [bikeId])
+  createdAt  DateTime @default(now())
+
+  // Index for sorting/filtering featured items
+  @@index([createdAt])
+}
