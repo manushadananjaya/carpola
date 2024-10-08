@@ -14,7 +14,7 @@ type Vehicle = {
   user: {
     userCity: string;
   };
-  image1:string;
+  image1: string;
 };
 
 type Bike = {
@@ -27,13 +27,14 @@ type Bike = {
   user: {
     userCity: string;
   };
-  image1:string;
+  image1: string;
 };
 
 type FeaturedItems = {
   vehicles: Vehicle[];
   bikes: Bike[];
 };
+
 export function FeaturedItemsComponent() {
   const [items, setItems] = useState<FeaturedItems>({
     vehicles: [],
@@ -57,60 +58,64 @@ export function FeaturedItemsComponent() {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto px-4">
       {/* Featured Vehicles Section */}
       <h2 className="text-3xl font-bold mb-6">Featured Vehicles</h2>
-      <ul className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.vehicles.map((vehicle) => (
-          <li
+          <div
             key={vehicle.vehicleId}
-            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow"
+            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow bg-white"
           >
             <img
               src={vehicle.image1}
               alt={`${vehicle.brand} ${vehicle.model}`}
               className="w-full h-48 object-cover mb-4 rounded"
             />
-            <h3 className="text-2xl font-semibold">
+            <h3 className="text-2xl font-semibold mb-2">
               {vehicle.brand} {vehicle.model} ({vehicle.year})
             </h3>
-            <p className="text-lg">Price: ${vehicle.price}</p>
-            <p className="text-sm text-gray-600">
+            <p className="text-lg font-bold text-blue-500 mb-2">
+              Price: ${vehicle.price}
+            </p>
+            <p className="text-sm text-gray-600 mb-2">
               Location: {vehicle.user.userCity}
             </p>
             <p className="text-sm text-gray-500">
               Posted on: {new Date(vehicle.postedAt).toLocaleDateString()}
             </p>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
 
       {/* Featured Bikes Section */}
       <h2 className="text-3xl font-bold mt-12 mb-6">Featured Bikes</h2>
-      <ul className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {items.bikes.map((bike) => (
-          <li
+          <div
             key={bike.bikeId}
-            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow"
+            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow bg-white"
           >
             <img
               src={bike.image1}
               alt={`${bike.brand} ${bike.model}`}
               className="w-full h-48 object-cover mb-4 rounded"
             />
-            <h3 className="text-2xl font-semibold">
+            <h3 className="text-2xl font-semibold mb-2">
               {bike.brand} {bike.model} ({bike.year})
             </h3>
-            <p className="text-lg">Price: ${bike.price}</p>
-            <p className="text-sm text-gray-600">
+            <p className="text-lg font-bold text-blue-500 mb-2">
+              Price: ${bike.price}
+            </p>
+            <p className="text-sm text-gray-600 mb-2">
               Location: {bike.user.userCity}
             </p>
             <p className="text-sm text-gray-500">
               Posted on: {new Date(bike.postedAt).toLocaleDateString()}
             </p>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
