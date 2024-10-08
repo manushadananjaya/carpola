@@ -47,6 +47,14 @@ model Vehicle {
   postedAt    DateTime @default(now())
   userId      Int
   user        User @relation(fields: [userId], references: [userId])
+
+   // Fields for five image URLs
+  image1      String  @db.VarChar(255)
+  image2      String  @db.VarChar(255)
+  image3      String  @db.VarChar(255)
+  image4      String  @db.VarChar(255)
+  image5      String  @db.VarChar(255)
+
   
   // Index for frequently queried fields
   @@index([postedAt])
@@ -72,6 +80,16 @@ model Bike {
   userId      Int
   user        User @relation(fields: [userId], references: [userId])
 
+
+  // Fields for five image URLs
+  image1      String  @db.VarChar(255)
+  image2      String  @db.VarChar(255)
+  image3      String  @db.VarChar(255)
+  image4      String  @db.VarChar(255)
+  image5      String  @db.VarChar(255)
+
+
+  
   // Index for frequently queried fields
   @@index([postedAt])
   @@index([price])
@@ -112,3 +130,4 @@ model FeaturedItem {
   // Index for sorting/filtering featured items
   @@index([createdAt])
 }
+

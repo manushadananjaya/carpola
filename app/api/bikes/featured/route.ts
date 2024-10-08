@@ -23,6 +23,7 @@ export async function GET() {
         brand: item.bike?.brand,
         year: item.bike?.year,
         postedAt: item.bike?.postedAt,
+        image1: item.bike?.image1,
         user: {
           userCity: item.bike?.user?.userCity,
         },

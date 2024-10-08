@@ -19,6 +19,11 @@ export async function POST(request: Request) {
         details: body.details,
         posted: body.posted ?? true,
         userId: body.userId,
+        image1: body.image1,
+        image2: body.image2,
+        image3: body.image3,
+        image4: body.image4,
+        image5: body.image5,
       },
     });
 
