@@ -15,7 +15,7 @@ export async function GET() {
 
   return NextResponse.json(
     featuredVehicles
-      .filter((item) => item.vehicle !== null) // Ensure vehicle is not null
+      .filter((item) => item.vehicle !== null) 
       .map((item) => ({
         vehicleId: item.vehicle?.vehicleId,
         model: item.vehicle?.model,

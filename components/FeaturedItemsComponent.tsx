@@ -14,6 +14,7 @@ type Vehicle = {
   user: {
     userCity: string;
   };
+  image1:string;
 };
 
 type Bike = {
@@ -26,13 +27,13 @@ type Bike = {
   user: {
     userCity: string;
   };
+  image1:string;
 };
 
 type FeaturedItems = {
   vehicles: Vehicle[];
   bikes: Bike[];
 };
-
 export function FeaturedItemsComponent() {
   const [items, setItems] = useState<FeaturedItems>({
     vehicles: [],
@@ -65,6 +66,11 @@ export function FeaturedItemsComponent() {
             key={vehicle.vehicleId}
             className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow"
           >
+            <img
+              src={vehicle.image1}
+              alt={`${vehicle.brand} ${vehicle.model}`}
+              className="w-full h-48 object-cover mb-4 rounded"
+            />
             <h3 className="text-2xl font-semibold">
               {vehicle.brand} {vehicle.model} ({vehicle.year})
             </h3>
@@ -87,6 +93,11 @@ export function FeaturedItemsComponent() {
             key={bike.bikeId}
             className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow"
           >
+            <img
+              src={bike.image1}
+              alt={`${bike.brand} ${bike.model}`}
+              className="w-full h-48 object-cover mb-4 rounded"
+            />
             <h3 className="text-2xl font-semibold">
               {bike.brand} {bike.model} ({bike.year})
             </h3>
