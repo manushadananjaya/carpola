@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // Import from next/navigation
 import { fetchFeaturedItems } from "@/services/fetchFeaturedItems";
 
 // Type definitions
@@ -41,6 +42,7 @@ export function FeaturedItemsComponent() {
     bikes: [],
   });
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter(); // Initialize the router
 
   useEffect(() => {
     async function fetchData() {
@@ -57,6 +59,16 @@ export function FeaturedItemsComponent() {
 
   if (error) return <div>Error: {error}</div>;
 
+  // Click handler for vehicles
+  const handleVehicleClick = (vehicleId: number) => {
+    router.push(`/vehicles/${vehicleId}`);
+  };
+
+  // Click handler for bikes
+  const handleBikeClick = (bikeId: number) => {
+    router.push(`/bikes/${bikeId}`);
+  };
+
   return (
     <div className="container mx-auto px-4">
       {/* Featured Vehicles Section */}
@@ -65,7 +77,8 @@ export function FeaturedItemsComponent() {
         {items.vehicles.map((vehicle) => (
           <div
             key={vehicle.vehicleId}
-            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow bg-white"
+            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow bg-white cursor-pointer"
+            onClick={() => handleVehicleClick(vehicle.vehicleId)} // Add click handler
           >
             <img
               src={vehicle.image1}
@@ -94,7 +107,8 @@ export function FeaturedItemsComponent() {
         {items.bikes.map((bike) => (
           <div
             key={bike.bikeId}
-            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow bg-white"
+            className="border p-4 rounded shadow-md hover:shadow-lg transition-shadow bg-white cursor-pointer"
+            onClick={() => handleBikeClick(bike.bikeId)} // Add click handler
           >
             <img
               src={bike.image1}
