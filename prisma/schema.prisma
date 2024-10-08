@@ -28,9 +28,9 @@ model Vehicle {
   posted       Boolean
   postedAt     DateTime @default(now())
   promoted     Boolean
-  featured     Boolean // <-- Add this field for featured vehicles
+  featured     Boolean 
   userId       Int
-  // Add other fields as needed
+  
   user         User @relation(fields: [userId], references: [userId])
 }
 
@@ -43,15 +43,14 @@ model Bike {
   year      Int
   mileage   Int
   startType String
-  bikeType  String // (electric, fuel)
+  bikeType  String
   engine    String
   details   String
   posted    Boolean
   postedAt  DateTime @default(now())
   promoted  Boolean
-  featured  Boolean // <-- Add this field for featured bikes
+  featured  Boolean 
   userId    Int
-  // Add other fields as needed
   user      User @relation(fields: [userId], references: [userId])
 }
 
