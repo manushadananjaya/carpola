@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import AuthButton from "./AuthButton";
 
 export function Navbar() {
   return (
@@ -18,54 +19,57 @@ export function Navbar() {
         <Car className="h-6 w-6" />
         <span className="ml-2 text-lg font-semibold">AutoMarket</span>
       </Link>
-      <nav className="ml-auto hidden md:flex gap-4 sm:gap-6">
-        <Link
-          className="text-sm font-medium hover:underline underline-offset-4"
-          href="/buy"
-        >
-          Buy
-        </Link>
-        <Link
-          className="text-sm font-medium hover:underline underline-offset-4"
-          href="/sell"
-        >
-          Sell
-        </Link>
-        <Link
-          className="text-sm font-medium hover:underline underline-offset-4"
-          href="/about"
-        >
-          About
-        </Link>
-        <Link
-          className="text-sm font-medium hover:underline underline-offset-4"
-          href="/contact"
-        >
-          Contact
-        </Link>
+      <nav className="flex items-center gap-4 sm:gap-6">
+        <div className="hidden md:flex gap-4 sm:gap-6">
+          <Link
+            className="text-sm font-medium hover:underline underline-offset-4"
+            href="/buy"
+          >
+            Buy
+          </Link>
+          <Link
+            className="text-sm font-medium hover:underline underline-offset-4"
+            href="/sell"
+          >
+            Sell
+          </Link>
+          <Link
+            className="text-sm font-medium hover:underline underline-offset-4"
+            href="/about"
+          >
+            About
+          </Link>
+          <Link
+            className="text-sm font-medium hover:underline underline-offset-4"
+            href="/contact"
+          >
+            Contact
+          </Link>
+        </div>
+        <AuthButton />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="md:hidden">
+              <Car className="h-4 w-4" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link href="/buy">Buy</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/sell">Sell</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/about">About</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/contact">Contact</Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </nav>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="icon" className="md:hidden">
-            <Car className="h-4 w-4" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link href="/buy">Buy</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/sell">Sell</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/about">About</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/contact">Contact</Link>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </header>
   );
 }
