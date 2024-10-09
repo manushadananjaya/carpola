@@ -1,48 +1,18 @@
+// components/LandingPageComponent.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CardContent, Card } from "@/components/ui/card";
-import { Search, Car, DollarSign, CheckCircle, Menu } from "lucide-react";
+import { Search, Car, DollarSign } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { Navbar } from "@/components/Navbar";
 import { FeaturedItemsComponent } from "./FeaturedItemsComponent";
 
 export function LandingPageComponent() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
-        <Link className="flex items-center justify-center" href="#">
-          <Car className="h-6 w-6" />
-          <span className="sr-only">AutoMarket</span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            Buy
-          </Link>
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            Sell
-          </Link>
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            About
-          </Link>
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            Contact
-          </Link>
-        </nav>
-      </header>
+      <Navbar />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-black flex justify-center items-center">
           <div className="container px-4 md:px-6">

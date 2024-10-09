@@ -1,52 +1,56 @@
-// app/vehicles/[id]/page.tsx
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { fetchBike } from "@/services/fetchItemDetailsBike"; // Import the service
+import { fetchBike } from "@/services/fetchItemDetailsBike";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageCarousel } from "@/components/ui/image-carousel";
+import { Separator } from "@/components/ui/separator";
+import { Navbar } from "@/components/Navbar";
 
-// Type definitions
-type Vehicle = {
-  vehicleId: number;
-  model: string;
-  price: number;
-  brand: string;
-  year: number;
-  postedAt: string;
-  user: {
-    userCity: string;
-  };
-  image1: string;
-};
-
+// Type definition
 type Bike = {
   bikeId: number;
-  model: string;
+  contactNo: string;
   price: number;
   brand: string;
+  model: string;
   year: number;
+  mileage: number;
+  startType: string;
+  bikeType: string;
+  engine: string;
+  details: string;
+  posted: boolean;
   postedAt: string;
+  userId: number;
+  image1: string;
+  image2: string;
+  image3: string;
+  image4: string;
+  image5: string;
   user: {
+    userId: number;
+    username: string;
+    userEmail: string;
+    userPhone: string;
     userCity: string;
   };
-  image1: string;
 };
 
-export default function VehicleDetailsPage({
+export default function BikeDetailsPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const [item, setItem] = useState<Vehicle | Bike | null>(null);
+  const [bike, setBike] = useState<Bike | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { id } = params;
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await fetchBike(id); // Use the service to fetch data
-        setItem(data);
+        const data = await fetchBike(id);
+        setBike(data);
       } catch (err) {
         setError((err as Error).message);
       }
@@ -55,29 +59,88 @@ export default function VehicleDetailsPage({
     fetchData();
   }, [id]);
 
-  if (error) return <div>Error: {error}</div>;
-  if (!item) return <div>Loading...</div>;
+  if (error)
+    return (
+      <div className="text-center text-red-500 text-xl mt-10">
+        Error: {error}
+      </div>
+    );
+  if (!bike) return <div className="text-center text-xl mt-10">Loading...</div>;
+
+  const images = [
+    bike.image1,
+    bike.image2,
+    bike.image3,
+    bike.image4,
+    bike.image5,
+  ];
 
   return (
-    <div className="container mx-auto px-4">
-      <div className="max-w-4xl mx-auto mt-10 p-4 border rounded shadow-lg bg-white">
-        <img
-          src={item.image1}
-          alt={`${item.brand} ${item.model}`}
-          className="w-full h-64 object-cover mb-6 rounded"
-        />
-        <h2 className="text-3xl font-bold mb-4">
-          {item.brand} {item.model} ({item.year})
-        </h2>
-        <p className="text-lg font-bold text-blue-500 mb-2">
-          Price: ${item.price}
-        </p>
-        <p className="text-sm text-gray-600 mb-2">
-          Location: {item.user.userCity}
-        </p>
-        <p className="text-sm text-gray-500">
-          Posted on: {new Date(item.postedAt).toLocaleDateString()}
-        </p>
+    <div>
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold">
+              {bike.brand} {bike.model} ({bike.year})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6">
+              <ImageCarousel
+                images={images}
+                alt={`${bike.brand} ${bike.model}`}
+              />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">Bike Details</h2>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <dt className="font-medium text-gray-500">Price</dt>
+                  <dd className="font-semibold">${bike.price}</dd>
+                  <dt className="font-medium text-gray-500">Mileage</dt>
+                  <dd>{bike.mileage} km</dd>
+                  <dt className="font-medium text-gray-500">Start Type</dt>
+                  <dd>{bike.startType}</dd>
+                  <dt className="font-medium text-gray-500">Bike Type</dt>
+                  <dd>{bike.bikeType}</dd>
+                  <dt className="font-medium text-gray-500">Engine</dt>
+                  <dd>{bike.engine}</dd>
+                </dl>
+              </div>
+
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">
+                  Seller Information
+                </h2>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <dt className="font-medium text-gray-500">Seller</dt>
+                  <dd>{bike.user.username}</dd>
+                  <dt className="font-medium text-gray-500">Location</dt>
+                  <dd>{bike.user.userCity}</dd>
+                  <dt className="font-medium text-gray-500">Phone</dt>
+                  <dd>{bike.contactNo}</dd>
+                  <dt className="font-medium text-gray-500">Email</dt>
+                  <dd className="break-all">{bike.user.userEmail}</dd>
+                </dl>
+              </div>
+            </div>
+
+            <Separator className="my-6" />
+
+            <div>
+              <h2 className="text-2xl font-semibold mb-2">Description</h2>
+              <p className="text-gray-700">{bike.details}</p>
+            </div>
+
+            <Separator className="my-6" />
+
+            <div className="text-sm text-gray-500">
+              Posted on: {new Date(bike.postedAt).toLocaleDateString()}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

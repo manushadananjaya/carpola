@@ -24,6 +24,7 @@ export async function GET(
     }
 
     // Return the bike data if found
+    console.log("Bike found:", bike);
     return NextResponse.json(bike);
   } catch (error) {
     console.error("Error fetching bike:", error);
