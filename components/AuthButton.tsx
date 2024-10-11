@@ -14,6 +14,7 @@ import Image from "next/image";
 export default function AuthButton() {
   const { data: session } = useSession();
 
+
   if (session) {
     return (
       <DropdownMenu>

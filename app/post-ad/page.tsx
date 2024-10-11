@@ -31,47 +31,101 @@ import { Navbar } from "@/components/Navbar";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-const formSchema = z.object({
-  type: z.enum(["vehicle", "bike"], {
-    required_error: "You must select a type.",
-  }),
-  brand: z.string().min(2, {
-    message: "Brand must be at least 2 characters.",
-  }),
-  model: z.string().min(2, {
-    message: "Model must be at least 2 characters.",
-  }),
-  year: z
-    .number()
-    .int()
-    .min(1900)
-    .max(new Date().getFullYear() + 1),
-  price: z.number().positive({
-    message: "Price must be a positive number.",
-  }),
-  mileage: z.number().nonnegative({
-    message: "Mileage must be a non-negative number.",
-  }),
-  details: z.string().min(10, {
-    message: "Details must be at least 10 characters.",
-  }),
-  contactNo: z.string().regex(/^\+?[1-9]\d{1,14}$/, {
-    message: "Please enter a valid phone number.",
-  }),
-  images: z
-    .array(
-      z
-        .any()
-        .refine((file) => file instanceof File, "Expected a File")
-        .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-        .refine(
-          (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
-          ".jpg, .png and .webp files are accepted."
-        )
-    )
-    .min(1, "At least one image is required")
-    .max(5, "You can upload a maximum of 5 images"),
-});
+const GearType = {
+  AUTOMATIC: "AUTOMATIC",
+  MANUAL: "MANUAL",
+  SEMI_AUTOMATIC: "SEMI_AUTOMATIC",
+} as const;
+
+const FuelType = {
+  PETROL: "PETROL",
+  DIESEL: "DIESEL",
+  ELECTRIC: "ELECTRIC",
+  HYBRID: "HYBRID",
+} as const;
+
+const StartType = {
+  ELECTRIC: "ELECTRIC",
+  KICK: "KICK",
+} as const;
+
+const BikeType = {
+  FUEL: "FUEL",
+  ELECTRIC: "ELECTRIC",
+} as const;
+
+
+const formSchema = z
+  .object({
+    type: z.enum(["vehicle", "bike"], {
+      required_error: "You must select a type.",
+    }),
+    brand: z.string().min(2, {
+      message: "Brand must be at least 2 characters.",
+    }),
+    model: z.string().min(2, {
+      message: "Model must be at least 2 characters.",
+    }),
+    year: z
+      .number()
+      .int()
+      .min(1900)
+      .max(new Date().getFullYear() + 1),
+    price: z.number().positive({
+      message: "Price must be a positive number.",
+    }),
+    mileage: z.number().nonnegative({
+      message: "Mileage must be a non-negative number.",
+    }),
+    engineCC: z
+      .number()
+      .positive({
+        message: "Engine CC must be a positive number.",
+      })
+      .optional(),
+    gearType: z.nativeEnum(GearType).optional(),
+    fuelType: z.nativeEnum(FuelType).optional(),
+    startType: z.nativeEnum(StartType).optional(),
+    bikeType: z.nativeEnum(BikeType).optional(),
+    engine: z
+      .string()
+      .min(2, {
+        message: "Engine must be at least 2 characters.",
+      })
+      .optional(),
+    details: z.string().min(10, {
+      message: "Details must be at least 10 characters.",
+    }),
+    contactNo: z.string().regex(/^\+?[1-9]\d{1,14}$/, {
+      message: "Please enter a valid phone number.",
+    }),
+    images: z
+      .array(
+        z
+          .any()
+          .refine((file) => file instanceof File, "Expected a File")
+          .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+          .refine(
+            (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+            ".jpg, .png and .webp files are accepted."
+          )
+      )
+      .min(1, "At least one image is required")
+      .max(5, "You can upload a maximum of 5 images"),
+  })
+  .refine(
+    (data) => {
+      if (data.type === "bike") {
+        return data.startType && data.bikeType && data.engine;
+      }
+      return true;
+    },
+    {
+      message: "For bikes, start type, bike type, and engine are required.",
+      path: ["startType", "bikeType", "engine"],
+    }
+  );
+
 
 export default function PostAdPage() {
   const router = useRouter();
@@ -87,11 +141,20 @@ export default function PostAdPage() {
       year: new Date().getFullYear(),
       price: 0,
       mileage: 0,
+      engineCC: 0,
+      gearType: GearType.MANUAL,
+      fuelType: FuelType.PETROL,
+      startType: StartType.ELECTRIC,
+      bikeType: BikeType.FUEL,
+      engine: "",
       details: "",
       contactNo: "",
       images: [],
     },
   });
+
+
+  const watchType = form.watch("type");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -238,6 +301,155 @@ export default function PostAdPage() {
                 </FormItem>
               )}
             />
+            {watchType === "vehicle" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="engineCC"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Engine CC</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="gearType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gear Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gear type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(GearType).map(([key, value]) => (
+                            <SelectItem key={key} value={value}>
+                              {key.charAt(0) + key.slice(1).toLowerCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="fuelType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fuel Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select fuel type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(FuelType).map(([key, value]) => (
+                            <SelectItem key={key} value={value}>
+                              {key.charAt(0) + key.slice(1).toLowerCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+            {watchType === "bike" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="startType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select start type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(StartType).map(([key, value]) => (
+                            <SelectItem key={key} value={value}>
+                              {key.charAt(0) + key.slice(1).toLowerCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bikeType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bike Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select bike type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(BikeType).map(([key, value]) => (
+                            <SelectItem key={key} value={value}>
+                              {key.charAt(0) + key.slice(1).toLowerCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="engine"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Engine</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter engine details" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
+
             <FormField
               control={form.control}
               name="details"
