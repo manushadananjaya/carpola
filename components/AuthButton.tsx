@@ -1,4 +1,3 @@
-// components/AuthButton.tsx
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -10,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "lucide-react";
+import Image from "next/image";
 
 export default function AuthButton() {
   const { data: session } = useSession();
@@ -19,7 +19,17 @@ export default function AuthButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <User className="h-4 w-4" />
+            {session.user?.image ? (
+              <Image
+                src={session.user.image}
+                alt={session.user.name || "User Avatar"}
+                width={32}
+                height={32}
+                className="rounded-full"
+              />
+            ) : (
+              <User className="h-4 w-4" />
+            )}
             <span className="sr-only">User menu</span>
           </Button>
         </DropdownMenuTrigger>

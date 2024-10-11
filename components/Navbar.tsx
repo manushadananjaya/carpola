@@ -1,8 +1,7 @@
-// components/Navbar.tsx
 "use client";
 
 import Link from "next/link";
-import { Car } from "lucide-react";
+import { Car, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,7 +19,7 @@ export function Navbar() {
         <span className="ml-2 text-lg font-semibold">AutoMarket</span>
       </Link>
       <nav className="flex items-center gap-4 sm:gap-6">
-        <div className="hidden md:flex gap-4 sm:gap-6">
+        <div className="hidden md:flex items-center gap-4 sm:gap-6">
           <Link
             className="text-sm font-medium hover:underline underline-offset-4"
             href="/buy"
@@ -45,6 +44,15 @@ export function Navbar() {
           >
             Contact
           </Link>
+          <Link href="/post-ad">
+            <Button
+              variant="outline"
+              className="bg-yellow-400 hover:bg-yellow-500 text-black border-yellow-400 hover:border-yellow-500"
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Post Free Ad
+            </Button>
+          </Link>
         </div>
         <AuthButton />
         <DropdownMenu>
@@ -66,6 +74,14 @@ export function Navbar() {
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/contact">Contact</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/post-ad" className="flex items-center">
+                <PlusCircle className="mr-2 h-4 w-4 text-yellow-500" />
+                <span className="text-yellow-500 font-semibold">
+                  Post Free Ad
+                </span>
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
