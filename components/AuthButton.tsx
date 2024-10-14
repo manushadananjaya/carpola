@@ -16,7 +16,7 @@ export default function AuthButton() {
   // Use useSession hook to get session data
   const { data: session } = useSession();
   
-  console.log(session);
+  console.log("seisson from auth button" , session);
 
   // If session exists, display dropdown with user information
   if (session && session.user) {

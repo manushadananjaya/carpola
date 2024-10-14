@@ -4,6 +4,7 @@ import { getProviders, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardHeader,
@@ -14,10 +15,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-// import { FcGoogle } from "react-icons/fc";
+import { Loader2 } from "lucide-react";
 
 export default function SignInPage() {
+  const router = useRouter();
   const [providers, setProviders] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const setupProviders = async () => {
@@ -27,10 +31,37 @@ export default function SignInPage() {
     setupProviders();
   }, []);
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    const email = event.currentTarget.email.value;
+    const password = event.currentTarget.password.value;
+
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      if (res?.error) {
+        setError(res.error);
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!providers) {
     return (
       <div className="flex justify-center items-center h-screen">
-        Loading...
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -44,23 +75,25 @@ export default function SignInPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Sign in with Google */}
           {providers.google && (
             <Button
               variant="outline"
               className="w-full"
               onClick={() => signIn(providers.google.id)}
+              disabled={isLoading}
             >
-              {/* <FcGoogle className="mr-2 h-4 w-4" /> */}
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Sign in with Google
             </Button>
           )}
 
           <Separator className="my-4" />
 
-          {/* Email and Password sign-in form */}
-          <form method="post" action="/api/auth/callback/credentials">
+          <form onSubmit={handleSubmit}>
             <div className="space-y-4">
+              {error && <p className="text-red-500 text-center">{error}</p>}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" name="email" type="email" required />
@@ -69,7 +102,10 @@ export default function SignInPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" required />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
                 Sign in with Email and Password
               </Button>
             </div>

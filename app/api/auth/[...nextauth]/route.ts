@@ -2,6 +2,7 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -19,26 +20,34 @@ const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email) throw new Error("Email is required");
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required.");
+        }
 
         // Fetch the user from the database
         const user = await prisma.user.findUnique({
           where: { userEmail: credentials.email },
         });
 
-        if (user) {
-          // If user exists, return the user object
-          return {
-            id: user.userId,
-            username: user.username,
-            email: user.userEmail,
-            city: user.userCity,
-            district: user.userDistrict,
-          };
-        } else {
-          // If the user doesn't exist or credentials are incorrect, throw an error
-          throw new Error("Invalid email or password.");
+        if (user && user.password) {
+          // Verify the password using bcrypt
+          const isValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (isValid) {
+            return {
+              id: user.userId,
+              username: user.username,
+              email: user.userEmail,
+              city: user.userCity,
+              district: user.userDistrict,
+            };
+          }
         }
+
+        throw new Error("Invalid email or password.");
       },
     }),
   ],
@@ -48,12 +57,10 @@ const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
-        // Check if the user already exists in the database
         let dbUser = await prisma.user.findUnique({
           where: { userEmail: user.email ?? "" },
         });
 
-        // If the user does not exist, create a new one
         if (!dbUser) {
           dbUser = await prisma.user.create({
             data: {
@@ -67,40 +74,50 @@ const authOptions: NextAuthOptions = {
           });
         }
 
-        // If the user is not onboarded, redirect to the onboarding page
         if (!dbUser.isOnboarded) {
           return `/auth/onboarding?email=${user.email ?? ""}`;
-        } else {
-          // update session user with the user id and get other user details from the database
-          
-          return "/";
         }
+
+        return true;
       }
 
-      // If the account provider is not Google, allow sign-in without additional checks
       return true;
     },
     async session({ session, token }) {
-      // Attach additional user information to the session object
-      session.user.id = token.id as number;
-      session.user.username = token.username as string;
-      session.user.email = token.email as string;
-      session.user.city = token.city as string;
-      session.user.district = token.district as string;
+      session.user = {
+        id: token.id as number,
+        username: token.username as string,
+        email: token.email as string,
+        city: token.city as string,
+        district: token.district as string,
+      };
 
       return session;
     },
     async jwt({ token, user }) {
-      // Store user information in the token on the first login
       if (user) {
         token.id = Number(user.id);
         token.username = user.username;
         token.email = user.email ?? "";
         token.city = user.city;
         token.district = user.district;
+      } else {
+        const dbUser = await prisma.user.findUnique({
+          where: { userEmail: token.email },
+        });
+
+        if (dbUser) {
+          token.id = dbUser.userId;
+          token.username = dbUser.username;
+          token.city = dbUser.userCity;
+          token.district = dbUser.userDistrict;
+        }
       }
 
       return token;
+    },
+    async redirect({ url, baseUrl }) {
+      return url.startsWith("/") ? `${baseUrl}${url}` : baseUrl;
     },
   },
   session: {
@@ -108,6 +125,5 @@ const authOptions: NextAuthOptions = {
   },
 };
 
-// Named export for GET and POST methods
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Import your Prisma client instance
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
-import { signIn } from "next-auth/react"; // Import signIn from next-auth/react
-import { getSession } from "next-auth/react"; // Import getSession to update the session
+import { signIn } from "next-auth/react";
+import { getSession } from "next-auth/react";
 
-// Function to handle POST requests for user registration
 export async function POST(req: Request) {
   try {
     const { username, email, phone, city, password, district, isOnboarded } =
@@ -26,7 +25,15 @@ export async function POST(req: Request) {
     });
 
     if (existingUser) {
-      // Update the existing user's information if they already exist (useful for Google sign-in)
+      // If user exists and the request contains a password, return an error for manual sign-up
+      if (password) {
+        return NextResponse.json(
+          { message: "User already exists", error: "User already exists" },
+          { status: 409 }
+        );
+      }
+
+      // Otherwise, for Google sign-in, update the existing user's information
       const updatedUser = await prisma.user.update({
         where: { userEmail: email },
         data: {
@@ -51,7 +58,7 @@ export async function POST(req: Request) {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    // Create a new user with or without password
+    // Create a new user
     const newUser = await prisma.user.create({
       data: {
         username,
@@ -69,7 +76,7 @@ export async function POST(req: Request) {
       const result = await signIn("credentials", {
         redirect: false,
         email: email,
-        password: password, // Use the raw password here for validation
+        password: password,
       });
 
       if (result?.error) {

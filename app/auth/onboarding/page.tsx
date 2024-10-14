@@ -67,11 +67,12 @@ export default function OnboardingPage() {
           description: "Profile completed successfully.",
         });
 
-        // Refresh the session to include updated user data
+        //refresh the seisson to update the user object
         await signIn("credentials", {
-          redirect: false,
-          email: formData.email,
-          password: formData.password || "", // Include password if available for non-Google users
+          username: updatedFormData.username,
+          email: updatedFormData.email,
+          city: updatedFormData.city,
+          district: updatedFormData.district,
         });
 
         router.push("/");

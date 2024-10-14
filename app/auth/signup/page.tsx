@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import districtsData from "@/data/sri-lanka-districts.json"; // Import your JSON file
+import districtsData from "@/data/sri-lanka-districts.json";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -26,17 +26,16 @@ export default function RegisterPage() {
     city: "",
     password: "",
     confirmPassword: "",
+    isOnboarded: true,
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Handle input changes
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Get cities based on the selected district
   type DistrictsData = {
     [key: string]: {
       cities: string[];
@@ -68,6 +67,8 @@ export default function RegisterPage() {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         toast({
           title: "Success",
@@ -75,8 +76,16 @@ export default function RegisterPage() {
         });
         router.push("/auth/signin");
       } else {
-        const error = await response.json();
-        throw new Error(error.message);
+        if (data.error === "User already exists") {
+          toast({
+            title: "Error",
+            description:
+              "A user with this email already exists. Please sign in or use a different email.",
+            variant: "destructive",
+          });
+        } else {
+          throw new Error(data.message || "Registration failed");
+        }
       }
     } catch (error) {
       toast({
@@ -144,7 +153,7 @@ export default function RegisterPage() {
                 required
                 value={formData.district}
                 onChange={handleChange}
-                className="block w-full border border-gray-300 rounded-md"
+                className="block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select District</option>
                 {Object.keys(districtsData).map((district) => (
@@ -162,8 +171,8 @@ export default function RegisterPage() {
                 required
                 value={formData.city}
                 onChange={handleChange}
-                disabled={!formData.district} 
-                className="block w-full border border-gray-300 rounded-md"
+                disabled={!formData.district}
+                className="block w-full border border-gray-300 rounded-md p-2"
               >
                 <option value="">Select City</option>
                 {cities.map((city) => (
