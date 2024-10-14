@@ -67,15 +67,12 @@ export default function OnboardingPage() {
           description: "Profile completed successfully.",
         });
 
-        //refresh the seisson to update the user object
-        await signIn("credentials", {
-          username: updatedFormData.username,
+        await signIn("email", {
           email: updatedFormData.email,
-          city: updatedFormData.city,
-          district: updatedFormData.district,
+          password: updatedFormData.password,
+          callbackUrl: "/",
         });
 
-        router.push("/");
       } else {
         const error = await response.json();
         throw new Error(error.message);

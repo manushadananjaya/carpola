@@ -13,8 +13,36 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
 import districtsData from "@/data/sri-lanka-districts.json";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle } from "lucide-react";
+
+type AlertType = "error" | "success" | null;
+
+interface AlertProps {
+  type: AlertType;
+  title: string;
+  message: string;
+}
+
+const CustomAlert: React.FC<AlertProps> = ({ type, title, message }) => {
+  if (!type) return null;
+
+  return (
+    <Alert
+      variant={type === "error" ? "destructive" : "default"}
+      className="mb-4"
+    >
+      {type === "error" ? (
+        <AlertCircle className="h-4 w-4" />
+      ) : (
+        <CheckCircle className="h-4 w-4" />
+      )}
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription>{message}</AlertDescription>
+    </Alert>
+  );
+};
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,6 +57,11 @@ export default function RegisterPage() {
     isOnboarded: true,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [alert, setAlert] = useState<AlertProps>({
+    type: null,
+    title: "",
+    message: "",
+  });
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -49,12 +82,13 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    setAlert({ type: null, title: "", message: "" });
 
     if (formData.password !== formData.confirmPassword) {
-      toast({
+      setAlert({
+        type: "error",
         title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
+        message: "Passwords do not match",
       });
       setIsLoading(false);
       return;
@@ -70,29 +104,29 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        toast({
+        setAlert({
+          type: "success",
           title: "Success",
-          description: "Registration successful. Please sign in.",
+          message: "Registration successful. Please sign in.",
         });
-        router.push("/auth/signin");
+        setTimeout(() => router.push("/auth/signin"), 2000);
       } else {
-        if (data.error === "User already exists") {
-          toast({
+        if (data.error === "User-already-exists") {
+          setAlert({
+            type: "error",
             title: "Error",
-            description:
+            message:
               "A user with this email already exists. Please sign in or use a different email.",
-            variant: "destructive",
           });
         } else {
           throw new Error(data.message || "Registration failed");
         }
       }
     } catch (error) {
-      toast({
+      setAlert({
+        type: "error",
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Registration failed",
-        variant: "destructive",
+        message: error instanceof Error ? error.message : "Registration failed",
       });
     } finally {
       setIsLoading(false);
@@ -108,6 +142,7 @@ export default function RegisterPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <CustomAlert {...alert} />
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>

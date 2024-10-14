@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       // If user exists and the request contains a password, return an error for manual sign-up
       if (password) {
         return NextResponse.json(
-          { message: "User already exists", error: "User already exists" },
+          { message: "User-already-exists", error: "User-already-exists" },
           { status: 409 }
         );
       }
