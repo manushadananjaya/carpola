@@ -104,6 +104,12 @@ const formSchema = z
     contactNo: z.string().regex(/^\+?[1-9]\d{1,14}$/, {
       message: "Please enter a valid phone number.",
     }),
+    city: z.string().nonempty({
+      message: "City is required.",
+    }),
+    district: z.string().nonempty({
+      message: "District is required.",
+    }),
     images: z
       .array(
         z
@@ -156,6 +162,8 @@ export default function PostAdPage() {
       engine: "",
       details: "",
       contactNo: "",
+      city: "", // Default value for city
+      district: "",
       images: [],
     },
   });
@@ -167,12 +175,17 @@ export default function PostAdPage() {
       setSession(sessionData); // Set the session data in state
       if (!sessionData) {
         router.push("/auth/signin"); // Redirect to login if no session is found
+      } else {
+        // Initialize contact number, city, and district from session data
+        form.setValue("contactNo", sessionData.user?.userPhone || "");
+        form.setValue("city", sessionData.user?.city || ""); // Set the city
+        form.setValue("district", sessionData.user?.district || ""); // Set the district
       }
       console.log(sessionData);
     };
 
     fetchSession();
-  }, [router]);
+  }, [router, form]);
 
   const watchType = form.watch("type");
 
@@ -497,8 +510,59 @@ export default function PostAdPage() {
                 <FormItem>
                   <FormLabel>Contact Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter your contact number" {...field} />
+                    <Input
+                      placeholder="Enter your contact number"
+                      {...field}
+                      disabled
+                    />
                   </FormControl>
+                  <FormDescription>
+                    If you want to change contact number go to your profile
+                    settings.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your city"
+                      {...field}
+                      disabled 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    If you want to change your city, go to your profile
+                    settings.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="district"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>District</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your district"
+                      {...field}
+                      disabled 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    If you want to change your district, go to your profile
+                    settings.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

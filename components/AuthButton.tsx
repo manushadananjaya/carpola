@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User } from "lucide-react";
-// import Image from "next/image"; //Removed as per update 1
 import Link from "next/link";
 
 export default function AuthButton() {
@@ -20,23 +19,24 @@ export default function AuthButton() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 border rounded-full">
-            <User className="h-4 w-4" />
+            <User className="h-4 w-4 text-black dark:text-white" />
             <span className="sr-only">User menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <Link href="/user" passHref>
-            <DropdownMenuItem className="font-normal cursor-pointer">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {session.user?.name}
-                </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {session.user?.email}
-                </p>
-              </div>
-            </DropdownMenuItem>
-          </Link>
+          <DropdownMenuItem>
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">
+                {session.user?.name}
+              </p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {session.user?.email}
+              </p>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/user">Profile Settings</Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => signOut()}>
             Sign out
           </DropdownMenuItem>
