@@ -1,4 +1,4 @@
-"use client";
+"use client"; // Ensure this component runs on the client side
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -13,14 +13,18 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function AuthButton() {
+  // Use useSession hook to get session data
   const { data: session } = useSession();
+  
+  console.log(session);
 
-  if (session) {
+  // If session exists, display dropdown with user information
+  if (session && session.user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            {session.user?.image ? (
+            {session.user.image ? (
               <Image
                 src={session.user.image}
                 alt={session.user.name || "User Avatar"}
@@ -38,11 +42,12 @@ export default function AuthButton() {
           <Link href="/user" passHref>
             <DropdownMenuItem className="font-normal cursor-pointer">
               <div className="flex flex-col space-y-1">
+                {/* Display user's name and email */}
                 <p className="text-sm font-medium leading-none">
-                  {session.user?.name}
+                  {session.user.name} (ID: {session.user.id})
                 </p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {session.user?.email}
+                  {session.user.email}
                 </p>
               </div>
             </DropdownMenuItem>
@@ -55,6 +60,7 @@ export default function AuthButton() {
     );
   }
 
+  // If no session (i.e., user is not logged in), display sign-in button
   return (
     <Button variant="ghost" onClick={() => signIn()}>
       Sign in

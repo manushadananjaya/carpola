@@ -1,42 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession, signIn } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardHeader,
   CardTitle,
+  CardDescription,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import districtsData from "@/data/sri-lanka-districts.json"; // Import your JSON file
+import districtsData from "@/data/sri-lanka-districts.json";
 
-export default function RegisterPage() {
+export default function OnboardingPage() {
+  const { data: session } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") ?? session?.user?.email ?? "";
+
   const [formData, setFormData] = useState({
     username: "",
-    email: "",
+    email: email,
     phone: "",
     district: "",
     city: "",
     password: "",
-    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Handle input changes
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Get cities based on the selected district
   type DistrictsData = {
     [key: string]: {
       cities: string[];
@@ -51,29 +52,29 @@ export default function RegisterPage() {
     e.preventDefault();
     setIsLoading(true);
 
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
+    const updatedFormData = { ...formData, isOnboarded: true };
 
     try {
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(updatedFormData),
       });
 
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Registration successful. Please sign in.",
+          description: "Profile completed successfully.",
         });
-        router.push("/auth/signin");
+
+        // Refresh the session to include updated user data
+        await signIn("credentials", {
+          redirect: false,
+          email: formData.email,
+          password: formData.password || "", // Include password if available for non-Google users
+        });
+
+        router.push("/");
       } else {
         const error = await response.json();
         throw new Error(error.message);
@@ -82,7 +83,7 @@ export default function RegisterPage() {
       toast({
         title: "Error",
         description:
-          error instanceof Error ? error.message : "Registration failed",
+          error instanceof Error ? error.message : "Profile completion failed",
         variant: "destructive",
       });
     } finally {
@@ -95,8 +96,11 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            Register
+            Welcome to Vahanasale.lk
           </CardTitle>
+          <CardDescription className="text-center">
+            Please complete your profile. We have a few steps to go.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -122,6 +126,7 @@ export default function RegisterPage() {
                 maxLength={100}
                 value={formData.email}
                 onChange={handleChange}
+                readOnly
               />
             </div>
             <div className="space-y-2">
@@ -144,7 +149,7 @@ export default function RegisterPage() {
                 required
                 value={formData.district}
                 onChange={handleChange}
-                className="block w-full border border-gray-300 rounded-md"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select District</option>
                 {Object.keys(districtsData).map((district) => (
@@ -162,8 +167,8 @@ export default function RegisterPage() {
                 required
                 value={formData.city}
                 onChange={handleChange}
-                disabled={!formData.district} 
-                className="block w-full border border-gray-300 rounded-md"
+                disabled={!formData.district}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select City</option>
                 {cities.map((city) => (
@@ -173,43 +178,11 @@ export default function RegisterPage() {
                 ))}
               </select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={8}
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                minLength={8}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Registering..." : "Register"}
+              {isLoading ? "Completing Profile..." : "Complete Profile"}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/auth/signin" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
       </Card>
     </div>
   );

@@ -5,6 +5,9 @@ import NextAuth from "next-auth";
 declare module "next-auth" {
   interface Session {
     user: {
+      username: string;
+      district: string;
+      city: string;
       id: number;
       name?: string | null;
       email?: string | null;
