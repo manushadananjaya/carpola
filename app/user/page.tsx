@@ -117,6 +117,8 @@ export default function UserProfilePage() {
           message: "Profile updated successfully.",
         });
         setIsEditing(false);
+
+        router.refresh();
       } else {
         // Handle the case when the response is not ok
         setAlert({
