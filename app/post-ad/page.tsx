@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
+import { getSession } from "next-auth/react";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -53,6 +54,10 @@ const BikeType = {
   FUEL: "FUEL",
   ELECTRIC: "ELECTRIC",
 } as const;
+
+
+
+
 
 
 const formSchema = z
@@ -132,6 +137,8 @@ export default function PostAdPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
+  const [session, setSession] = useState<any>(null); // State to store session data
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -153,6 +160,19 @@ export default function PostAdPage() {
     },
   });
 
+  // Fetch session data when the component mounts
+  useEffect(() => {
+    const fetchSession = async () => {
+      const sessionData = await getSession();
+      setSession(sessionData); // Set the session data in state
+      if (!sessionData) {
+        router.push("/auth/signin"); // Redirect to login if no session is found
+      }
+      console.log(sessionData);
+    };
+
+    fetchSession();
+  }, [router]);
 
   const watchType = form.watch("type");
 
