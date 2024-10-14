@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 const prisma = new PrismaClient();
 
 // Configure the NextAuth options
-const authOptions: NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -41,7 +41,7 @@ const authOptions: NextAuthOptions = {
               id: user.userId,
               username: user.username,
               email: user.userEmail,
-              phone: user.userPhone, // Add phone number
+              phone: user.userPhone,
               city: user.userCity,
               district: user.userDistrict,
             };
@@ -89,36 +89,36 @@ const authOptions: NextAuthOptions = {
         id: token.id as number,
         username: token.username as string,
         email: token.email as string,
-        userPhone: token.phone as string, 
+        userPhone: token.phone as string,
         city: token.city as string,
         district: token.district as string,
       };
       return session;
     },
     async jwt({ token, user }) {
-    if (user) {
-      token.id = Number(user.id);
-      token.username = user.username;
-      token.email = user.email ?? "";
-      token.phone = user.phone ?? ""; 
-      token.city = user.city;
-      token.district = user.district;
-    } else {
-      const dbUser = await prisma.user.findUnique({
-        where: { userEmail: token.email },
-      });
+      if (user) {
+        token.id = Number(user.id);
+        token.username = user.username;
+        token.email = user.email ?? "";
+        token.phone = user.phone ?? "";
+        token.city = user.city;
+        token.district = user.district;
+      } else {
+        const dbUser = await prisma.user.findUnique({
+          where: { userEmail: token.email },
+        });
 
-      if (dbUser) {
-        token.id = dbUser.userId;
-        token.username = dbUser.username;
-        token.phone = dbUser.userPhone; // Ensure phone is fetched from DB
-        token.city = dbUser.userCity;
-        token.district = dbUser.userDistrict;
+        if (dbUser) {
+          token.id = dbUser.userId;
+          token.username = dbUser.username;
+          token.phone = dbUser.userPhone;
+          token.city = dbUser.userCity;
+          token.district = dbUser.userDistrict;
+        }
       }
-    }
-    return token;
-  },
-  async redirect({ url, baseUrl }) {
+      return token;
+    },
+    async redirect({ url, baseUrl }) {
       return url.startsWith("/") ? `${baseUrl}${url}` : baseUrl;
     },
   },
@@ -128,4 +128,4 @@ const authOptions: NextAuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST, authOptions };
+export { handler as GET, handler as POST };
