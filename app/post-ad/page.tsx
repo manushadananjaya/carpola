@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -28,6 +27,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { getSession } from "next-auth/react";
+import { CldUploadWidget } from "next-cloudinary";
+import { CldImage } from "next-cloudinary";
+import { X } from "lucide-react";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -54,11 +56,6 @@ const BikeType = {
   FUEL: "FUEL",
   ELECTRIC: "ELECTRIC",
 } as const;
-
-
-
-
-
 
 const formSchema = z
   .object({
@@ -101,7 +98,7 @@ const formSchema = z
     details: z.string().min(10, {
       message: "Details must be at least 10 characters.",
     }),
-    contactNo: z.string().regex(/^\+?[1-9]\d{1,14}$/, {
+    contactNo: z.string().min(10, {
       message: "Please enter a valid phone number.",
     }),
     city: z.string().nonempty({
@@ -111,16 +108,7 @@ const formSchema = z
       message: "District is required.",
     }),
     images: z
-      .array(
-        z
-          .any()
-          .refine((file) => file instanceof File, "Expected a File")
-          .refine((file) => file.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-          .refine(
-            (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
-            ".jpg, .png and .webp files are accepted."
-          )
-      )
+      .array(z.string())
       .min(1, "At least one image is required")
       .max(5, "You can upload a maximum of 5 images"),
   })
@@ -137,13 +125,11 @@ const formSchema = z
     }
   );
 
-
 export default function PostAdPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-
-  const [session, setSession] = useState<any>(null); // State to store session data
+  const [session, setSession] = useState<any>(null);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -162,24 +148,22 @@ export default function PostAdPage() {
       engine: "",
       details: "",
       contactNo: "",
-      city: "", // Default value for city
+      city: "",
       district: "",
       images: [],
     },
   });
 
-  // Fetch session data when the component mounts
   useEffect(() => {
     const fetchSession = async () => {
       const sessionData = await getSession();
-      setSession(sessionData); // Set the session data in state
+      setSession(sessionData);
       if (!sessionData) {
-        router.push("/auth/signin"); // Redirect to login if no session is found
+        router.push("/auth/signin");
       } else {
-        // Initialize contact number, city, and district from session data
         form.setValue("contactNo", sessionData.user?.userPhone || "");
-        form.setValue("city", sessionData.user?.city || ""); // Set the city
-        form.setValue("district", sessionData.user?.district || ""); // Set the district
+        form.setValue("city", sessionData.user?.city || "");
+        form.setValue("district", sessionData.user?.district || "");
       }
       console.log(sessionData);
     };
@@ -189,20 +173,83 @@ export default function PostAdPage() {
 
   const watchType = form.watch("type");
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const currentImages = form.getValues("images");
+    const newImages = files.slice(0, 5 - currentImages.length);
+
+    if (newImages.length > 0) {
+      const updatedImages = [...currentImages, ...newImages.map(file => file instanceof File ? URL.createObjectURL(file) : file)];
+      form.setValue("images", updatedImages);
+
+      const newPreviews = newImages.map((file) => URL.createObjectURL(file));
+      setPreviewImages((prev) => [...prev, ...newPreviews]);
+    }
+
+    if (currentImages.length + newImages.length >= 5) {
+      toast({
+        title: "Maximum images reached",
+        description: "You can upload a maximum of 5 images.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const currentImages = form.getValues("images");
+    const updatedImages = currentImages.filter((_, i) => i !== index);
+    form.setValue("images", updatedImages);
+
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      // Here you would typically send the data to your backend
-      // For now, we'll just simulate an API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-      console.log(values);
+      // Check if environment variables are available
+      if (!cloudName || !uploadPreset) {
+        throw new Error("Cloudinary configuration is missing.");
+      }
+
+      // Upload images to Cloudinary
+      const uploadedImageUrls = await Promise.all(
+        values.images.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("upload_preset", uploadPreset);
+
+          const response = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+          const data = await response.json();
+          return data.secure_url;
+        })
+      );
+
+      // Prepare submission data
+      const submissionData = {
+        ...values,
+        images: uploadedImageUrls,
+      };
+
+      console.log(submissionData);
+
       toast({
         title: "Ad Posted Successfully!",
         description: "Your ad has been submitted for review.",
       });
-      router.push("/"); // Redirect to home page after successful submission
+
+      router.push("/");
     } catch (error) {
+      console.error("Error posting ad:", error);
       toast({
         title: "Error",
         description: "There was a problem posting your ad. Please try again.",
@@ -212,14 +259,6 @@ export default function PostAdPage() {
       setIsSubmitting(false);
     }
   }
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    form.setValue("images", files);
-
-    const newPreviews = files.map((file) => URL.createObjectURL(file));
-    setImagePreviews(newPreviews);
-  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -482,7 +521,6 @@ export default function PostAdPage() {
                 />
               </>
             )}
-
             <FormField
               control={form.control}
               name="details"
@@ -531,11 +569,7 @@ export default function PostAdPage() {
                 <FormItem>
                   <FormLabel>City</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Enter your city"
-                      {...field}
-                      disabled 
-                    />
+                    <Input placeholder="Enter your city" {...field} disabled />
                   </FormControl>
                   <FormDescription>
                     If you want to change your city, go to your profile
@@ -545,7 +579,6 @@ export default function PostAdPage() {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="district"
@@ -556,7 +589,7 @@ export default function PostAdPage() {
                     <Input
                       placeholder="Enter your district"
                       {...field}
-                      disabled 
+                      disabled
                     />
                   </FormControl>
                   <FormDescription>
@@ -572,34 +605,47 @@ export default function PostAdPage() {
               name="images"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Images</FormLabel>
+                  <FormLabel>Images (Max 5)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.webp"
-                      multiple
-                      onChange={handleImageChange}
-                    />
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap gap-4">
+                        {previewImages.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={url}
+                              alt={`Preview ${index + 1}`}
+                              className="w-32 h-32 object-cover rounded-md"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImage(index)}
+                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              aria-label={`Remove image ${index + 1}`}
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      {field.value.length < 5 && (
+                        <Input
+                          type="file"
+                          accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                          onChange={handleImageUpload}
+                          multiple
+                        />
+                      )}
+                    </div>
                   </FormControl>
                   <FormDescription>
-                    Upload up to 5 images (max 5MB each, .jpg, .png, or .webp)
+                    Upload up to 5 images of your vehicle or bike. Accepted
+                    formats: JPG, PNG, WebP. Max size: 5MB per image.
                   </FormDescription>
                   <FormMessage />
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {imagePreviews.map((preview, index) => (
-                      <Image
-                        key={index}
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        width={100}
-                        height={100}
-                        className="object-cover rounded"
-                      />
-                    ))}
-                  </div>
                 </FormItem>
               )}
             />
+
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Posting..." : "Post Ad"}
             </Button>
