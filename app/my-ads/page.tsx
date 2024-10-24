@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2, Star } from "lucide-react";
+import { Loader2, Trash2, Star, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,15 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Navbar } from "@/components/Navbar";
 
 type Ad = {
@@ -39,28 +30,71 @@ type Package = {
   name: string;
   price: number;
   description: string;
+  features: string[];
+  color: string;
 };
 
 export default function MyAds() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [ads, setAds] = useState<Ad[]>([]);
-  const [packages, setPackages] = useState<Package[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get WhatsApp number from environment variable
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
+  const supportMessage = encodeURIComponent(
+    "Hi, I need more support regarding upgrading my ad. Can you help?"
+  );
+
+  const packages: Package[] = [
+    {
+      id: "1",
+      name: "Basic",
+      price: 9.99,
+      description: "Perfect for beginners",
+      features: ["1 promoted ad", "24-hour boost", "Basic analytics"],
+      color: "bg-blue-500",
+    },
+    {
+      id: "2",
+      name: "Premium",
+      price: 19.99,
+      description: "For serious sellers",
+      features: [
+        "3 promoted ads",
+        "72-hour boost",
+        "Advanced analytics",
+        "Priority support",
+      ],
+      color: "bg-purple-500",
+    },
+    {
+      id: "3",
+      name: "Pro",
+      price: 39.99,
+      description: "Maximum visibility",
+      features: [
+        "Unlimited promoted ads",
+        "1-week boost",
+        "Real-time analytics",
+        "Dedicated account manager",
+        "Featured seller badge",
+      ],
+      color: "bg-green-500",
+    },
+  ];
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
     } else if (status === "authenticated") {
       fetchAds();
-      fetchPackages();
     }
   }, [status, router]);
 
   const fetchAds = async () => {
     try {
-      // Replace with your actual API endpoint
       const response = await fetch("/api/my-ads");
       if (!response.ok) throw new Error("Failed to fetch ads");
       const data = await response.json();
@@ -72,21 +106,8 @@ export default function MyAds() {
     }
   };
 
-  const fetchPackages = async () => {
-    try {
-      // Replace with your actual API endpoint
-      const response = await fetch("/api/promotion-packages");
-      if (!response.ok) throw new Error("Failed to fetch packages");
-      const data = await response.json();
-      setPackages(data);
-    } catch (err) {
-      console.error("Failed to load promotion packages:", err);
-    }
-  };
-
   const handleDeleteAd = async (adId: string) => {
     try {
-      // Replace with your actual API endpoint
       const response = await fetch(`/api/delete-ad/${adId}`, {
         method: "DELETE",
       });
@@ -98,8 +119,17 @@ export default function MyAds() {
   };
 
   const handlePromoteAd = (adId: string) => {
-    // Implement promotion logic here
-    console.log(`Promoting ad ${adId}`);
+    const promoteMessage = encodeURIComponent(
+      `Hello, I would like to promote my ad with ID ${adId}. Can you assist?`
+    );
+    window.location.href = `https://wa.me/${whatsappNumber}?text=${promoteMessage}`;
+  };
+
+  const handleUpgradePackage = (pkgName: string) => {
+    const upgradeMessage = encodeURIComponent(
+      `I would like to upgrade to the ${pkgName} package. Can you help with the process?`
+    );
+    window.location.href = `https://wa.me/${whatsappNumber}?text=${upgradeMessage}`;
   };
 
   if (isLoading) {
@@ -113,7 +143,7 @@ export default function MyAds() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
-      <main className="container mx-auto py-10">
+      <main className="container mx-auto py-10 px-4">
         <h1 className="text-3xl font-bold mb-6">My Ads</h1>
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -121,19 +151,19 @@ export default function MyAds() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {ads.map((ad) => (
-            <Card key={ad.id}>
+            <Card key={ad.id} className="overflow-hidden">
+              <img
+                src={ad.imageUrl}
+                alt={ad.title}
+                className="w-full h-48 object-cover"
+              />
               <CardHeader>
                 <CardTitle>{ad.title}</CardTitle>
                 <CardDescription>Price: ${ad.price}</CardDescription>
               </CardHeader>
               <CardContent>
-                <img
-                  src={ad.imageUrl}
-                  alt={ad.title}
-                  className="w-full h-48 object-cover rounded-md mb-4"
-                />
                 <Badge
                   variant={
                     ad.status === "approved"
@@ -168,39 +198,50 @@ export default function MyAds() {
           ))}
         </div>
 
-        <h2 className="text-2xl font-bold mt-12 mb-6">Upgrade Your Ads</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h2 className="text-3xl font-bold mt-12 mb-6 text-center">
+          Upgrade Your Ads
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {packages.map((pkg) => (
-            <Card key={pkg.id}>
-              <CardHeader>
-                <CardTitle>{pkg.name}</CardTitle>
-                <CardDescription>${pkg.price}</CardDescription>
+            <Card key={pkg.id} className="flex flex-col">
+              <CardHeader className={`${pkg.color} text-white`}>
+                <CardTitle className="text-2xl">{pkg.name}</CardTitle>
+                <CardDescription className="text-white text-opacity-90 text-lg">
+                  ${pkg.price}/month
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <p>{pkg.description}</p>
+              <CardContent className="flex-grow">
+                <p className="text-gray-600 mb-4">{pkg.description}</p>
+                <ul className="space-y-2">
+                  {pkg.features.map((feature, index) => (
+                    <li key={index} className="flex items-center">
+                      <Check className="w-5 h-5 mr-2 text-green-500" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
               <CardFooter>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="w-full">Choose Plan</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Confirm Upgrade</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to upgrade to the {pkg.name} plan
-                        for ${pkg.price}?
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button variant="outline">Cancel</Button>
-                      <Button>Confirm Upgrade</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  className="w-full"
+                  onClick={() => handleUpgradePackage(pkg.name)}
+                >
+                  {`Choose ${pkg.name}`}
+                </Button>
               </CardFooter>
             </Card>
           ))}
+        </div>
+        <div className="text-center mt-8">
+          <p>If you need more support, contact us at:</p>
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=${supportMessage}`}
+            className="text-blue-600 underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            WhatsApp Support: {whatsappNumber}
+          </a>
         </div>
       </main>
     </div>
