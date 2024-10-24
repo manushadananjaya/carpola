@@ -28,7 +28,7 @@ export function Navbar() {
           </Link>
           <Link
             className="text-sm font-medium hover:underline underline-offset-4"
-            href="/sell"
+            href="/my-ads"
           >
             Sell
           </Link>
@@ -67,7 +67,7 @@ export function Navbar() {
               <Link href="/buy">Buy</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/sell">Sell</Link>
+              <Link href="/my-ads">Sell</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/about">About</Link>

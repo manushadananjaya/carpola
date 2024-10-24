@@ -278,7 +278,7 @@ export default function AdPostingForm() {
         message: "Your ad has been submitted for review.",
       });
 
-      setTimeout(() => router.push("/"), 3000);
+      setTimeout(() => router.push("/my-ads"), 3000);
     } catch (error) {
       console.error("Error posting ad:", error);
       setAlertInfo({

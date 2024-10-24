@@ -15,11 +15,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  if (!token && pathname === "/my-ads") {
+    const loginUrl = new URL("/api/auth/signin", req.url);
+    loginUrl.searchParams.set("callbackUrl", req.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
   // Allow the request to proceed
   return NextResponse.next();
 }
 
 // Apply middleware to protect only the /post-ad route
 export const config = {
-  matcher: ["/post-ad"],
+  matcher: ["/post-ad", "/my-ads"],
 };
