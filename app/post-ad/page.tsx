@@ -27,9 +27,9 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { Navbar } from "@/components/Navbar";
 import { getSession } from "next-auth/react";
-import { CldUploadWidget } from "next-cloudinary";
-import { CldImage } from "next-cloudinary";
 import { X } from "lucide-react";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -57,11 +57,17 @@ const BikeType = {
   ELECTRIC: "ELECTRIC",
 } as const;
 
+const VehicleType = {
+  VEHICLE: "VEHICLE",
+  BIKE: "BIKE",
+} as const;
+
 const formSchema = z
   .object({
-    type: z.enum(["vehicle", "bike"], {
+    type: z.nativeEnum(VehicleType, {
       required_error: "You must select a type.",
     }),
+    userId: z.string().nonempty(),
     brand: z.string().min(2, {
       message: "Brand must be at least 2 characters.",
     }),
@@ -89,12 +95,6 @@ const formSchema = z
     fuelType: z.nativeEnum(FuelType).optional(),
     startType: z.nativeEnum(StartType).optional(),
     bikeType: z.nativeEnum(BikeType).optional(),
-    engine: z
-      .string()
-      .min(2, {
-        message: "Engine must be at least 2 characters.",
-      })
-      .optional(),
     details: z.string().min(10, {
       message: "Details must be at least 10 characters.",
     }),
@@ -108,14 +108,14 @@ const formSchema = z
       message: "District is required.",
     }),
     images: z
-      .array(z.string())
+      .array(z.union([z.string(), z.instanceof(File)]))
       .min(1, "At least one image is required")
       .max(5, "You can upload a maximum of 5 images"),
   })
   .refine(
     (data) => {
-      if (data.type === "bike") {
-        return data.startType && data.bikeType && data.engine;
+      if (data.type === "BIKE") {
+        return data.startType && data.bikeType && data.engineCC;
       }
       return true;
     },
@@ -125,16 +125,22 @@ const formSchema = z
     }
   );
 
-export default function PostAdPage() {
+
+export default function AdPostingForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [alertInfo, setAlertInfo] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "vehicle",
+      type: "VEHICLE",
       brand: "",
       model: "",
       year: new Date().getFullYear(),
@@ -145,12 +151,12 @@ export default function PostAdPage() {
       fuelType: FuelType.PETROL,
       startType: StartType.ELECTRIC,
       bikeType: BikeType.FUEL,
-      engine: "",
       details: "",
       contactNo: "",
       city: "",
       district: "",
       images: [],
+      userId: "",
     },
   });
 
@@ -164,8 +170,9 @@ export default function PostAdPage() {
         form.setValue("contactNo", sessionData.user?.userPhone || "");
         form.setValue("city", sessionData.user?.city || "");
         form.setValue("district", sessionData.user?.district || "");
+        form.setValue("userId", String(sessionData.user?.id) || "");
+        
       }
-      console.log(sessionData);
     };
 
     fetchSession();
@@ -179,7 +186,7 @@ export default function PostAdPage() {
     const newImages = files.slice(0, 5 - currentImages.length);
 
     if (newImages.length > 0) {
-      const updatedImages = [...currentImages, ...newImages.map(file => file instanceof File ? URL.createObjectURL(file) : file)];
+      const updatedImages = [...currentImages, ...newImages];
       form.setValue("images", updatedImages);
 
       const newPreviews = newImages.map((file) => URL.createObjectURL(file));
@@ -205,11 +212,12 @@ export default function PostAdPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    setAlertInfo(null);
+
     try {
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-      // Check if environment variables are available
       if (!cloudName || !uploadPreset) {
         throw new Error("Cloudinary configuration is missing.");
       }
@@ -217,6 +225,11 @@ export default function PostAdPage() {
       // Upload images to Cloudinary
       const uploadedImageUrls = await Promise.all(
         values.images.map(async (file) => {
+          if (typeof file === "string" && file.startsWith("http")) {
+            // If the file is already a URL, it's already uploaded
+            return file;
+          }
+
           const formData = new FormData();
           formData.append("file", file);
           formData.append("upload_preset", uploadPreset);
@@ -229,31 +242,48 @@ export default function PostAdPage() {
             }
           );
 
+          if (!response.ok) {
+            throw new Error("Failed to upload image to Cloudinary");
+          }
+
           const data = await response.json();
           return data.secure_url;
         })
       );
 
-      // Prepare submission data
+      // Prepare the data to send to the backend
       const submissionData = {
         ...values,
-        images: uploadedImageUrls,
+        images: uploadedImageUrls, // Replace File objects with URLs
+        year: parseInt(values.year.toString()), // Ensure year is sent as an integer
+        price: parseFloat(values.price.toString()), // Ensure price is a float
+        mileage: parseInt(values.mileage.toString()), // Ensure mileage is an integer
       };
 
-      console.log(submissionData);
-
-      toast({
-        title: "Ad Posted Successfully!",
-        description: "Your ad has been submitted for review.",
+      // Send the data to your API
+      const apiResponse = await fetch("/api/post-ad", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submissionData),
       });
 
-      router.push("/");
+      if (!apiResponse.ok) {
+        throw new Error("Failed to submit ad data");
+      }
+
+      setAlertInfo({
+        type: "success",
+        message: "Your ad has been submitted for review.",
+      });
+
+      setTimeout(() => router.push("/"), 3000);
     } catch (error) {
       console.error("Error posting ad:", error);
-      toast({
-        title: "Error",
-        description: "There was a problem posting your ad. Please try again.",
-        variant: "destructive",
+      setAlertInfo({
+        type: "error",
+        message: "There was a problem posting your ad. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
@@ -286,8 +316,11 @@ export default function PostAdPage() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="vehicle">Vehicle</SelectItem>
-                      <SelectItem value="bike">Bike</SelectItem>
+                      {Object.entries(VehicleType).map(([key, value]) => (
+                        <SelectItem key={key} value={value}>
+                          {key.charAt(0) + key.slice(1).toLowerCase()}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -373,7 +406,7 @@ export default function PostAdPage() {
                 </FormItem>
               )}
             />
-            {watchType === "vehicle" && (
+            {watchType === "VEHICLE" && (
               <>
                 <FormField
                   control={form.control}
@@ -450,8 +483,27 @@ export default function PostAdPage() {
                 />
               </>
             )}
-            {watchType === "bike" && (
+            {watchType === "BIKE" && (
               <>
+                <FormField
+                  control={form.control}
+                  name="engineCC"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Engine CC</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(parseInt(e.target.value))
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="startType"
@@ -502,19 +554,6 @@ export default function PostAdPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="engine"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Engine</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter engine details" {...field} />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -645,12 +684,22 @@ export default function PostAdPage() {
                 </FormItem>
               )}
             />
-
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Posting..." : "Post Ad"}
             </Button>
           </form>
         </Form>
+        {alertInfo && (
+          <Alert
+            variant={alertInfo.type === "success" ? "default" : "destructive"}
+            className="mb-6"
+          >
+            <AlertTitle>
+              {alertInfo.type === "success" ? "Success" : "Error"}
+            </AlertTitle>
+            <AlertDescription>{alertInfo.message}</AlertDescription>
+          </Alert>
+        )}
       </main>
     </div>
   );

@@ -7,7 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums for standardized fields
+// Enum for distinguishing vehicle types
+enum AdType {
+  VEHICLE
+  BIKE
+}
+
+// Other Enums
 enum GearType {
   AUTOMATIC
   MANUAL
@@ -31,71 +37,39 @@ enum BikeType {
   ELECTRIC
 }
 
-model Vehicle {
-  vehicleId   Int     @id @default(autoincrement())
-  contactNo   String  @db.VarChar(15)
+model Ad {
+  adId        Int     @id @default(autoincrement())
   price       Int
   brand       String  @db.VarChar(50)
   model       String  @db.VarChar(50)
   year        Int
   mileage     Int
-  gear        GearType
-  fuelType    FuelType
-  engine      String  @db.VarChar(100)
+  vehicleType AdType  // Field to specify if it's a Bike or a Vehicle
+
+  engine      Int  
   details     String? @db.Text
   posted      Boolean
   postedAt    DateTime @default(now())
   userId      Int
   user        User @relation(fields: [userId], references: [userId])
 
-   // Fields for five image URLs
-  image1      String  @db.VarChar(255)
-  image2      String  @db.VarChar(255)
-  image3      String  @db.VarChar(255)
-  image4      String  @db.VarChar(255)
-  image5      String  @db.VarChar(255)
+  images      String[] @db.Text  // Array to store multiple images
 
-  
-  // Index for frequently queried fields
+  // Unique fields for vehicles
+  gear        GearType?  // Only relevant for vehicles
+  fuelType    FuelType?  // Only relevant for vehicles
+
+  // Unique fields for bikes
+  startType   StartType?  // Only relevant for bikes
+  bikeType    BikeType?   // Only relevant for bikes
+
+  // Indexes for frequently queried fields
   @@index([postedAt])
   @@index([price])
   PromotedItem PromotedItem[]
   FeaturedItem FeaturedItem[]
 }
 
-model Bike {
-  bikeId      Int     @id @default(autoincrement())
-  contactNo   String  @db.VarChar(15)
-  price       Int
-  brand       String  @db.VarChar(50)
-  model       String  @db.VarChar(50)
-  year        Int
-  mileage     Int
-  startType   StartType
-  bikeType    BikeType
-  engine      String  @db.VarChar(100)
-  details     String? @db.Text
-  posted      Boolean
-  postedAt    DateTime @default(now())
-  userId      Int
-  user        User @relation(fields: [userId], references: [userId])
-
-
-  // Fields for five image URLs
-  image1      String  @db.VarChar(255)
-  image2      String  @db.VarChar(255)
-  image3      String  @db.VarChar(255)
-  image4      String  @db.VarChar(255)
-  image5      String  @db.VarChar(255)
-
-
-  
-  // Index for frequently queried fields
-  @@index([postedAt])
-  @@index([price])
-  PromotedItem PromotedItem[]
-  FeaturedItem FeaturedItem[]
-}
 
 model User {
   userId       Int      @id @default(autoincrement())
@@ -103,24 +77,20 @@ model User {
   userEmail    String   @unique @db.VarChar(100)
   userPhone    String   @db.VarChar(15)
   userCity     String   @db.VarChar(50)
-  userDistrict String   @db.VarChar(50)  
-  password     String?  @db.VarChar(255) // Nullable password field
-  
+  userDistrict String   @db.VarChar(50)
+  password     String?  @db.VarChar(255)  // Nullable password field
+
   // Relations
-  vehicles     Vehicle[]
-  bikes        Bike[]
+  ads          Ad[]     // Users can have multiple ads
 
-  // Optional field to track onboarding status (if needed)
-  isOnboarded  Boolean  @default(false) // Marks whether user has completed onboarding
+  // Optional field to track onboarding status
+  isOnboarded  Boolean  @default(false)
 }
-
 
 model PromotedItem {
   id         Int      @id @default(autoincrement())
-  vehicleId  Int?
-  bikeId     Int?
-  vehicle    Vehicle? @relation(fields: [vehicleId], references: [vehicleId])
-  bike       Bike?    @relation(fields: [bikeId], references: [bikeId])
+  adId       Int?
+  ad         Ad?      @relation(fields: [adId], references: [adId])
   createdAt  DateTime @default(now())
 
   // Index for sorting/filtering promoted items
@@ -129,13 +99,10 @@ model PromotedItem {
 
 model FeaturedItem {
   id         Int      @id @default(autoincrement())
-  vehicleId  Int?
-  bikeId     Int?
-  vehicle    Vehicle? @relation(fields: [vehicleId], references: [vehicleId])
-  bike       Bike?    @relation(fields: [bikeId], references: [bikeId])
+  adId       Int?
+  ad         Ad?      @relation(fields: [adId], references: [adId])
   createdAt  DateTime @default(now())
 
   // Index for sorting/filtering featured items
   @@index([createdAt])
 }
-
