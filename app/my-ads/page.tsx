@@ -40,6 +40,7 @@ export default function MyAds() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingAdId, setDeletingAdId] = useState<string | null>(null); // State to track ad deletion
 
   // Get WhatsApp number from environment variable
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
@@ -107,6 +108,7 @@ export default function MyAds() {
   };
 
   const handleDeleteAd = async (adId: string) => {
+    setDeletingAdId(adId); // Set the current ad being deleted
     try {
       const response = await fetch(`/api/delete-ad/${adId}`, {
         method: "DELETE",
@@ -115,6 +117,8 @@ export default function MyAds() {
       setAds(ads.filter((ad) => ad.id !== adId));
     } catch (err) {
       setError("Failed to delete the ad. Please try again.");
+    } finally {
+      setDeletingAdId(null); // Reset after deletion
     }
   };
 
@@ -181,9 +185,19 @@ export default function MyAds() {
                   variant="destructive"
                   size="sm"
                   onClick={() => handleDeleteAd(ad.id)}
+                  disabled={deletingAdId === ad.id} // Disable the button while deleting
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  {deletingAdId === ad.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </>
+                  )}
                 </Button>
                 <Button
                   variant="outline"
