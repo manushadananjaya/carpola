@@ -46,12 +46,15 @@ export default function SignInPage() {
         password,
       });
 
+      console.log("res", res);
+
       if (res?.error) {
         setError(res.error);
       } else {
         router.push("/");
       }
     } catch (error) {
+      console.log("Error signing in with email and password ", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

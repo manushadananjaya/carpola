@@ -6,7 +6,6 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-// Configure the NextAuth options
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -24,13 +23,25 @@ const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required.");
         }
 
+        // Check if admin credentials match
+        if (
+          credentials.email === "admin@vahanasale.lk" &&
+          credentials.password === "admin123"
+        ) {
+          return {
+            id: "admin",
+            username: "Admin",
+            email: credentials.email,
+            isAdmin: true,
+          } as any;
+        }
+
         // Fetch the user from the database
         const user = await prisma.user.findUnique({
           where: { userEmail: credentials.email },
         });
 
         if (user && user.password) {
-          // Verify the password using bcrypt
           const isValid = await bcrypt.compare(
             credentials.password,
             user.password
@@ -41,9 +52,10 @@ const authOptions: NextAuthOptions = {
               id: user.userId,
               username: user.username,
               email: user.userEmail,
-              phone: user.userPhone, // Add phone number
+              phone: user.userPhone,
               city: user.userCity,
               district: user.userDistrict,
+              isAdmin: false,
             };
           }
         }
@@ -56,70 +68,45 @@ const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        let dbUser = await prisma.user.findUnique({
-          where: { userEmail: user.email ?? "" },
-        });
-
-        if (!dbUser) {
-          dbUser = await prisma.user.create({
-            data: {
-              username: user.name || "New User",
-              userEmail: user.email || "",
-              userPhone: "",
-              userCity: "",
-              userDistrict: "",
-              isOnboarded: false,
-            },
-          });
-        }
-
-        if (!dbUser.isOnboarded) {
-          return `/auth/onboarding?email=${user.email ?? ""}`;
-        }
-
-        return true;
-      }
-
+    async signIn({ user }) {
+      console.log("user in signIn callback", user);
       return true;
     },
     async session({ session, token }) {
+      // Check if token properties exist and set them in session
       session.user = {
         id: token.id as number,
         username: token.username as string,
         email: token.email as string,
-        userPhone: token.phone as string, 
+        userPhone: token.phone as string,
         city: token.city as string,
         district: token.district as string,
+        isAdmin: token.isAdmin as boolean, // Set isAdmin in session
       };
       return session;
     },
     async jwt({ token, user }) {
-    if (user) {
-      token.id = Number(user.id);
-      token.username = user.username;
-      token.email = user.email ?? "";
-      token.phone = user.phone ?? ""; 
-      token.city = user.city;
-      token.district = user.district;
-    } else {
-      const dbUser = await prisma.user.findUnique({
-        where: { userEmail: token.email },
-      });
+      if (user) {
+        token.id = Number(user.id);
+        token.username = user.username;
+        token.email = user.email ?? "";
+        token.phone = user.phone ?? "";
+        token.city = user.city;
+        token.district = user.district;
+        token.isAdmin = (user as any).isAdmin ?? false;
 
-      if (dbUser) {
-        token.id = dbUser.userId;
-        token.username = dbUser.username;
-        token.phone = dbUser.userPhone; // Ensure phone is fetched from DB
-        token.city = dbUser.userCity;
-        token.district = dbUser.userDistrict;
+        // Set redirect URL in token if the user is an admin
+        if (token.isAdmin) {
+          token.redirectUrl = "/admin/dashboard";
+        }
       }
-    }
-    return token;
-  },
-  async redirect({ url, baseUrl }) {
-      return url.startsWith("/") ? `${baseUrl}${url}` : baseUrl;
+      return token;
+    },
+    async redirect({ url, baseUrl }) {
+      // Use token.redirectUrl if it exists for admin users
+      return url.startsWith("/")
+        ? `${baseUrl}${url}`
+        : `${baseUrl}/admin/dashboard`;
     },
   },
   session: {

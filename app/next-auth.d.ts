@@ -14,6 +14,9 @@ declare module "next-auth" {
       image?: string | null;
       userPhone?: string | null;
       userCity?: string | null;
+      role?: string | null;
+      isAdmin?: boolean;
+    
     };
   }
 
@@ -23,6 +26,19 @@ declare module "next-auth" {
     email?: string | null;
     userPhone?: string | null;
     userCity?: string | null;
+    role?: string | null;
+    isAdmin?: boolean;
+   
+  }
+
+  interface user {
+    id: number;
+    name?: string | null;
+    email?: string | null;
+    userPhone?: string | null;
+    userCity?: string | null;
+    role?: string | null;
+   
   }
 }
 
