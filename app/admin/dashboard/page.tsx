@@ -68,6 +68,9 @@ export default function AdminDashboard() {
     featured: 0,
   });
 
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated") {
@@ -107,13 +110,17 @@ export default function AdminDashboard() {
 
   const handleApprove = async (adId: string) => {
     try {
-      await fetch(`/api/ads/${adId}/approve`, { method: "POST" });
-      await fetchAds();
-      await fetchStats();
+      await fetch(`/api/ads/approve/${adId}`, { method: "POST" });
+      await fetchAds(); // Refetch ads to reflect the update
+      await fetchStats(); // Update the stats accordingly
+      setSuccessMessage("Ad approved successfully!"); // Set success message
+      setTimeout(() => setSuccessMessage(null), 3000); // Hide message after 3 seconds
     } catch (error) {
       console.error("Failed to approve ad:", error);
     }
   };
+
+
 
   const handleReject = async (adId: string) => {
     try {
@@ -147,7 +154,7 @@ export default function AdminDashboard() {
 
   const handleDelete = async (adId: string) => {
     try {
-      await fetch(`/api/ads/${adId}`, { method: "DELETE" });
+      await fetch(`/api/delete-ad/${adId}`, { method: "DELETE" });
       await fetchAds();
       await fetchStats();
     } catch (error) {
@@ -172,6 +179,12 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
+      {/* Success Message */}
+      {successMessage && (
+        <div className="max-w-md mx-auto my-4 p-4 bg-green-100 text-green-700 rounded-lg shadow-lg">
+          {successMessage}
+        </div>
+      )}
       <main className="container mx-auto py-10 px-4">
         <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
         <Card className="mb-6">

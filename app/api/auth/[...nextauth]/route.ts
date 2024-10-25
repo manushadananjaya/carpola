@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
+// Configure the NextAuth options
 const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -23,25 +24,29 @@ const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required.");
         }
 
-        // Check if admin credentials match
+        // Check if admin is logging in with hardcoded credentials
         if (
           credentials.email === "admin@vahanasale.lk" &&
           credentials.password === "admin123"
         ) {
           return {
-            id: "admin",
+            id: 1, // Admin ID
             username: "Admin",
-            email: credentials.email,
-            isAdmin: true,
-          } as any;
+            email: "admin@vahanasale.lk",
+            phone: "", // You can add a phone number if needed
+            city: "",
+            district: "",
+            isAdmin: true, // Admin flag set to true
+          };
         }
 
-        // Fetch the user from the database
+        // Fetch the user from the database for non-admin users
         const user = await prisma.user.findUnique({
           where: { userEmail: credentials.email },
         });
 
         if (user && user.password) {
+          // Verify the password using bcrypt
           const isValid = await bcrypt.compare(
             credentials.password,
             user.password
@@ -52,10 +57,10 @@ const authOptions: NextAuthOptions = {
               id: user.userId,
               username: user.username,
               email: user.userEmail,
-              phone: user.userPhone,
+              phone: user.userPhone, // Add phone number
               city: user.userCity,
               district: user.userDistrict,
-              isAdmin: false,
+              isAdmin: false, // Regular user, set isAdmin to false
             };
           }
         }
@@ -68,12 +73,35 @@ const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async signIn({ user }) {
-      console.log("user in signIn callback", user);
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        let dbUser = await prisma.user.findUnique({
+          where: { userEmail: user.email ?? "" },
+        });
+
+        if (!dbUser) {
+          dbUser = await prisma.user.create({
+            data: {
+              username: user.name || "New User",
+              userEmail: user.email || "",
+              userPhone: "",
+              userCity: "",
+              userDistrict: "",
+              isOnboarded: false,
+            },
+          });
+        }
+
+        if (!dbUser.isOnboarded) {
+          return `/auth/onboarding?email=${user.email ?? ""}`;
+        }
+
+        return true;
+      }
+
       return true;
     },
     async session({ session, token }) {
-      // Check if token properties exist and set them in session
       session.user = {
         id: token.id as number,
         username: token.username as string,
@@ -81,7 +109,7 @@ const authOptions: NextAuthOptions = {
         userPhone: token.phone as string,
         city: token.city as string,
         district: token.district as string,
-        isAdmin: token.isAdmin as boolean, // Set isAdmin in session
+        isAdmin: token.isAdmin as boolean, // Pass isAdmin to the session
       };
       return session;
     },
@@ -93,20 +121,25 @@ const authOptions: NextAuthOptions = {
         token.phone = user.phone ?? "";
         token.city = user.city;
         token.district = user.district;
-        token.isAdmin = (user as any).isAdmin ?? false;
+        token.isAdmin = user.isAdmin; // Set isAdmin from the user object
+      } else {
+        const dbUser = await prisma.user.findUnique({
+          where: { userEmail: token.email },
+        });
 
-        // Set redirect URL in token if the user is an admin
-        if (token.isAdmin) {
-          token.redirectUrl = "/admin/dashboard";
+        if (dbUser) {
+          token.id = dbUser.userId;
+          token.username = dbUser.username;
+          token.phone = dbUser.userPhone;
+          token.city = dbUser.userCity;
+          token.district = dbUser.userDistrict;
+          token.isAdmin = dbUser.userEmail === "admin@vahanasale.lk"; // Check for admin status in the DB as well
         }
       }
       return token;
     },
     async redirect({ url, baseUrl }) {
-      // Use token.redirectUrl if it exists for admin users
-      return url.startsWith("/")
-        ? `${baseUrl}${url}`
-        : `${baseUrl}/admin/dashboard`;
+      return url.startsWith("/") ? `${baseUrl}${url}` : baseUrl;
     },
   },
   session: {
