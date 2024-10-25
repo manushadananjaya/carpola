@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Check, X, Star, Zap, Trash2 } from "lucide-react";
+import { Search, Check, Star, Zap, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/Navbar";
@@ -70,7 +69,6 @@ export default function AdminDashboard() {
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-
   useEffect(() => {
     if (status === "loading") return;
     if (status === "unauthenticated") {
@@ -88,7 +86,7 @@ export default function AdminDashboard() {
   const fetchAds = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/ads");
+      const response = await fetch("/api/ads/pending");
       const data = await response.json();
       setAds(data);
     } catch (error) {
@@ -108,33 +106,31 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchApproved = async () => {
+    try {
+      const response = await fetch("/api/ads/approved");
+      const data = await response.json();
+      setAds(data);
+    } catch (error) {
+      console.error("Error fetching approved ads:", error);
+    }
+  };
+
   const handleApprove = async (adId: string) => {
     try {
       await fetch(`/api/ads/approve/${adId}`, { method: "POST" });
-      await fetchAds(); // Refetch ads to reflect the update
-      await fetchStats(); // Update the stats accordingly
-      setSuccessMessage("Ad approved successfully!"); // Set success message
-      setTimeout(() => setSuccessMessage(null), 3000); // Hide message after 3 seconds
+      await fetchAds();
+      await fetchStats();
+      setSuccessMessage("Ad approved successfully!");
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Failed to approve ad:", error);
     }
   };
 
-
-
-  const handleReject = async (adId: string) => {
-    try {
-      await fetch(`/api/ads/${adId}/reject`, { method: "POST" });
-      await fetchAds();
-      await fetchStats();
-    } catch (error) {
-      console.error("Failed to reject ad:", error);
-    }
-  };
-
   const handlePromote = async (adId: string) => {
     try {
-      await fetch(`/api/ads/${adId}/promote`, { method: "POST" });
+      await fetch(`/api/ads/promote/${adId}`, { method: "POST" });
       await fetchAds();
       await fetchStats();
     } catch (error) {
@@ -144,7 +140,7 @@ export default function AdminDashboard() {
 
   const handleFeature = async (adId: string) => {
     try {
-      await fetch(`/api/ads/${adId}/feature`, { method: "POST" });
+      await fetch(`/api/ads/feature/${adId}`, { method: "POST" });
       await fetchAds();
       await fetchStats();
     } catch (error) {
@@ -154,11 +150,21 @@ export default function AdminDashboard() {
 
   const handleDelete = async (adId: string) => {
     try {
-      await fetch(`/api/delete-ad/${adId}`, { method: "DELETE" });
-      await fetchAds();
-      await fetchStats();
+      const response = await fetch(`/api/delete-ad/${adId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        await fetchAds();
+        await fetchStats();
+        setSuccessMessage("Ad deleted successfully. User has been notified.");
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        throw new Error("Failed to delete ad");
+      }
     } catch (error) {
       console.error("Failed to delete ad:", error);
+      setSuccessMessage("Failed to delete ad. Please try again.");
+      setTimeout(() => setSuccessMessage(null), 3000);
     }
   };
 
@@ -179,7 +185,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
-      {/* Success Message */}
       {successMessage && (
         <div className="max-w-md mx-auto my-4 p-4 bg-green-100 text-green-700 rounded-lg shadow-lg">
           {successMessage}
@@ -227,48 +232,57 @@ export default function AdminDashboard() {
             className="max-w-sm"
           />
         </div>
-        <Tabs defaultValue="pending">
+        <Tabs
+          defaultValue="pending"
+          onValueChange={(value) => {
+            if (value === "approved") {
+              fetchApproved(); // Fetch approved ads
+            } else if (value === "pending") {
+              fetchAds(); // Fetch all ads by default for pending
+            }
+          }}
+        >
           <TabsList>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="promoted">Promoted</TabsTrigger>
             <TabsTrigger value="featured">Featured</TabsTrigger>
           </TabsList>
+
           <TabsContent value="pending">
             <AdTable
               ads={pendingAds}
               onApprove={handleApprove}
-              onReject={handleReject}
               onPromote={handlePromote}
               onFeature={handleFeature}
               onDelete={handleDelete}
             />
           </TabsContent>
+
           <TabsContent value="approved">
             <AdTable
-              ads={approvedAds}
+              ads={ads} 
               onApprove={handleApprove}
-              onReject={handleReject}
               onPromote={handlePromote}
               onFeature={handleFeature}
               onDelete={handleDelete}
             />
           </TabsContent>
+
           <TabsContent value="promoted">
             <AdTable
               ads={promotedAds}
               onApprove={handleApprove}
-              onReject={handleReject}
               onPromote={handlePromote}
               onFeature={handleFeature}
               onDelete={handleDelete}
             />
           </TabsContent>
+
           <TabsContent value="featured">
             <AdTable
               ads={featuredAds}
               onApprove={handleApprove}
-              onReject={handleReject}
               onPromote={handlePromote}
               onFeature={handleFeature}
               onDelete={handleDelete}
@@ -283,14 +297,12 @@ export default function AdminDashboard() {
 function AdTable({
   ads,
   onApprove,
-  onReject,
   onPromote,
   onFeature,
   onDelete,
 }: {
   ads: Ad[];
   onApprove: (id: string) => void;
-  onReject: (id: string) => void;
   onPromote: (id: string) => void;
   onFeature: (id: string) => void;
   onDelete: (id: string) => void;
@@ -308,7 +320,14 @@ function AdTable({
       <TableBody>
         {ads.map((ad) => (
           <TableRow key={ad.adId}>
-            <TableCell>{`${ad.brand} ${ad.model} ${ad.year}`}</TableCell>
+            <TableCell>
+              <div>{`${ad.brand} ${ad.model} ${ad.year}`}</div>
+              <div className="text-sm text-gray-500">
+                Ad ID: {ad.adId} <br />
+                {ad.user.username} ({ad.user.userEmail}) <br />
+                {ad.user.userCity}, {ad.user.userDistrict}
+              </div>
+            </TableCell>
             <TableCell>${ad.price}</TableCell>
             <TableCell>{ad.vehicleType}</TableCell>
             <TableCell>
@@ -325,6 +344,11 @@ function AdTable({
                       <DialogDescription>
                         {ad.description || "No description available"}
                       </DialogDescription>
+                      <div className="text-sm text-gray-500">
+                        Ad ID: {ad.adId} <br />
+                        {ad.user.username} ({ad.user.userEmail}) <br />
+                        {ad.user.userCity}, {ad.user.userDistrict}
+                      </div>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -381,9 +405,9 @@ function AdTable({
                       </Button>
                       <Button
                         variant="destructive"
-                        onClick={() => onReject(ad.adId)}
+                        onClick={() => onDelete(ad.adId)}
                       >
-                        Reject
+                        Delete
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -391,19 +415,13 @@ function AdTable({
                 <Button size="sm" onClick={() => onApprove(ad.adId)}>
                   <Check className="w-4 h-4" />
                 </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => onReject(ad.adId)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
                 {!ad.promoted && (
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => onPromote(ad.adId)}
-                  >
+                  > 
+                    Promote 
                     <Star className="w-4 h-4" />
                   </Button>
                 )}
@@ -412,7 +430,8 @@ function AdTable({
                     size="sm"
                     variant="outline"
                     onClick={() => onFeature(ad.adId)}
-                  >
+                  > 
+                    Feature
                     <Zap className="w-4 h-4" />
                   </Button>
                 )}
@@ -431,3 +450,4 @@ function AdTable({
     </Table>
   );
 }
+
