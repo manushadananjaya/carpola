@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Search, Check, Star, Zap, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -60,15 +60,14 @@ export default function AdminDashboard() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  // const [stats, setStats] = useState({
-  //   pending: 0,
-  //   approved: 0,
-  //   promoted: 0,
-  //   featured: 0,
-  // });
+  const [stats, setStats] = useState({
+    pending: 0,
+    approved: 0,
+    promoted: 0,
+    featured: 0,
+  });
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("pending");
 
   useEffect(() => {
     if (status === "loading") return;
@@ -79,18 +78,10 @@ export default function AdminDashboard() {
         router.push("/403");
       } else {
         fetchAds();
+        fetchStats();
       }
     }
   }, [status, session, router]);
-
-  const stats = useMemo(() => {
-    return {
-      pending: ads.filter((ad) => !ad.promoted && !ad.featured).length,
-      approved: ads.filter((ad) => !ad.promoted && !ad.featured).length,
-      promoted: ads.filter((ad) => ad.promoted).length,
-      featured: ads.filter((ad) => ad.featured).length,
-    };
-  }, [ads]);
 
   const fetchAds = async () => {
     setIsLoading(true);
@@ -105,16 +96,15 @@ export default function AdminDashboard() {
     }
   };
 
-  // const fetchStats = async () => {
-  //   try {
-  //     const response = await fetch("/api/ads/stats");
-  //     const data = await response.json();
-  //     setStats(data);
-  //     console.log(data);
-  //   } catch (error) {
-  //     console.error("Error fetching stats:", error);
-  //   }
-  // };
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/ads/stats");
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
 
   const fetchApproved = async () => {
     try {
@@ -146,7 +136,15 @@ export default function AdminDashboard() {
         startType: featuredAd.ad.startType,
         postedAt: featuredAd.ad.postedAt,
         featured: true, // Since it's a featured ad
-        user: featuredAd.ad.user,
+        user: {
+          // Assuming user details are either fetched from another source or provided
+          userId: 29, // For now hardcoding the userId for demo purposes
+          username: "Test User", // Replace with actual user data if available
+          userEmail: "testuser@example.com", // Replace with real user data
+          userCity: "Test City",
+          userDistrict: "Test District",
+          userPhone: "1234567890", // Dummy phone for demo
+        },
       }));
 
       setAds(formattedAds);
@@ -154,6 +152,7 @@ export default function AdminDashboard() {
       console.error("Error fetching featured ads:", error);
     }
   };
+
 
   const fetchPromoted = async () => {
     try {
@@ -175,7 +174,15 @@ export default function AdminDashboard() {
         startType: promotedAd.ad.startType,
         postedAt: promotedAd.ad.postedAt,
         promoted: true, // Since it's a promoted ad
-        user: promotedAd.ad.user,
+        user: {
+          // Assuming the user details are not included, but will come from session or another source
+          userId: 29, // For now hardcoding the userId for demo purposes
+          username: "Test User", // Replace this with actual user data if available
+          userEmail: "testuser@example.com", // Replace with real user data
+          userCity: "Test City",
+          userDistrict: "Test District",
+          userPhone: "1234567890", // Dummy phone for demo
+        },
       }));
 
       setAds(formattedAds);
@@ -184,11 +191,14 @@ export default function AdminDashboard() {
     }
   };
 
+
+
+
   const handleApprove = async (adId: string) => {
     try {
       await fetch(`/api/ads/approve/${adId}`, { method: "POST" });
       await fetchAds();
-
+      await fetchStats();
       setSuccessMessage("Ad approved successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
@@ -200,6 +210,7 @@ export default function AdminDashboard() {
     try {
       await fetch(`/api/ads/promote/${adId}`, { method: "POST" });
       await fetchAds();
+      await fetchStats();
     } catch (error) {
       console.error("Failed to promote ad:", error);
     }
@@ -209,6 +220,7 @@ export default function AdminDashboard() {
     try {
       await fetch(`/api/ads/feature/${adId}`, { method: "POST" });
       await fetchAds();
+      await fetchStats();
     } catch (error) {
       console.error("Failed to feature ad:", error);
     }
@@ -221,7 +233,7 @@ export default function AdminDashboard() {
       });
       if (response.ok) {
         await fetchAds();
-
+        await fetchStats();
         setSuccessMessage("Ad deleted successfully. User has been notified.");
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
@@ -234,24 +246,20 @@ export default function AdminDashboard() {
     }
   };
 
-  // Dynamically filter ads based on the activeTab
-  const filteredAds = ads
-    .filter(
-      (ad) =>
-        `${ad.brand} ${ad.model} ${ad.year}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (ad.description?.toLowerCase().includes(searchTerm.toLowerCase()) ??
-          false)
-    )
-    .filter((ad) => {
-      if (activeTab === "pending") return !ad.promoted && !ad.featured;
-      if (activeTab === "approved") return !ad.promoted && !ad.featured;
-      if (activeTab === "promoted") return ad.promoted;
-      if (activeTab === "featured") return ad.featured;
-      return true; // Default to include all ads if no specific tab is active
-    });
-    
+  const filteredAds = ads.filter(
+    (ad) =>
+      `${ad.brand} ${ad.model} ${ad.year}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (ad.description?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+        false)
+  );
+
+  const pendingAds = filteredAds.filter((ad) => !ad.promoted && !ad.featured);
+  const approvedAds = filteredAds.filter((ad) => !ad.promoted && !ad.featured);
+  const promotedAds = filteredAds.filter((ad) => ad.promoted);
+  const featuredAds = filteredAds.filter((ad) => ad.featured);
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -266,42 +274,33 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle>Quick Stats</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1">
-            {activeTab === "pending" && (
-              <div className="bg-blue-100 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-800">Pending Ads</h3>
-                <p className="text-2xl font-bold text-blue-600">
-                  {stats.pending}
-                </p>
-              </div>
-            )}
-            {activeTab === "approved" && (
-              <div className="bg-green-100 p-4 rounded-lg">
-                <h3 className="font-semibold text-green-800">Approved Ads</h3>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats.approved}
-                </p>
-              </div>
-            )}
-            {activeTab === "promoted" && (
-              <div className="bg-purple-100 p-4 rounded-lg">
-                <h3 className="font-semibold text-purple-800">Promoted Ads</h3>
-                <p className="text-2xl font-bold text-purple-600">
-                  {stats.promoted}
-                </p>
-              </div>
-            )}
-            {activeTab === "featured" && (
-              <div className="bg-yellow-100 p-4 rounded-lg">
-                <h3 className="font-semibold text-yellow-800">Featured Ads</h3>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {stats.featured}
-                </p>
-              </div>
-            )}
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-blue-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-blue-800">Pending Ads</h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {stats.pending}
+              </p>
+            </div>
+            <div className="bg-green-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-green-800">Approved Ads</h3>
+              <p className="text-2xl font-bold text-green-600">
+                {stats.approved}
+              </p>
+            </div>
+            <div className="bg-purple-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-purple-800">Promoted Ads</h3>
+              <p className="text-2xl font-bold text-purple-600">
+                {stats.promoted}
+              </p>
+            </div>
+            <div className="bg-yellow-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-yellow-800">Featured Ads</h3>
+              <p className="text-2xl font-bold text-yellow-600">
+                {stats.featured}
+              </p>
+            </div>
           </CardContent>
         </Card>
-
         <div className="mb-6">
           <Input
             type="text"
@@ -314,14 +313,14 @@ export default function AdminDashboard() {
         <Tabs
           defaultValue="pending"
           onValueChange={(value) => {
-            setActiveTab(value); // Update activeTab on tab change
             if (value === "approved") {
               fetchApproved(); // Fetch approved ads
             } else if (value === "pending") {
               fetchAds(); // Fetch all ads by default for pending
             } else if (value === "promoted") {
               fetchPromoted(); // Fetch promoted ads
-            } else if (value === "featured") {
+            }
+            else if (value === "featured") {
               fetchFeatured(); // Fetch featured ads
             }
           }}
@@ -333,9 +332,39 @@ export default function AdminDashboard() {
             <TabsTrigger value="featured">Featured</TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab}>
+          <TabsContent value="pending">
             <AdTable
-              ads={filteredAds}
+              ads={pendingAds}
+              onApprove={handleApprove}
+              onPromote={handlePromote}
+              onFeature={handleFeature}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+
+          <TabsContent value="approved">
+            <AdTable
+              ads={ads}
+              onApprove={handleApprove}
+              onPromote={handlePromote}
+              onFeature={handleFeature}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+
+          <TabsContent value="promoted">
+            <AdTable
+              ads={promotedAds}
+              onApprove={handleApprove}
+              onPromote={handlePromote}
+              onFeature={handleFeature}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+
+          <TabsContent value="featured">
+            <AdTable
+              ads={featuredAds}
               onApprove={handleApprove}
               onPromote={handlePromote}
               onFeature={handleFeature}

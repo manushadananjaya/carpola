@@ -1,39 +1,27 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+import {prisma} from "@/lib/prisma"; // Import prisma client if configured in a separate file
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse
+// POST method to feature an ad
+export async function POST(
+  request: Request,
+  { params }: { params: { adId: string } }
 ) {
-  const { adId } = req.query;
+  const { adId } = params;
 
-  if (req.method === "POST") {
-    try {
-      // Check if the ad is already featured
-    const existingFeature = await prisma.featuredItem.findUnique({
-        where: {
-            id: Number(adId), // Add the 'id' property
-        },
+  try {
+    // Update the Ad model by associating it with the FeaturedItem
+    await prisma.featuredItem.create({
+      data: {
+        adId: parseInt(adId),
+      },
     });
 
-    if (existingFeature) {
-        return res.status(400).json({ message: "Ad is already featured" });
-    }
-
-      // Feature the ad by adding an entry in the FeaturedItem table
-      await prisma.featuredItem.create({
-        data: {
-          adId: Number(adId),
-        },
-      });
-
-      res.status(200).json({ message: "Ad featured successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Failed to feature ad" });
-    }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return NextResponse.json({ message: "Ad featured successfully!" });
+  } catch (error) {
+    console.error("Error featuring ad:", error);
+    return NextResponse.json(
+      { error: "Failed to feature ad" },
+      { status: 500 }
+    );
   }
 }

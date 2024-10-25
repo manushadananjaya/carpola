@@ -1,39 +1,27 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
+import {prisma} from "@/lib/prisma"; // Import prisma client if configured in a separate file
 
-export default async function handle(
-  req: NextApiRequest,
-  res: NextApiResponse
+// POST method to promote an ad
+export async function POST(
+  request: Request,
+  { params }: { params: { adId: string } }
 ) {
-  const { adId } = req.query;
+  const { adId } = params;
 
-  if (req.method === "POST") {
-    try {
-      // Check if the ad is already promoted
-    const existingPromotion = await prisma.promotedItem.findUnique({
-        where: {
-            id: Number(adId), // Add the 'id' property
-        },
+  try {
+    // Update the Ad model by associating it with the PromotedItem
+    await prisma.promotedItem.create({
+      data: {
+        adId: parseInt(adId),
+      },
     });
 
-    if (existingPromotion) {
-        return res.status(400).json({ message: "Ad is already promoted" });
-    }
-
-      // Promote the ad by adding an entry in the PromotedItem table
-      await prisma.promotedItem.create({
-        data: {
-          adId: Number(adId),
-        },
-      });
-
-      res.status(200).json({ message: "Ad promoted successfully" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Failed to promote ad" });
-    }
-  } else {
-    res.setHeader("Allow", ["POST"]);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return NextResponse.json({ message: "Ad promoted successfully!" });
+  } catch (error) {
+    console.error("Error promoting ad:", error);
+    return NextResponse.json(
+      { error: "Failed to promote ad" },
+      { status: 500 }
+    );
   }
 }
