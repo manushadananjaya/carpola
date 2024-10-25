@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Check, X, Star, Zap } from "lucide-react";
+import { Search, Check, X, Star, Zap, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -29,15 +29,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/Navbar";
 
 type Ad = {
-  id: string;
-  title: string;
-  description: string;
+  adId: string;
+  description?: string;
   price: number;
-  status: "pending" | "approved" | "rejected";
   featured: boolean;
   promoted: boolean;
   createdAt: string;
   userId: string;
+  vehicleType: "VEHICLE" | "BIKE";
+  brand: string;
+  model: string;
+  year: number;
+  mileage: number;
+  fuelType: string;
+  gear: string;
+  engine: number;
+  images: string[];
+  user: {
+    userId: string;
+    username: string;
+    userEmail: string;
+    userPhone: string;
+    userCity: string;
+    userDistrict: string;
+  };
 };
 
 export default function AdminDashboard() {
@@ -46,103 +61,113 @@ export default function AdminDashboard() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    pending: 0,
+    approved: 0,
+    promoted: 0,
+    featured: 0,
+  });
 
   useEffect(() => {
-    console.log("session", session);
-
-    if (status === "loading") {
-      // Wait for session data to load
-      return;
-    }
-
-    // Redirect to sign-in page if user is not authenticated
+    if (status === "loading") return;
     if (status === "unauthenticated") {
       router.push("/auth/signin");
     } else if (status === "authenticated") {
-      // Redirect if user is not an admin
       if (!session?.user?.isAdmin) {
-        router.push("/403"); // Redirect to a custom "403 Forbidden" page or homepage
+        router.push("/403");
       } else {
-        // Fetch ads if user is authenticated and is an admin
         fetchAds();
+        fetchStats();
       }
     }
   }, [status, session, router]);
 
   const fetchAds = async () => {
-    // In a real application, this would be an API call
     setIsLoading(true);
-    // Simulating API call with setTimeout
-    setTimeout(() => {
-      const mockAds: Ad[] = [
-        {
-          id: "1",
-          title: "Vintage Guitar",
-          description: "Beautiful vintage guitar in excellent condition",
-          price: 1200,
-          status: "pending",
-          featured: false,
-          promoted: false,
-          createdAt: "2023-05-01",
-          userId: "user1",
-        },
-        {
-          id: "2",
-          title: "MacBook Pro 2021",
-          description: "Like new MacBook Pro, barely used",
-          price: 1800,
-          status: "approved",
-          featured: true,
-          promoted: true,
-          createdAt: "2023-05-02",
-          userId: "user2",
-        },
-        {
-          id: "3",
-          title: "Mountain Bike",
-          description: "High-end mountain bike, perfect for trails",
-          price: 800,
-          status: "rejected",
-          featured: false,
-          promoted: false,
-          createdAt: "2023-05-03",
-          userId: "user3",
-        },
-      ];
-      setAds(mockAds);
+    try {
+      const response = await fetch("/api/ads");
+      const data = await response.json();
+      setAds(data);
+    } catch (error) {
+      console.error("Error fetching ads:", error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleApprove = (adId: string) => {
-    setAds(
-      ads.map((ad) => (ad.id === adId ? { ...ad, status: "approved" } : ad))
-    );
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/ads/stats");
+      const data = await response.json();
+      setStats(data);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
   };
 
-  const handleReject = (adId: string) => {
-    setAds(
-      ads.map((ad) => (ad.id === adId ? { ...ad, status: "rejected" } : ad))
-    );
+  const handleApprove = async (adId: string) => {
+    try {
+      await fetch(`/api/ads/${adId}/approve`, { method: "POST" });
+      await fetchAds();
+      await fetchStats();
+    } catch (error) {
+      console.error("Failed to approve ad:", error);
+    }
   };
 
-  const handlePromote = (adId: string) => {
-    setAds(ads.map((ad) => (ad.id === adId ? { ...ad, promoted: true } : ad)));
+  const handleReject = async (adId: string) => {
+    try {
+      await fetch(`/api/ads/${adId}/reject`, { method: "POST" });
+      await fetchAds();
+      await fetchStats();
+    } catch (error) {
+      console.error("Failed to reject ad:", error);
+    }
   };
 
-  const handleFeature = (adId: string) => {
-    setAds(ads.map((ad) => (ad.id === adId ? { ...ad, featured: true } : ad)));
+  const handlePromote = async (adId: string) => {
+    try {
+      await fetch(`/api/ads/${adId}/promote`, { method: "POST" });
+      await fetchAds();
+      await fetchStats();
+    } catch (error) {
+      console.error("Failed to promote ad:", error);
+    }
+  };
+
+  const handleFeature = async (adId: string) => {
+    try {
+      await fetch(`/api/ads/${adId}/feature`, { method: "POST" });
+      await fetchAds();
+      await fetchStats();
+    } catch (error) {
+      console.error("Failed to feature ad:", error);
+    }
+  };
+
+  const handleDelete = async (adId: string) => {
+    try {
+      await fetch(`/api/ads/${adId}`, { method: "DELETE" });
+      await fetchAds();
+      await fetchStats();
+    } catch (error) {
+      console.error("Failed to delete ad:", error);
+    }
   };
 
   const filteredAds = ads.filter(
     (ad) =>
-      ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ad.description.toLowerCase().includes(searchTerm.toLowerCase())
+      `${ad.brand} ${ad.model} ${ad.year}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (ad.description?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+        false)
   );
 
-  const pendingAds = filteredAds.filter((ad) => ad.status === "pending");
-  const approvedAds = filteredAds.filter((ad) => ad.status === "approved");
-  const rejectedAds = filteredAds.filter((ad) => ad.status === "rejected");
+  const pendingAds = filteredAds.filter((ad) => !ad.promoted && !ad.featured);
+  const approvedAds = filteredAds.filter((ad) => !ad.promoted && !ad.featured);
+  const promotedAds = filteredAds.filter((ad) => ad.promoted);
+  const featuredAds = filteredAds.filter((ad) => ad.featured);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -153,23 +178,29 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle>Quick Stats</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-blue-100 p-4 rounded-lg">
               <h3 className="font-semibold text-blue-800">Pending Ads</h3>
               <p className="text-2xl font-bold text-blue-600">
-                {pendingAds.length}
+                {stats.pending}
               </p>
             </div>
             <div className="bg-green-100 p-4 rounded-lg">
               <h3 className="font-semibold text-green-800">Approved Ads</h3>
               <p className="text-2xl font-bold text-green-600">
-                {approvedAds.length}
+                {stats.approved}
               </p>
             </div>
-            <div className="bg-red-100 p-4 rounded-lg">
-              <h3 className="font-semibold text-red-800">Rejected Ads</h3>
-              <p className="text-2xl font-bold text-red-600">
-                {rejectedAds.length}
+            <div className="bg-purple-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-purple-800">Promoted Ads</h3>
+              <p className="text-2xl font-bold text-purple-600">
+                {stats.promoted}
+              </p>
+            </div>
+            <div className="bg-yellow-100 p-4 rounded-lg">
+              <h3 className="font-semibold text-yellow-800">Featured Ads</h3>
+              <p className="text-2xl font-bold text-yellow-600">
+                {stats.featured}
               </p>
             </div>
           </CardContent>
@@ -183,22 +214,13 @@ export default function AdminDashboard() {
             className="max-w-sm"
           />
         </div>
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="pending">
           <TabsList>
-            <TabsTrigger value="all">All Ads</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
-            <TabsTrigger value="rejected">Rejected</TabsTrigger>
+            <TabsTrigger value="promoted">Promoted</TabsTrigger>
+            <TabsTrigger value="featured">Featured</TabsTrigger>
           </TabsList>
-          <TabsContent value="all">
-            <AdTable
-              ads={filteredAds}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onPromote={handlePromote}
-              onFeature={handleFeature}
-            />
-          </TabsContent>
           <TabsContent value="pending">
             <AdTable
               ads={pendingAds}
@@ -206,6 +228,7 @@ export default function AdminDashboard() {
               onReject={handleReject}
               onPromote={handlePromote}
               onFeature={handleFeature}
+              onDelete={handleDelete}
             />
           </TabsContent>
           <TabsContent value="approved">
@@ -215,15 +238,27 @@ export default function AdminDashboard() {
               onReject={handleReject}
               onPromote={handlePromote}
               onFeature={handleFeature}
+              onDelete={handleDelete}
             />
           </TabsContent>
-          <TabsContent value="rejected">
+          <TabsContent value="promoted">
             <AdTable
-              ads={rejectedAds}
+              ads={promotedAds}
               onApprove={handleApprove}
               onReject={handleReject}
               onPromote={handlePromote}
               onFeature={handleFeature}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
+          <TabsContent value="featured">
+            <AdTable
+              ads={featuredAds}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onPromote={handlePromote}
+              onFeature={handleFeature}
+              onDelete={handleDelete}
             />
           </TabsContent>
         </Tabs>
@@ -238,12 +273,14 @@ function AdTable({
   onReject,
   onPromote,
   onFeature,
+  onDelete,
 }: {
   ads: Ad[];
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onPromote: (id: string) => void;
   onFeature: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   return (
     <Table>
@@ -251,30 +288,16 @@ function AdTable({
         <TableRow>
           <TableHead>Title</TableHead>
           <TableHead>Price</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Created</TableHead>
+          <TableHead>Type</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {ads.map((ad) => (
-          <TableRow key={ad.id}>
-            <TableCell>{ad.title}</TableCell>
+          <TableRow key={ad.adId}>
+            <TableCell>{`${ad.brand} ${ad.model} ${ad.year}`}</TableCell>
             <TableCell>${ad.price}</TableCell>
-            <TableCell>
-              <Badge
-                variant={
-                  ad.status === "approved"
-                    ? "default"
-                    : ad.status === "rejected"
-                    ? "destructive"
-                    : "secondary"
-                }
-              >
-                {ad.status}
-              </Badge>
-            </TableCell>
-            <TableCell>{new Date(ad.createdAt).toLocaleDateString()}</TableCell>
+            <TableCell>{ad.vehicleType}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Dialog>
@@ -283,76 +306,110 @@ function AdTable({
                       View
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-4xl">
                     <DialogHeader>
-                      <DialogTitle>{ad.title}</DialogTitle>
-                      <DialogDescription>{ad.description}</DialogDescription>
+                      <DialogTitle>{`${ad.brand} ${ad.model} ${ad.year}`}</DialogTitle>
+                      <DialogDescription>
+                        {ad.description || "No description available"}
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <span className="font-bold">Price:</span>
-                        <span className="col-span-3">${ad.price}</span>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-semibold mb-2">Details</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            <span className="font-medium">Price:</span>
+                            <span>${ad.price}</span>
+                            <span className="font-medium">Mileage:</span>
+                            <span>{ad.mileage} km</span>
+                            <span className="font-medium">Fuel Type:</span>
+                            <span>{ad.fuelType}</span>
+                            <span className="font-medium">Gear:</span>
+                            <span>{ad.gear}</span>
+                            <span className="font-medium">Engine:</span>
+                            <span>{ad.engine} cc</span>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">
+                            Seller Information
+                          </h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            <span className="font-medium">Name:</span>
+                            <span>{ad.user.username}</span>
+                            <span className="font-medium">Email:</span>
+                            <span>{ad.user.userEmail}</span>
+                            <span className="font-medium">Phone:</span>
+                            <span>{ad.user.userPhone}</span>
+                            <span className="font-medium">City:</span>
+                            <span>{ad.user.userCity}</span>
+                            <span className="font-medium">District:</span>
+                            <span>{ad.user.userDistrict}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <span className="font-bold">Status:</span>
-                        <span className="col-span-3">{ad.status}</span>
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <span className="font-bold">Featured:</span>
-                        <span className="col-span-3">
-                          {ad.featured ? "Yes" : "No"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <span className="font-bold">Promoted:</span>
-                        <span className="col-span-3">
-                          {ad.promoted ? "Yes" : "No"}
-                        </span>
+                      <div>
+                        <h4 className="font-semibold mb-2">Images</h4>
+                        <div className="grid grid-cols-5 gap-2">
+                          {ad.images.slice(0, 5).map((image, index) => (
+                            <img
+                              key={index}
+                              src={image}
+                              alt={`${ad.brand} ${ad.model} ${index + 1}`}
+                              className="w-full h-24 object-cover rounded"
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={() => onApprove(ad.id)}>Approve</Button>
+                      <Button onClick={() => onApprove(ad.adId)}>
+                        Approve
+                      </Button>
                       <Button
                         variant="destructive"
-                        onClick={() => onReject(ad.id)}
+                        onClick={() => onReject(ad.adId)}
                       >
                         Reject
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                {ad.status === "pending" && (
-                  <>
-                    <Button size="sm" onClick={() => onApprove(ad.id)}>
-                      <Check className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => onReject(ad.id)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </>
-                )}
-                {ad.status === "approved" && !ad.promoted && (
+                <Button size="sm" onClick={() => onApprove(ad.adId)}>
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => onReject(ad.adId)}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                {!ad.promoted && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onPromote(ad.id)}
+                    onClick={() => onPromote(ad.adId)}
                   >
                     <Star className="w-4 h-4" />
                   </Button>
                 )}
-                {ad.status === "approved" && !ad.featured && (
+                {!ad.featured && (
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onFeature(ad.id)}
+                    onClick={() => onFeature(ad.adId)}
                   >
                     <Zap className="w-4 h-4" />
                   </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => onDelete(ad.adId)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </TableCell>
           </TableRow>

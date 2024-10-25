@@ -21,6 +21,16 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+
+  // //if user is not an admin and trying to access the /admin/dashboard page
+  // if (!token && pathname === "/admin/dashboard") {
+  //   const loginUrl = new URL("/api/auth/signin", req.url);
+  //   loginUrl.searchParams.set("callbackUrl", req.url);
+  //   return NextResponse.redirect(loginUrl);
+  // }
+  
+  
+
   // Allow the request to proceed
   return NextResponse.next();
 }
