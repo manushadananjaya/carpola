@@ -15,7 +15,10 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Grid, List, Car, Bike, Truck } from "lucide-react";
+import axios from "axios";
+import locationData from "../../../data/sri-lanka-districts.json";
 
+// Vehicle Type Enum
 const VehicleType = {
   CAR: "CAR",
   VAN: "VAN",
@@ -33,71 +36,19 @@ const VehicleType = {
 } as const;
 
 type Vehicle = {
-  id: string;
-  type: keyof typeof VehicleType;
+  adId: number;
+  vehicleType: keyof typeof VehicleType;
   brand: string;
   model: string;
   year: number;
   price: number;
   mileage: number;
-  image: string;
-  district: string;
-  city: string;
+  images: string[];
+  user: {
+    userDistrict: string;
+    userCity: string;
+  };
 };
-
-const mockVehicles: Vehicle[] = [
-  {
-    id: "1",
-    type: "CAR",
-    brand: "Toyota",
-    model: "Corolla",
-    year: 2020,
-    price: 20000,
-    mileage: 30000,
-    image: "/placeholder.svg?height=200&width=300",
-    district: "Colombo",
-    city: "Colombo 01",
-  },
-  {
-    id: "2",
-    type: "BIKE",
-    brand: "Honda",
-    model: "CBR",
-    year: 2021,
-    price: 15000,
-    mileage: 5000,
-    image: "/placeholder.svg?height=200&width=300",
-    district: "Gampaha",
-    city: "Negombo",
-  },
-  {
-    id: "3",
-    type: "TRUCK",
-    brand: "Ford",
-    model: "F-150",
-    year: 2019,
-    price: 35000,
-    mileage: 40000,
-    image: "/placeholder.svg?height=200&width=300",
-    district: "Kandy",
-    city: "Kandy",
-  },
-  {
-    id: "4",
-    type: "VAN",
-    brand: "Mercedes",
-    model: "Sprinter",
-    year: 2022,
-    price: 45000,
-    mileage: 10000,
-    image: "/placeholder.svg?height=200&width=300",
-    district: "Galle",
-    city: "Galle",
-  },
-];
-
-// Import the location data
-import locationData from "../../../data/sri-lanka-districts.json";
 
 export default function SearchResults() {
   const searchParams = useSearchParams();
@@ -108,32 +59,53 @@ export default function SearchResults() {
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [yearRange, setYearRange] = useState([2000, new Date().getFullYear()]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState<string>("");
-  const [selectedCity, setSelectedCity] = useState<string>("");
-
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
+  const [selectedCity, setSelectedCity] = useState<string>("ALL");
+  const [ads, setAds] = useState<Vehicle[]>([]);
   const [cities, setCities] = useState<string[]>([]);
 
-useEffect(() => {
+  // Fetch ads from the API
+  useEffect(() => {
+    const fetchAds = async () => {
+      try {
+        const { data } = await axios.get("/api/ads/search", {
+          params: {
+            type: selectedType,
+            district: selectedDistrict,
+            city: selectedCity,
+            minPrice: priceRange[0],
+            maxPrice: priceRange[1],
+            minYear: yearRange[0],
+            maxYear: yearRange[1],
+            searchTerm,
+          },
+        });
+        setAds(data);
+      } catch (error) {
+        console.error("Error fetching ads:", error);
+      }
+    };
+
+    fetchAds();
+  }, [
+    selectedType,
+    selectedDistrict,
+    selectedCity,
+    priceRange,
+    yearRange,
+    searchTerm,
+  ]);
+
+  useEffect(() => {
     if (selectedDistrict) {
-        setCities(locationData[selectedDistrict as keyof typeof locationData]?.cities || []);
+      setCities(
+        locationData[selectedDistrict as keyof typeof locationData]?.cities ||
+          []
+      );
     } else {
-        setCities([]);
+      setCities([]);
     }
-}, [selectedDistrict]);
-
-  const filteredVehicles = mockVehicles.filter(
-    (vehicle) =>
-      (selectedType === "ALL" || vehicle.type === selectedType) &&
-      vehicle.price >= priceRange[0] &&
-      vehicle.price <= priceRange[1] &&
-      vehicle.year >= yearRange[0] &&
-      vehicle.year <= yearRange[1] &&
-      (vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        vehicle.model.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedDistrict === "ALL" || vehicle.district === selectedDistrict) &&
-      (selectedCity === "ALL" || vehicle.city === selectedCity)
-  );
-
+  }, [selectedDistrict]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -250,7 +222,7 @@ useEffect(() => {
         <div className="w-full md:w-3/4">
           <div className="flex justify-between items-center mb-4">
             <span className="text-sm text-gray-500">
-              {filteredVehicles.length} results found
+              {ads.length} results found
             </span>
             <div className="flex items-center space-x-2">
               <span className="text-sm">Grid View</span>
@@ -276,15 +248,15 @@ useEffect(() => {
                 : "grid-cols-1"
             }`}
           >
-            {filteredVehicles.map((vehicle) => (
+            {ads.map((vehicle) => (
               <div
-                key={vehicle.id}
+                key={vehicle.adId}
                 className={`bg-white rounded-lg shadow-md overflow-hidden ${
                   isGridView ? "" : "flex"
                 }`}
               >
                 <img
-                  src={vehicle.image}
+                  src={vehicle.images[0]}
                   alt={`${vehicle.brand} ${vehicle.model}`}
                   className={`object-cover ${
                     isGridView ? "w-full h-48" : "w-48 h-full"
@@ -295,24 +267,25 @@ useEffect(() => {
                     {vehicle.brand} {vehicle.model}
                   </h2>
                   <div className="flex items-center mb-2">
-                    {vehicle.type === "CAR" && <Car className="w-4 h-4 mr-1" />}
-                    {vehicle.type === "BIKE" && (
+                    {vehicle.vehicleType === "CAR" && (
+                      <Car className="w-4 h-4 mr-1" />
+                    )}
+                    {vehicle.vehicleType === "BIKE" && (
                       <Bike className="w-4 h-4 mr-1" />
                     )}
-                    {vehicle.type === "TRUCK" && (
+                    {vehicle.vehicleType === "TRUCK" && (
                       <Truck className="w-4 h-4 mr-1" />
                     )}
                     <span className="text-sm text-gray-500">
-                      {vehicle.type}
+                      {vehicle.vehicleType}
                     </span>
                   </div>
                   <p className="text-gray-600">Year: {vehicle.year}</p>
-                  <p className="text-gray-600">Mileage: {vehicle.mileage} km</p>
+                  <p className="text-gray-600">Mileage: {vehicle.mileage}</p>
+                  <p className="text-gray-600">Price: ${vehicle.price}</p>
                   <p className="text-gray-600">
-                    Location: {vehicle.city}, {vehicle.district}
-                  </p>
-                  <p className="text-lg font-bold mt-2">
-                    ${vehicle.price.toLocaleString()}
+                    Location: {vehicle.user.userCity},{" "}
+                    {vehicle.user.userDistrict}
                   </p>
                 </div>
               </div>
