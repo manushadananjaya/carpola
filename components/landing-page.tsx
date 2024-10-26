@@ -7,7 +7,7 @@ import { CardContent, Card } from "@/components/ui/card";
 import { Search, Car, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
-import { FeaturedItemsComponent } from "./FeaturedItemsComponent";
+import FeaturedCategories from "@/components/FeaturedCategories";
 
 export function LandingPageComponent() {
   return (
@@ -45,9 +45,9 @@ export function LandingPageComponent() {
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 justify-center items-center flex">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-8">
-              Featured Vehicles
+              Find Your Next Vehicle Today
             </h2>
-            <FeaturedItemsComponent />
+            <FeaturedCategories />
           </div>
         </section>
         <section className="w-full py-12 md:py-24 lg:py-32 justify-center items-center flex">
@@ -85,7 +85,7 @@ export function LandingPageComponent() {
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Ready to Sell Your Car?
+                  Ready to Sell Your Vehicle?
                 </h2>
                 <p className="mx-auto max-w-[600px] text-gray-500 md:text-xl lg:text-base xl:text-xl">
                   List your vehicle on AutoMarket and reach thousands of

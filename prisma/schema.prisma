@@ -9,8 +9,19 @@ datasource db {
 
 // Enum for distinguishing vehicle types
 enum AdType {
-  VEHICLE
+  CAR
+  VAN
+  JEEP
+  LORRY
   BIKE
+  CREWCAB
+  PICKUP
+  BUS
+  TRUCK
+  THREEWHEEL
+  TRACTOR
+  HEAVYDUTY
+  OTHER
 }
 
 // Other Enums
@@ -44,7 +55,7 @@ model Ad {
   model       String  @db.VarChar(50)
   year        Int
   mileage     Int
-  vehicleType AdType  // Field to specify if it's a Bike or a Vehicle
+  vehicleType AdType  // Enum to distinguish vehicle types
 
   engine      Int  
   details     String? @db.Text
