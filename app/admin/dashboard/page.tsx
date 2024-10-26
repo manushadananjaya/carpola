@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, Check, Star, Zap, Trash2 } from "lucide-react";
+import {
+  Search,
+  Check,
+  Star,
+  Zap,
+  Trash2,
+  X,
+  CalendarDays,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -26,6 +34,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/Navbar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Ad = {
   adId: string;
@@ -52,6 +66,8 @@ type Ad = {
     userCity: string;
     userDistrict: string;
   };
+  promotionExpired?: boolean;
+  promotionExpiryDate?: string;
 };
 
 export default function AdminDashboard() {
@@ -60,13 +76,6 @@ export default function AdminDashboard() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  // const [stats, setStats] = useState({
-  //   pending: 0,
-  //   approved: 0,
-  //   promoted: 0,
-  //   featured: 0,
-  // });
-
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("pending");
 
@@ -89,6 +98,7 @@ export default function AdminDashboard() {
       approved: ads.filter((ad) => !ad.promoted && !ad.featured).length,
       promoted: ads.filter((ad) => ad.promoted).length,
       featured: ads.filter((ad) => ad.featured).length,
+      expired: ads.filter((ad) => ad.promotionExpired).length,
     };
   }, [ads]);
 
@@ -105,17 +115,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // const fetchStats = async () => {
-  //   try {
-  //     const response = await fetch("/api/ads/stats");
-  //     const data = await response.json();
-  //     setStats(data);
-  //     console.log(data);
-  //   } catch (error) {
-  //     console.error("Error fetching stats:", error);
-  //   }
-  // };
-
   const fetchApproved = async () => {
     try {
       const response = await fetch("/api/ads/approved");
@@ -130,25 +129,11 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/ads/featured");
       const data = await response.json();
-
-      // Map the featured ads to the format used in the Ad component
       const formattedAds = data.map((featuredAd: any) => ({
-        adId: featuredAd.ad.adId,
-        price: featuredAd.ad.price,
-        brand: featuredAd.ad.brand,
-        model: featuredAd.ad.model,
-        year: featuredAd.ad.year,
-        mileage: featuredAd.ad.mileage,
-        vehicleType: featuredAd.ad.vehicleType,
-        engine: featuredAd.ad.engine,
-        description: featuredAd.ad.details,
-        images: featuredAd.ad.images,
-        startType: featuredAd.ad.startType,
-        postedAt: featuredAd.ad.postedAt,
-        featured: true, // Since it's a featured ad
-        user: featuredAd.ad.user,
+        ...featuredAd.ad,
+        featured: true,
+        promotionExpiryDate: featuredAd.expiryDate,
       }));
-
       setAds(formattedAds);
     } catch (error) {
       console.error("Error fetching featured ads:", error);
@@ -160,23 +145,23 @@ export default function AdminDashboard() {
       const response = await fetch("/api/ads/promoted");
       const data = await response.json();
 
-      // Map the promoted ads to the format used in the Ad component
-      const formattedAds = data.map((promotedAd: any) => ({
-        adId: promotedAd.ad.adId,
-        price: promotedAd.ad.price,
-        brand: promotedAd.ad.brand,
-        model: promotedAd.ad.model,
-        year: promotedAd.ad.year,
-        mileage: promotedAd.ad.mileage,
-        vehicleType: promotedAd.ad.vehicleType,
-        engine: promotedAd.ad.engine,
-        description: promotedAd.ad.details,
-        images: promotedAd.ad.images,
-        startType: promotedAd.ad.startType,
-        postedAt: promotedAd.ad.postedAt,
-        promoted: true, // Since it's a promoted ad
-        user: promotedAd.ad.user,
-      }));
+      // Current date for checking expiration
+      const currentDate = new Date();
+
+      const formattedAds = data.map((promotedAd: { promotionExpiresAt: any; ad: any; featured: any; }) => {
+        const { promotionExpiresAt, ad, featured } = promotedAd;
+
+        // Check if the promotion has expired locally
+        const isExpired = new Date(promotionExpiresAt) < currentDate;
+
+        return {
+          ...ad,
+          promoted: true,
+          featured,
+          promotionExpiryDate: promotionExpiresAt,
+          promotionExpired: isExpired,
+        };
+      });
 
       setAds(formattedAds);
     } catch (error) {
@@ -184,11 +169,27 @@ export default function AdminDashboard() {
     }
   };
 
+
+
+  const fetchExpired = async () => {
+    try {
+      const response = await fetch("/api/ads/expired");
+      const data = await response.json();
+      const formattedAds = data.map((expiredAd: any) => ({
+        ...expiredAd.ad,
+        promotionExpired: true,
+        promotionExpiryDate: expiredAd.expiryDate,
+      }));
+      setAds(formattedAds);
+    } catch (error) {
+      console.error("Error fetching expired ads:", error);
+    }
+  };
+
   const handleApprove = async (adId: string) => {
     try {
       await fetch(`/api/ads/approve/${adId}`, { method: "POST" });
       await fetchAds();
-
       setSuccessMessage("Ad approved successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
@@ -196,10 +197,18 @@ export default function AdminDashboard() {
     }
   };
 
-  const handlePromote = async (adId: string) => {
+  const handlePromote = async (adId: string, duration: number) => {
     try {
-      await fetch(`/api/ads/promote/${adId}`, { method: "POST" });
+      await fetch(`/api/ads/promote/${adId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ duration }),
+      });
       await fetchAds();
+      setSuccessMessage(`Ad promoted for ${duration} days successfully!`);
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Failed to promote ad:", error);
     }
@@ -221,7 +230,6 @@ export default function AdminDashboard() {
       });
       if (response.ok) {
         await fetchAds();
-
         setSuccessMessage("Ad deleted successfully. User has been notified.");
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
@@ -234,7 +242,26 @@ export default function AdminDashboard() {
     }
   };
 
-  // Dynamically filter ads based on the activeTab
+  const handleCancelPromotion = async (adId: string) => {
+    try {
+      await fetch(`/api/ads/cancel-promotion/${adId}`, { method: "POST" });
+      setSuccessMessage("Promotion cancelled successfully!");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error("Failed to cancel promotion:", error);
+    }
+  };
+
+  const handleCancelAllPromotions = async () => {
+    try {
+      await fetch(`/api/ads/cancel-all-promotions`, { method: "POST" });
+      setSuccessMessage("All expired promotions cancelled successfully!");
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error("Failed to cancel all promotions:", error);
+    }
+  };
+
   const filteredAds = ads
     .filter(
       (ad) =>
@@ -247,11 +274,15 @@ export default function AdminDashboard() {
     .filter((ad) => {
       if (activeTab === "pending") return !ad.promoted && !ad.featured;
       if (activeTab === "approved") return !ad.promoted && !ad.featured;
-      if (activeTab === "promoted") return ad.promoted;
+      if (activeTab === "promoted") return ad.promoted && !ad.promotionExpired;
       if (activeTab === "featured") return ad.featured;
-      return true; // Default to include all ads if no specific tab is active
+      if (activeTab === "expired") return ad.promotionExpired;
+      return true;
     });
-    
+
+
+
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -299,6 +330,16 @@ export default function AdminDashboard() {
                 </p>
               </div>
             )}
+            {activeTab === "expired" && (
+              <div className="bg-red-100 p-4 rounded-lg">
+                <h3 className="font-semibold text-red-800">
+                  Expired Promotions
+                </h3>
+                <p className="text-2xl font-bold text-red-600">
+                  {stats.expired}
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -314,15 +355,17 @@ export default function AdminDashboard() {
         <Tabs
           defaultValue="pending"
           onValueChange={(value) => {
-            setActiveTab(value); // Update activeTab on tab change
+            setActiveTab(value);
             if (value === "approved") {
-              fetchApproved(); // Fetch approved ads
+              fetchApproved();
             } else if (value === "pending") {
-              fetchAds(); // Fetch all ads by default for pending
+              fetchAds();
             } else if (value === "promoted") {
-              fetchPromoted(); // Fetch promoted ads
+              fetchPromoted();
             } else if (value === "featured") {
-              fetchFeatured(); // Fetch featured ads
+              fetchFeatured();
+            } else if (value === "expired") {
+              fetchExpired();
             }
           }}
         >
@@ -331,15 +374,27 @@ export default function AdminDashboard() {
             <TabsTrigger value="approved">Approved</TabsTrigger>
             <TabsTrigger value="promoted">Promoted</TabsTrigger>
             <TabsTrigger value="featured">Featured</TabsTrigger>
+            <TabsTrigger value="expired">Expired Promotions</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab}>
+            {activeTab === "expired" && (
+              <Button
+                onClick={handleCancelAllPromotions}
+                className="mb-4"
+                variant="destructive"
+              >
+                Cancel All Expired Promotions
+              </Button>
+            )}
             <AdTable
               ads={filteredAds}
               onApprove={handleApprove}
               onPromote={handlePromote}
               onFeature={handleFeature}
               onDelete={handleDelete}
+              onCancelPromotion={handleCancelPromotion}
+              activeTab={activeTab}
             />
           </TabsContent>
         </Tabs>
@@ -354,12 +409,16 @@ function AdTable({
   onPromote,
   onFeature,
   onDelete,
+  onCancelPromotion,
+  activeTab,
 }: {
   ads: Ad[];
   onApprove: (id: string) => void;
-  onPromote: (id: string) => void;
+  onPromote: (id: string, duration: number) => void;
   onFeature: (id: string) => void;
   onDelete: (id: string) => void;
+  onCancelPromotion: (id: string) => void;
+  activeTab: string;
 }) {
   return (
     <Table>
@@ -368,6 +427,9 @@ function AdTable({
           <TableHead>Title</TableHead>
           <TableHead>Price</TableHead>
           <TableHead>Type</TableHead>
+          {(activeTab === "promoted" || activeTab === "featured") && (
+            <TableHead>Expiry Date</TableHead>
+          )}
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -384,6 +446,15 @@ function AdTable({
             </TableCell>
             <TableCell>${ad.price}</TableCell>
             <TableCell>{ad.vehicleType}</TableCell>
+            {(activeTab === "promoted" || activeTab === "expired") && (
+              <TableCell>
+                {ad.promotionExpiryDate
+                  ? new Date(ad.promotionExpiryDate).toLocaleDateString()
+                  : "N/A"}
+              </TableCell>
+            )}
+
+            <TableCell>{ad.promotionExpired ? "Expired" : "Active"}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Dialog>
@@ -399,8 +470,10 @@ function AdTable({
                         {ad.description || "No description available"}
                       </DialogDescription>
                       <div className="text-sm text-gray-500">
-                        Ad ID: {ad.adId} <br />
-                        {ad.user.username} ({ad.user.userEmail}) <br />
+                        Ad ID: {ad.adId}
+                        <br />
+                        {ad.user.username} ({ad.user.userEmail})
+                        <br />
                         {ad.user.userCity}, {ad.user.userDistrict}
                       </div>
                     </DialogHeader>
@@ -466,36 +539,61 @@ function AdTable({
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                <Button size="sm" onClick={() => onApprove(ad.adId)}>
-                  <Check className="w-4 h-4" />
-                </Button>
-                {!ad.promoted && (
+                {activeTab !== "expired" && (
+                  <>
+                    <Button size="sm" onClick={() => onApprove(ad.adId)}>
+                      <Check className="w-4 h-4" />
+                    </Button>
+                    {!ad.promoted && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            Promote <Star className="w-4 h-4 ml-1" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem
+                            onSelect={() => onPromote(ad.adId, 7)}
+                          >
+                            7 Days
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => onPromote(ad.adId, 14)}
+                          >
+                            14 Days
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                    {!ad.featured && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onFeature(ad.adId)}
+                      >
+                        Feature
+                        <Zap className="w-4 h-4 ml-1" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => onDelete(ad.adId)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
+                {activeTab === "expired" && (
                   <Button
                     size="sm"
-                    variant="outline"
-                    onClick={() => onPromote(ad.adId)}
-                  > 
-                    Promote 
-                    <Star className="w-4 h-4" />
+                    variant="destructive"
+                    onClick={() => onCancelPromotion(ad.adId)}
+                  >
+                    Cancel Promotion
+                    <X className="w-4 h-4 ml-1" />
                   </Button>
                 )}
-                {!ad.featured && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onFeature(ad.adId)}
-                  > 
-                    Feature
-                    <Zap className="w-4 h-4" />
-                  </Button>
-                )}
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => onDelete(ad.adId)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
               </div>
             </TableCell>
           </TableRow>
@@ -504,4 +602,3 @@ function AdTable({
     </Table>
   );
 }
-

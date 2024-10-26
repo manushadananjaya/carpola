@@ -49,22 +49,22 @@ enum BikeType {
 }
 
 model Ad {
-  adId        Int     @id @default(autoincrement())
+  adId        Int       @id @default(autoincrement())
   price       Int
-  brand       String  @db.VarChar(50)
-  model       String  @db.VarChar(50)
+  brand       String    @db.VarChar(50)
+  model       String    @db.VarChar(50)
   year        Int
   mileage     Int
-  vehicleType AdType  // Enum to distinguish vehicle types
+  vehicleType AdType    // Enum to distinguish vehicle types
 
   engine      Int  
-  details     String? @db.Text
+  details     String?   @db.Text
   posted      Boolean
-  postedAt    DateTime @default(now())
+  postedAt    DateTime  @default(now())
   userId      Int
-  user        User @relation(fields: [userId], references: [userId])
+  user        User      @relation(fields: [userId], references: [userId])
 
-  images      String[] @db.Text  // Array to store multiple images
+  images      String[]  @db.Text  // Array to store multiple images
 
   // Unique fields for vehicles
   gear        GearType?  // Only relevant for vehicles
@@ -77,10 +77,9 @@ model Ad {
   // Indexes for frequently queried fields
   @@index([postedAt])
   @@index([price])
+  
   PromotedItem PromotedItem[]
-  FeaturedItem FeaturedItem[]
 }
-
 
 model User {
   userId       Int      @id @default(autoincrement())
@@ -99,21 +98,17 @@ model User {
 }
 
 model PromotedItem {
-  id         Int      @id @default(autoincrement())
-  adId       Int?
-  ad         Ad?      @relation(fields: [adId], references: [adId])
-  createdAt  DateTime @default(now())
+  id                Int      @id @default(autoincrement())
+  adId              Int?
+  ad                Ad?      @relation(fields: [adId], references: [adId])
+  createdAt         DateTime @default(now())
+  
+  // Expiration date for the promotion
+  promotionExpiresAt DateTime
+
+  // Field to indicate if this promotion is featured or not
+  featured          Boolean  @default(false)
 
   // Index for sorting/filtering promoted items
-  @@index([createdAt])
-}
-
-model FeaturedItem {
-  id         Int      @id @default(autoincrement())
-  adId       Int?
-  ad         Ad?      @relation(fields: [adId], references: [adId])
-  createdAt  DateTime @default(now())
-
-  // Index for sorting/filtering featured items
   @@index([createdAt])
 }
