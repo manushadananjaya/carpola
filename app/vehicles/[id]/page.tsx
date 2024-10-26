@@ -6,28 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageCarousel } from "@/components/ui/image-carousel";
 import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/Navbar";
+import { Modal } from "react-responsive-modal";
+import "react-responsive-modal/styles.css";
 
 // Type definition
 type Vehicle = {
-  vehicleId: number;
+  adId: number;
   contactNo: string;
   price: number;
   brand: string;
   model: string;
   year: number;
   mileage: number;
-  gear: string;
-  fuelType: string;
-  engine: string;
-  details: string;
+  gear: string | null;
+  fuelType: string | null;
+  engine: number;
+  details: string | null;
   posted: boolean;
-  postedAt: string;
+  postedAt: string | null;
   userId: number;
-  image1: string;
-  image2: string;
-  image3: string;
-  image4: string;
-  image5: string;
+  images: string[];
   user: {
     userId: number;
     username: string;
@@ -44,6 +42,8 @@ export default function VehicleDetailsPage({
 }) {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false); // State to control modal visibility
+  const [selectedImage, setSelectedImage] = useState<string | null>(null); // Selected image for modal
   const { id } = params;
 
   useEffect(() => {
@@ -59,6 +59,8 @@ export default function VehicleDetailsPage({
     fetchData();
   }, [id]);
 
+  console.log("fetched vehicle:", vehicle);
+
   if (error)
     return (
       <div className="text-center text-red-500 text-xl mt-10">
@@ -68,13 +70,20 @@ export default function VehicleDetailsPage({
   if (!vehicle)
     return <div className="text-center text-xl mt-10">Loading...</div>;
 
-  const images = [
-    vehicle.image1,
-    vehicle.image2,
-    vehicle.image3,
-    vehicle.image4,
-    vehicle.image5,
-  ];
+  // Vehicle image array
+  const images = vehicle.images || [];
+
+  // Function to handle image click
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setIsOpen(true); // Open modal
+  };
+
+  // Function to close modal
+  const closeModal = () => {
+    setIsOpen(false);
+    setSelectedImage(null);
+  };
 
   return (
     <div>
@@ -91,6 +100,7 @@ export default function VehicleDetailsPage({
               <ImageCarousel
                 images={images}
                 alt={`${vehicle.brand} ${vehicle.model}`}
+                onImageClick={handleImageClick} // Attach click handler
               />
             </div>
 
@@ -103,11 +113,11 @@ export default function VehicleDetailsPage({
                   <dt className="font-medium text-gray-500">Mileage</dt>
                   <dd>{vehicle.mileage} km</dd>
                   <dt className="font-medium text-gray-500">Gear</dt>
-                  <dd>{vehicle.gear}</dd>
+                  <dd>{vehicle.gear || "N/A"}</dd>
                   <dt className="font-medium text-gray-500">Fuel Type</dt>
-                  <dd>{vehicle.fuelType}</dd>
+                  <dd>{vehicle.fuelType || "N/A"}</dd>
                   <dt className="font-medium text-gray-500">Engine</dt>
-                  <dd>{vehicle.engine}</dd>
+                  <dd>{vehicle.engine} cc</dd>
                 </dl>
               </div>
 
@@ -121,7 +131,7 @@ export default function VehicleDetailsPage({
                   <dt className="font-medium text-gray-500">Location</dt>
                   <dd>{vehicle.user.userCity}</dd>
                   <dt className="font-medium text-gray-500">Phone</dt>
-                  <dd>{vehicle.contactNo}</dd>
+                  <dd>{vehicle.user.userPhone}</dd>
                   <dt className="font-medium text-gray-500">Email</dt>
                   <dd className="break-all">{vehicle.user.userEmail}</dd>
                 </dl>
@@ -132,16 +142,32 @@ export default function VehicleDetailsPage({
 
             <div>
               <h2 className="text-2xl font-semibold mb-2">Description</h2>
-              <p className="text-gray-700">{vehicle.details}</p>
+              <p className="text-gray-700">
+                {vehicle.details || "No details provided."}
+              </p>
             </div>
 
             <Separator className="my-6" />
 
             <div className="text-sm text-gray-500">
-              Posted on: {new Date(vehicle.postedAt).toLocaleDateString()}
+              Posted on:{" "}
+              {vehicle.postedAt
+                ? new Date(vehicle.postedAt).toLocaleDateString()
+                : "N/A"}
             </div>
           </CardContent>
         </Card>
+
+        {/* Modal for Enlarged Image */}
+        <Modal open={isOpen} onClose={closeModal} center>
+          {selectedImage && (
+            <img
+              src={selectedImage}
+              alt="Enlarged vehicle"
+              className="max-w-full max-h-screen"
+            />
+          )}
+        </Modal>
       </div>
     </div>
   );

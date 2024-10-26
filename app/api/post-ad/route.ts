@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Ensure your prisma client is setup properly in lib/prisma.ts
+import { prisma } from "@/lib/prisma"; // Ensure your prisma client is set up properly in lib/prisma.ts
 
 // Function to sanitize strings by removing NULL bytes
 function sanitizeString(input: string | null): string | null {
@@ -21,13 +21,13 @@ export async function POST(req: NextRequest) {
       model,
       year,
       mileage,
-      type, // AdType Enum: VEHICLE or BIKE
+      type, // AdType Enum: CAR, VAN, JEEP, LORRY, BIKE, CREWCAB, PICKUP, etc.
       engineCC,
       details,
       userId, // Foreign key referencing User
-      images, // Array of images (assume you send an array from frontend)
-      gearType, // Only for vehicles
-      fuelType, // Only for vehicles
+      images, // Array of images (assume you send an array from the frontend)
+      gearType, // Only for relevant vehicles
+      fuelType, // Only for relevant vehicles
       startType, // Only for bikes
       bikeType, // Only for bikes
     } = body;
@@ -37,6 +37,21 @@ export async function POST(req: NextRequest) {
     // Sanitize image strings
     const sanitizedImages =
       images?.map((img: string) => sanitizeString(img)) || [];
+
+    // Determine if the type is a vehicle that should include gearType and fuelType
+    const isVehicleWithGearAndFuel = [
+      "CAR",
+      "VAN",
+      "JEEP",
+      "LORRY",
+      "CREWCAB",
+      "PICKUP",
+      "BUS",
+      "TRUCK",
+      "THREEWHEEL",
+      "TRACTOR",
+      "HEAVYDUTY",
+    ].includes(type);
 
     // Create a new ad using Prisma
     const ad = await prisma.ad.create({
@@ -54,8 +69,8 @@ export async function POST(req: NextRequest) {
           connect: { userId: parsedUserId }, // Connect to an existing user by userId
         },
         images: sanitizedImages, // Store all images in the array field
-        gear: type === "VEHICLE" ? gearType : null, // Only include if it's a vehicle
-        fuelType: type === "VEHICLE" ? fuelType : null, // Only include if it's a vehicle
+        gear: isVehicleWithGearAndFuel ? gearType : null, // Only include if it's a relevant vehicle
+        fuelType: isVehicleWithGearAndFuel ? fuelType : null, // Only include if it's a relevant vehicle
         startType: type === "BIKE" ? startType : null, // Only include if it's a bike
         bikeType: type === "BIKE" ? bikeType : null, // Only include if it's a bike
       },

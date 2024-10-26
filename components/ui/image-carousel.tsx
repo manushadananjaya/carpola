@@ -4,7 +4,6 @@
 import * as React from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Carousel,
   CarouselContent,
@@ -16,9 +15,14 @@ import {
 interface ImageCarouselProps {
   images: string[];
   alt: string;
+  onImageClick?: (imageUrl: string) => void; // Make sure to include this prop in the interface
 }
 
-export function ImageCarousel({ images, alt }: ImageCarouselProps) {
+export function ImageCarousel({
+  images,
+  alt,
+  onImageClick,
+}: ImageCarouselProps) {
   return (
     <Carousel className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
       <CarouselContent>
@@ -31,7 +35,8 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
                   alt={`${alt} - Image ${index + 1}`}
                   width={800}
                   height={600}
-                  className="object-cover w-full h-full rounded-lg"
+                  className="object-cover w-full h-full rounded-lg cursor-pointer" // Added cursor-pointer for better UX
+                  onClick={() => onImageClick && onImageClick(src)} // Use the correct variable name for the image URL
                 />
               </CardContent>
             </Card>

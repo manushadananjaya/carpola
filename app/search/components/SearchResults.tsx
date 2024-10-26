@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Grid, List, Car, Bike, Truck } from "lucide-react";
 import axios from "axios";
 import locationData from "../../../data/sri-lanka-districts.json";
+import Link from "next/link";
 
 // Vehicle Type Enum
 const VehicleType = {
@@ -56,8 +57,8 @@ export default function SearchResults() {
 
   const [isGridView, setIsGridView] = useState(true);
   const [selectedType, setSelectedType] = useState<string>(initialCategory);
-  const [priceRange, setPriceRange] = useState([0, 100000]);
-  const [yearRange, setYearRange] = useState([2000, new Date().getFullYear()]);
+  const [priceRange, setPriceRange] = useState([0, 10000000]);
+  const [yearRange, setYearRange] = useState([1980, new Date().getFullYear()]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedCity, setSelectedCity] = useState<string>("ALL");
@@ -205,7 +206,7 @@ export default function SearchResults() {
           <div>
             <Label>Year Range</Label>
             <Slider
-              min={2000}
+              min={1980}
               max={new Date().getFullYear()}
               step={1}
               value={yearRange}
@@ -249,46 +250,48 @@ export default function SearchResults() {
             }`}
           >
             {ads.map((vehicle) => (
-              <div
-                key={vehicle.adId}
-                className={`bg-white rounded-lg shadow-md overflow-hidden ${
-                  isGridView ? "" : "flex"
-                }`}
-              >
-                <img
-                  src={vehicle.images[0]}
-                  alt={`${vehicle.brand} ${vehicle.model}`}
-                  className={`object-cover ${
-                    isGridView ? "w-full h-48" : "w-48 h-full"
+              <Link key={vehicle.adId} href={`/vehicles/${vehicle.adId}`}>
+                <div
+                  key={vehicle.adId}
+                  className={`bg-white rounded-lg shadow-md overflow-hidden ${
+                    isGridView ? "" : "flex"
                   }`}
-                />
-                <div className="p-4">
-                  <h2 className="text-xl font-semibold mb-2">
-                    {vehicle.brand} {vehicle.model}
-                  </h2>
-                  <div className="flex items-center mb-2">
-                    {vehicle.vehicleType === "CAR" && (
-                      <Car className="w-4 h-4 mr-1" />
-                    )}
-                    {vehicle.vehicleType === "BIKE" && (
-                      <Bike className="w-4 h-4 mr-1" />
-                    )}
-                    {vehicle.vehicleType === "TRUCK" && (
-                      <Truck className="w-4 h-4 mr-1" />
-                    )}
-                    <span className="text-sm text-gray-500">
-                      {vehicle.vehicleType}
-                    </span>
+                >
+                  <img
+                    src={vehicle.images[0]}
+                    alt={`${vehicle.brand} ${vehicle.model}`}
+                    className={`object-cover ${
+                      isGridView ? "w-full h-48" : "w-48 h-full"
+                    }`}
+                  />
+                  <div className="p-4">
+                    <h2 className="text-xl font-semibold mb-2">
+                      {vehicle.brand} {vehicle.model}
+                    </h2>
+                    <div className="flex items-center mb-2">
+                      {vehicle.vehicleType === "CAR" && (
+                        <Car className="w-4 h-4 mr-1" />
+                      )}
+                      {vehicle.vehicleType === "BIKE" && (
+                        <Bike className="w-4 h-4 mr-1" />
+                      )}
+                      {vehicle.vehicleType === "TRUCK" && (
+                        <Truck className="w-4 h-4 mr-1" />
+                      )}
+                      <span className="text-sm text-gray-500">
+                        {vehicle.vehicleType}
+                      </span>
+                    </div>
+                    <p className="text-gray-600">Year: {vehicle.year}</p>
+                    <p className="text-gray-600">Mileage: {vehicle.mileage}</p>
+                    <p className="text-gray-600">Price: ${vehicle.price}</p>
+                    <p className="text-gray-600">
+                      Location: {vehicle.user.userCity},{" "}
+                      {vehicle.user.userDistrict}
+                    </p>
                   </div>
-                  <p className="text-gray-600">Year: {vehicle.year}</p>
-                  <p className="text-gray-600">Mileage: {vehicle.mileage}</p>
-                  <p className="text-gray-600">Price: ${vehicle.price}</p>
-                  <p className="text-gray-600">
-                    Location: {vehicle.user.userCity},{" "}
-                    {vehicle.user.userDistrict}
-                  </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

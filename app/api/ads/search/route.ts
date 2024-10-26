@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {prisma} from "@/lib/prisma"; // Ensure this points to your Prisma client instance
+import { prisma } from "@/lib/prisma"; // Ensure this points to your Prisma client instance
 
 // This handles the GET request for ads
 export async function GET(req: NextRequest) {
@@ -23,26 +23,44 @@ export async function GET(req: NextRequest) {
     // Construct filters dynamically
     const filters: any = {
       vehicleType: type !== "ALL" ? type : undefined, // If "ALL", ignore filter
-      price: {
-        gte: parsedMinPrice,
-        lte: parsedMaxPrice,
-      },
-      year: {
-        gte: parsedMinYear,
-        lte: parsedMaxYear,
-      },
+      price:
+        parsedMinPrice || parsedMaxPrice
+          ? {
+              gte: parsedMinPrice,
+              lte: parsedMaxPrice,
+            }
+          : undefined,
+      year:
+        parsedMinYear || parsedMaxYear
+          ? {
+              gte: parsedMinYear,
+              lte: parsedMaxYear,
+            }
+          : undefined,
       OR: searchTerm
         ? [
             { brand: { contains: searchTerm, mode: "insensitive" } },
             { model: { contains: searchTerm, mode: "insensitive" } },
           ]
         : undefined,
-      user: {
-        userDistrict: district !== "ALL" ? district : undefined, // If "ALL", ignore filter
-        userCity: city !== "ALL" ? city : undefined, // If "ALL", ignore filter
-      },
       posted: true, // Only fetch posted ads
     };
+
+    // User filter is created separately to handle cases where both district and city might be "ALL"
+    const userFilter: any = {
+      userDistrict: district !== "ALL" ? district : undefined,
+      userCity: city !== "ALL" ? city : undefined,
+    };
+
+    // Remove undefined properties from the user filter
+    Object.keys(userFilter).forEach(
+      (key) => userFilter[key] === undefined && delete userFilter[key]
+    );
+
+    // Include the user filter only if it has valid entries
+    if (Object.keys(userFilter).length > 0) {
+      filters.user = userFilter;
+    }
 
     // Remove undefined filters
     Object.keys(filters).forEach(
@@ -53,13 +71,8 @@ export async function GET(req: NextRequest) {
         delete filters[key]
     );
 
-    if (filters.user) {
-      Object.keys(filters.user).forEach(
-        (key) =>
-          filters.user[key as keyof typeof filters.user] === undefined &&
-          delete filters.user[key as keyof typeof filters.user]
-      );
-    }
+    // Log filters to debug
+    console.log("Filters applied:", filters);
 
     const ads = await prisma.ad.findMany({
       where: filters,

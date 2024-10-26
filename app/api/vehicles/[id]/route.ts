@@ -1,7 +1,7 @@
 // app/api/vehicles/[id]/route.ts
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Ensure prisma is correctly imported
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: Request,
@@ -10,20 +10,22 @@ export async function GET(
   const { id } = params;
 
   try {
-    // Fetch the vehicle by ID
-    const vehicle = await prisma.vehicle.findUnique({
-      where: { vehicleId: Number(id) },
+    // Fetch the vehicle ad by ID
+    const vehicle = await prisma.ad.findUnique({
+      where: { adId: Number(id) },
       include: {
-        user: true, // Include user information (e.g., city)
+        user: true, // Include the associated user's information
       },
     });
 
-    // If the vehicle is not found, return a 404 response
+    // If the vehicle ad is not found, return a 404 response
     if (!vehicle) {
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
 
-    // Return the vehicle data if found
+    console.log("Vehicle ad found:", vehicle);
+
+    // Return the vehicle ad data if found
     return NextResponse.json(vehicle);
   } catch (error) {
     console.error("Error fetching vehicle:", error);

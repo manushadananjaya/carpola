@@ -10,13 +10,14 @@ export async function POST(
   const { adId } = params;
 
   try {
-    // Update the ad's `posted` field to `true` to mark it as approved
+    // Update the ad's `posted` field to `true` and set the `postedAt` date
     const updatedAd = await prisma.ad.update({
       where: {
         adId: Number(adId), // Ensure adId is treated as a number
       },
       data: {
         posted: true, // Set posted to true
+        postedAt: new Date(), // Update the postedAt date to current timestamp
       },
     });
 
