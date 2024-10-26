@@ -55,30 +55,30 @@ model Ad {
   model       String    @db.VarChar(50)
   year        Int
   mileage     Int
-  vehicleType AdType    // Enum to distinguish vehicle types
+  vehicleType AdType
 
   engine      Int  
   details     String?   @db.Text
-  posted      Boolean
-  postedAt    DateTime  @default(now())
+  posted      Boolean   @default(false)  // Status to indicate if the ad is posted
+  postedAt    DateTime?                // Timestamp when the ad was posted
+
   userId      Int
   user        User      @relation(fields: [userId], references: [userId])
 
   images      String[]  @db.Text  // Array to store multiple images
 
   // Unique fields for vehicles
-  gear        GearType?  // Only relevant for vehicles
-  fuelType    FuelType?  // Only relevant for vehicles
+  gear        GearType? // Only relevant for vehicles
+  fuelType    FuelType? // Only relevant for vehicles
 
   // Unique fields for bikes
-  startType   StartType?  // Only relevant for bikes
-  bikeType    BikeType?   // Only relevant for bikes
+  startType   StartType? // Only relevant for bikes
+  bikeType    BikeType?  // Only relevant for bikes
 
-  // Indexes for frequently queried fields
-  @@index([postedAt])
-  @@index([price])
-  
   PromotedItem PromotedItem[]
+
+  // Composite index for efficient querying of posted ads by date and price
+  @@index([posted, postedAt, price])
 }
 
 model User {

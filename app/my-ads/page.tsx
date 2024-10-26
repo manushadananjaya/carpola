@@ -23,6 +23,8 @@ type Ad = {
   price: number;
   status: "under review" | "approved" | "rejected";
   imageUrl: string;
+  promoted: boolean;
+  featured: boolean;
 };
 
 type Package = {
@@ -40,9 +42,8 @@ export default function MyAds() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deletingAdId, setDeletingAdId] = useState<string | null>(null); // State to track ad deletion
+  const [deletingAdId, setDeletingAdId] = useState<string | null>(null);
 
-  // Get WhatsApp number from environment variable
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
   const supportMessage = encodeURIComponent(
     "Hi, I need more support regarding upgrading my ad. Can you help?"
@@ -108,7 +109,7 @@ export default function MyAds() {
   };
 
   const handleDeleteAd = async (adId: string) => {
-    setDeletingAdId(adId); // Set the current ad being deleted
+    setDeletingAdId(adId);
     try {
       const response = await fetch(`/api/delete-ad/${adId}`, {
         method: "DELETE",
@@ -118,7 +119,7 @@ export default function MyAds() {
     } catch (err) {
       setError("Failed to delete the ad. Please try again.");
     } finally {
-      setDeletingAdId(null); // Reset after deletion
+      setDeletingAdId(null);
     }
   };
 
@@ -168,24 +169,28 @@ export default function MyAds() {
                 <CardDescription>Price: ${ad.price}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Badge
-                  variant={
-                    ad.status === "approved"
-                      ? "default"
-                      : ad.status === "rejected"
-                      ? "destructive"
-                      : "secondary"
-                  }
-                >
-                  {ad.status}
-                </Badge>
+                <div className="flex space-x-2">
+                  <Badge
+                    variant={
+                      ad.status === "approved"
+                        ? "default"
+                        : ad.status === "rejected"
+                        ? "destructive"
+                        : "secondary"
+                    }
+                  >
+                    {ad.status}
+                  </Badge>
+                  {ad.promoted && <Badge variant="default">Promoted</Badge>}
+                  {ad.featured && <Badge variant="default">Featured</Badge>}
+                </div>
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={() => handleDeleteAd(ad.id)}
-                  disabled={deletingAdId === ad.id} // Disable the button while deleting
+                  disabled={deletingAdId === ad.id}
                 >
                   {deletingAdId === ad.id ? (
                     <>
