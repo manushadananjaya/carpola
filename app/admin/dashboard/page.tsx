@@ -148,24 +148,31 @@ export default function AdminDashboard() {
       const response = await fetch("/api/ads/promoted");
       const data = await response.json();
       const currentDate = new Date();
-      const formattedAds = data.map(
-        (promotedAd: { promotionExpiresAt: any; ad: any; featured: any }) => {
+
+      // Format and filter out duplicates based on a unique ad identifier (adId)
+      const formattedAds = data
+        .map((promotedAd: { promotionExpiresAt: any; ad: any; featured: any; }) => {
           const { promotionExpiresAt, ad, featured } = promotedAd;
           const isExpired = new Date(promotionExpiresAt) < currentDate;
           return {
             ...ad,
             promoted: true,
-            featured,
+            featured, // retain the 'featured' status as a property
             promotionExpiryDate: promotionExpiresAt,
             promotionExpired: isExpired,
           };
-        }
-      );
+        })
+        .filter(
+          (ad: { adId: any; }, index: any, self: any[]) =>
+            index === self.findIndex((a: { adId: any; }) => a.adId === ad.adId)
+        );
+
       setAds(formattedAds);
     } catch (error) {
       console.error("Error fetching promoted ads:", error);
     }
   };
+
 
   const fetchExpired = async () => {
     try {
@@ -601,7 +608,9 @@ function AdTable({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
-                {!ad.featured && activeTab !== "promoted" && (
+
+                {/* Show "Feature" button if the ad is not already featured */}
+                {!ad.featured && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -618,6 +627,7 @@ function AdTable({
                     )}
                   </Button>
                 )}
+
                 <Button
                   size="sm"
                   variant="destructive"
