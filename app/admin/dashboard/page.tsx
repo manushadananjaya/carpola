@@ -40,6 +40,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 type Ad = {
   adId: string;
@@ -78,6 +79,8 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("pending");
+  const [promotingAdId, setPromotingAdId] = useState<string | null>(null);
+  const [featuringAdId, setFeaturingAdId] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -144,32 +147,25 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/ads/promoted");
       const data = await response.json();
-
-      // Current date for checking expiration
       const currentDate = new Date();
-
-      const formattedAds = data.map((promotedAd: { promotionExpiresAt: any; ad: any; featured: any; }) => {
-        const { promotionExpiresAt, ad, featured } = promotedAd;
-
-        // Check if the promotion has expired locally
-        const isExpired = new Date(promotionExpiresAt) < currentDate;
-
-        return {
-          ...ad,
-          promoted: true,
-          featured,
-          promotionExpiryDate: promotionExpiresAt,
-          promotionExpired: isExpired,
-        };
-      });
-
+      const formattedAds = data.map(
+        (promotedAd: { promotionExpiresAt: any; ad: any; featured: any }) => {
+          const { promotionExpiresAt, ad, featured } = promotedAd;
+          const isExpired = new Date(promotionExpiresAt) < currentDate;
+          return {
+            ...ad,
+            promoted: true,
+            featured,
+            promotionExpiryDate: promotionExpiresAt,
+            promotionExpired: isExpired,
+          };
+        }
+      );
       setAds(formattedAds);
     } catch (error) {
       console.error("Error fetching promoted ads:", error);
     }
   };
-
-
 
   const fetchExpired = async () => {
     try {
@@ -198,6 +194,7 @@ export default function AdminDashboard() {
   };
 
   const handlePromote = async (adId: string, duration: number) => {
+    setPromotingAdId(adId);
     try {
       await fetch(`/api/ads/promote/${adId}`, {
         method: "POST",
@@ -211,15 +208,22 @@ export default function AdminDashboard() {
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Failed to promote ad:", error);
+    } finally {
+      setPromotingAdId(null);
     }
   };
 
   const handleFeature = async (adId: string) => {
+    setFeaturingAdId(adId);
     try {
       await fetch(`/api/ads/feature/${adId}`, { method: "POST" });
       await fetchAds();
+      setSuccessMessage("Ad featured successfully!");
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("Failed to feature ad:", error);
+    } finally {
+      setFeaturingAdId(null);
     }
   };
 
@@ -247,6 +251,11 @@ export default function AdminDashboard() {
       await fetch(`/api/ads/cancel-promotion/${adId}`, { method: "POST" });
       setSuccessMessage("Promotion cancelled successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
+      if (activeTab === "expired") {
+        await fetchExpired();
+      } else {
+        await fetchAds();
+      }
     } catch (error) {
       console.error("Failed to cancel promotion:", error);
     }
@@ -257,6 +266,7 @@ export default function AdminDashboard() {
       await fetch(`/api/ads/cancel-all-promotions`, { method: "POST" });
       setSuccessMessage("All expired promotions cancelled successfully!");
       setTimeout(() => setSuccessMessage(null), 3000);
+      await fetchExpired();
     } catch (error) {
       console.error("Failed to cancel all promotions:", error);
     }
@@ -280,9 +290,6 @@ export default function AdminDashboard() {
       return true;
     });
 
-
-
-
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar />
@@ -297,7 +304,7 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle>Quick Stats</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1">
+          <CardContent>
             {activeTab === "pending" && (
               <div className="bg-blue-100 p-4 rounded-lg">
                 <h3 className="font-semibold text-blue-800">Pending Ads</h3>
@@ -395,6 +402,8 @@ export default function AdminDashboard() {
               onDelete={handleDelete}
               onCancelPromotion={handleCancelPromotion}
               activeTab={activeTab}
+              promotingAdId={promotingAdId}
+              featuringAdId={featuringAdId}
             />
           </TabsContent>
         </Tabs>
@@ -411,6 +420,8 @@ function AdTable({
   onDelete,
   onCancelPromotion,
   activeTab,
+  promotingAdId,
+  featuringAdId,
 }: {
   ads: Ad[];
   onApprove: (id: string) => void;
@@ -419,6 +430,8 @@ function AdTable({
   onDelete: (id: string) => void;
   onCancelPromotion: (id: string) => void;
   activeTab: string;
+  promotingAdId: string | null;
+  featuringAdId: string | null;
 }) {
   return (
     <Table>
@@ -427,9 +440,10 @@ function AdTable({
           <TableHead>Title</TableHead>
           <TableHead>Price</TableHead>
           <TableHead>Type</TableHead>
-          {(activeTab === "promoted" || activeTab === "featured") && (
-            <TableHead>Expiry Date</TableHead>
-          )}
+          <TableHead>Status</TableHead>
+          {(activeTab === "promoted" ||
+            activeTab === "featured" ||
+            activeTab === "expired") && <TableHead>Expiry Date</TableHead>}
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -446,15 +460,29 @@ function AdTable({
             </TableCell>
             <TableCell>${ad.price}</TableCell>
             <TableCell>{ad.vehicleType}</TableCell>
-            {(activeTab === "promoted" || activeTab === "expired") && (
+            <TableCell>
+              {ad.promoted && (
+                <Badge className="mr-1 bg-purple-500">Promoted</Badge>
+              )}
+              {ad.featured && (
+                <Badge className="mr-1 bg-yellow-500">Featured</Badge>
+              )}
+              {!ad.promoted && !ad.featured && (
+                <Badge className="mr-1 bg-gray-500">Standard</Badge>
+              )}
+              {ad.promotionExpired && (
+                <Badge className="bg-red-500">Expired</Badge>
+              )}
+            </TableCell>
+            {(activeTab === "promoted" ||
+              activeTab === "featured" ||
+              activeTab === "expired") && (
               <TableCell>
                 {ad.promotionExpiryDate
                   ? new Date(ad.promotionExpiryDate).toLocaleDateString()
                   : "N/A"}
               </TableCell>
             )}
-
-            <TableCell>{ad.promotionExpired ? "Expired" : "Active"}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Dialog>
@@ -527,9 +555,11 @@ function AdTable({
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={() => onApprove(ad.adId)}>
-                        Approve
-                      </Button>
+                      {activeTab === "pending" && (
+                        <Button onClick={() => onApprove(ad.adId)}>
+                          Approve
+                        </Button>
+                      )}
                       <Button
                         variant="destructive"
                         onClick={() => onDelete(ad.adId)}
@@ -539,51 +569,62 @@ function AdTable({
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                {activeTab !== "expired" && (
-                  <>
-                    <Button size="sm" onClick={() => onApprove(ad.adId)}>
-                      <Check className="w-4 h-4" />
-                    </Button>
-                    {!ad.promoted && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="outline">
-                            Promote <Star className="w-4 h-4 ml-1" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem
-                            onSelect={() => onPromote(ad.adId, 7)}
-                          >
-                            7 Days
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={() => onPromote(ad.adId, 14)}
-                          >
-                            14 Days
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                    {!ad.featured && (
+                {activeTab === "pending" && (
+                  <Button size="sm" onClick={() => onApprove(ad.adId)}>
+                    <Check className="w-4 h-4" />
+                  </Button>
+                )}
+                {!ad.promoted && activeTab !== "featured" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => onFeature(ad.adId)}
+                        disabled={promotingAdId === ad.adId}
                       >
+                        {promotingAdId === ad.adId ? (
+                          "Promoting..."
+                        ) : (
+                          <>
+                            Promote <Star className="w-4 h-4 ml-1" />
+                          </>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onSelect={() => onPromote(ad.adId, 7)}>
+                        7 Days
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onPromote(ad.adId, 14)}>
+                        14 Days
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+                {!ad.featured && activeTab !== "promoted" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onFeature(ad.adId)}
+                    disabled={featuringAdId === ad.adId}
+                  >
+                    {featuringAdId === ad.adId ? (
+                      "Featuring..."
+                    ) : (
+                      <>
                         Feature
                         <Zap className="w-4 h-4 ml-1" />
-                      </Button>
+                      </>
                     )}
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => onDelete(ad.adId)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </>
+                  </Button>
                 )}
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => onDelete(ad.adId)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
                 {activeTab === "expired" && (
                   <Button
                     size="sm"

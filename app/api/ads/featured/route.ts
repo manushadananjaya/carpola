@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Adjust this path to match your Prisma client location
+import {prisma} from "@/lib/prisma"; // Adjust the path to match your Prisma client location
 
-// GET method to fetch all promoted ads
+// GET method to fetch all featured ads
 export async function GET() {
   try {
-    // Fetch all promoted items from the database
-    const featuredItems = await prisma.featuredItem.findMany({
+    // Fetch all featured items from the database
+    const featuredItems = await prisma.promotedItem.findMany({
+      where: {
+        featured: true,
+        promotionExpiresAt: {
+          gt: new Date(), // Ensure promotions are still active
+        },
+      },
       include: {
         ad: {
           include: {
@@ -17,9 +23,9 @@ export async function GET() {
 
     return NextResponse.json(featuredItems);
   } catch (error) {
-    console.error("Error fetching promoted items:", error);
+    console.error("Error fetching featured items:", error);
     return NextResponse.json(
-      { error: "Failed to retrieve promoted items" },
+      { error: "Failed to retrieve featured items" },
       { status: 500 }
     );
   }

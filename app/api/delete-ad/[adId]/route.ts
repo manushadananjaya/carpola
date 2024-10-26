@@ -40,7 +40,6 @@ export async function DELETE(
       where: { adId },
       include: {
         PromotedItem: true,
-        FeaturedItem: true,
       },
     });
 
@@ -66,10 +65,6 @@ export async function DELETE(
 
     // Deleting related PromotedItem and FeaturedItem records (optional, if needed)
     await prisma.promotedItem.deleteMany({
-      where: { adId: adId },
-    });
-
-    await prisma.featuredItem.deleteMany({
       where: { adId: adId },
     });
 
