@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,14 +14,13 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Grid, List, Car, Bike, Truck, Star } from "lucide-react";
+import { Grid, List, Car, Bike, Truck, Star, Search } from "lucide-react";
 import axios from "axios";
 import locationData from "../../../data/sri-lanka-districts.json";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { debounce } from "lodash";
 import { useRouter } from "next/navigation";
-
 
 // Vehicle Type Enum
 const VehicleType = {
@@ -61,6 +60,8 @@ export default function SearchResults() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
   const initialSearchQuery = searchParams.get("query") || "";
+  const [loading, setLoading] = useState(false);
+
 
   const [isGridView, setIsGridView] = useState(true);
   const [selectedType, setSelectedType] = useState<string>(initialCategory);
@@ -71,67 +72,84 @@ export default function SearchResults() {
   const [selectedCity, setSelectedCity] = useState<string>("ALL");
   const [ads, setAds] = useState<Vehicle[]>([]);
   const [cities, setCities] = useState<string[]>([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const router = useRouter();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  
-  // Other state definitions for filters
+  const debouncedSearch = debounce(async (value) => {
+    const trimmedValue = value.trim(); // Trim whitespace
 
-  // Debounce function: delays the effect until the user stops typing
-  const debouncedSearch = debounce((value) => {
-    setDebouncedSearchTerm(value);
+    // Skip search if only whitespace or too short
+    if (trimmedValue.length < 3) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.get("/api/search-suggestions", {
+        params: { query: trimmedValue },
+      });
+
+      // Assuming API returns an array of suggestion objects with a `label` field
+      const suggestions = response.data.map((item: any) => item.label || item);
+      setSearchSuggestions(suggestions);
+      setShowSuggestions(true);
+    } catch (error) {
+      console.error("Error fetching search suggestions:", error);
+    } finally {
+      setLoading(false);
+    }
   }, 300);
 
-  // Fetch ads from the API
+
+
+
+  const fetchAds = async () => {
+    try {
+      const { data } = await axios.get("/api/ads/search", {
+        params: {
+          type: selectedType,
+          district: selectedDistrict,
+          city: selectedCity,
+          minPrice: priceRange[0],
+          maxPrice: priceRange[1],
+          minYear: yearRange[0],
+          maxYear: yearRange[1],
+          searchTerm,
+        },
+      });
+
+      const processedAds = data.map((ad: any) => ({
+        ...ad,
+        isFeatured:
+          ad.PromotedItem?.some((item: any) => item.featured) || false,
+        isPromoted: ad.PromotedItem?.length > 0 || false,
+      }));
+
+      const sortedAds = processedAds.sort((a: Vehicle, b: Vehicle) => {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        if (a.isPromoted && !b.isPromoted) return -1;
+        if (!a.isPromoted && b.isPromoted) return 1;
+        return 0;
+      });
+
+      setAds(sortedAds);
+    } catch (error) {
+      console.error("Error fetching ads:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchAds = async () => {
-      try {
-        const { data } = await axios.get("/api/ads/search", {
-          params: {
-            type: selectedType,
-            district: selectedDistrict,
-            city: selectedCity,
-            minPrice: priceRange[0],
-            maxPrice: priceRange[1],
-            minYear: yearRange[0],
-            maxYear: yearRange[1],
-            searchTerm,
-          },
-        });
-
-        // Process and sort the ads
-        const processedAds = data.map((ad: any) => ({
-          ...ad,
-          isFeatured:
-            ad.PromotedItem?.some((item: any) => item.featured) || false,
-          isPromoted: ad.PromotedItem?.length > 0 || false,
-        }));
-
-        const sortedAds = processedAds.sort((a: Vehicle, b: Vehicle) => {
-          if (a.isFeatured && !b.isFeatured) return -1;
-          if (!a.isFeatured && b.isFeatured) return 1;
-          if (a.isPromoted && !b.isPromoted) return -1;
-          if (!a.isPromoted && b.isPromoted) return 1;
-          return 0;
-        });
-
-        setAds(sortedAds);
-        console.log("Fetched ads:", sortedAds);
-      } catch (error) {
-        console.error("Error fetching ads:", error);
-      }
-    };
-
-    fetchAds();
-  }, [
-    selectedType,
-    selectedDistrict,
-    selectedCity,
-    priceRange,
-    yearRange,
-    searchTerm,
-  ]);
+    if (initialSearchQuery) {
+      fetchAds();
+    }
+  }, []);
 
   useEffect(() => {
     if (selectedDistrict) {
@@ -145,21 +163,30 @@ export default function SearchResults() {
   }, [selectedDistrict]);
 
   useEffect(() => {
-    // Set up a new search term as the user types
     debouncedSearch(searchTerm);
-
-    // Clean up debounce on unmount
     return () => {
       debouncedSearch.cancel();
     };
   }, [searchTerm]);
 
-  // Effect to update the ads list based on the debounced search term
-   useEffect(() => {
-     if (debouncedSearchTerm) {
-       router.push(`/search?query=${debouncedSearchTerm}`);
-     }
-   }, [debouncedSearchTerm, router]);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push(`/search?query=${searchTerm}`);
+    fetchAds();
+    setShowSuggestions(false);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchTerm(suggestion);
+    router.push(`/search?query=${suggestion}`);
+    fetchAds();
+    setShowSuggestions(false);
+  };
+
+  const handleFilterChange = () => {
+    fetchAds();
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Search Results</h1>
@@ -167,21 +194,52 @@ export default function SearchResults() {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Filters */}
         <div className="w-full md:w-1/4 space-y-6">
-          <div>
+          <div className="relative">
             <Label htmlFor="search">Search</Label>
-            <Input
-              id="search"
-              placeholder="Search by brand or model"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <form onSubmit={handleSearch} className="flex">
+              <Input
+                id="search"
+                ref={searchInputRef}
+                placeholder="Search by brand or model"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-grow"
+              />
+              <Button type="submit" className="ml-2">
+                <Search className="h-4 w-4" />
+              </Button>
+            </form>
+            {showSuggestions && (
+              <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg">
+                {loading ? (
+                  <div className="px-4 py-2 text-gray-500">Searching...</div>
+                ) : searchSuggestions.length > 0 ? (
+                  searchSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-gray-500">
+                    No suggestions found
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
             <Label htmlFor="type">Vehicle Type</Label>
             <Select
               value={selectedType}
-              onValueChange={(value) => setSelectedType(value)}
+              onValueChange={(value) => {
+                setSelectedType(value);
+                handleFilterChange();
+              }}
             >
               <SelectTrigger id="type">
                 <SelectValue placeholder="Select type" />
@@ -204,6 +262,7 @@ export default function SearchResults() {
               onValueChange={(value) => {
                 setSelectedDistrict(value);
                 setSelectedCity("ALL");
+                handleFilterChange();
               }}
             >
               <SelectTrigger id="district">
@@ -224,7 +283,10 @@ export default function SearchResults() {
             <Label htmlFor="city">City</Label>
             <Select
               value={selectedCity}
-              onValueChange={(value) => setSelectedCity(value)}
+              onValueChange={(value) => {
+                setSelectedCity(value);
+                handleFilterChange();
+              }}
             >
               <SelectTrigger id="city">
                 <SelectValue placeholder="Select city" />
@@ -244,14 +306,15 @@ export default function SearchResults() {
             <Label>Price Range</Label>
             <Slider
               min={0}
-              max={100000}
-              step={1000}
+              max={10000000}
+              step={100000}
               value={priceRange}
               onValueChange={setPriceRange}
+              onValueCommit={handleFilterChange}
             />
             <div className="flex justify-between mt-2">
-              <span>${priceRange[0]}</span>
-              <span>${priceRange[1]}</span>
+              <span>${priceRange[0].toLocaleString()}</span>
+              <span>${priceRange[1].toLocaleString()}</span>
             </div>
           </div>
 
@@ -263,6 +326,7 @@ export default function SearchResults() {
               step={1}
               value={yearRange}
               onValueChange={setYearRange}
+              onValueCommit={handleFilterChange}
             />
             <div className="flex justify-between mt-2">
               <span>{yearRange[0]}</span>
@@ -352,7 +416,7 @@ export default function SearchResults() {
                     </div>
                     <p className="text-gray-600">Year: {vehicle.year}</p>
                     <p className="text-gray-600">
-                      Mileage: {vehicle.mileage} km
+                      Mileage: {vehicle.mileage.toLocaleString()} km
                     </p>
                     <p className="text-gray-600 font-semibold text-lg">
                       Price: ${vehicle.price.toLocaleString()}
@@ -370,4 +434,5 @@ export default function SearchResults() {
       </div>
     </div>
   );
+
 }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Ensure this points to your Prisma client instance
+import { prisma } from "@/lib/prisma";
 
-// This handles the GET request for ads
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type");
@@ -14,55 +13,75 @@ export async function GET(req: NextRequest) {
   const searchTerm = searchParams.get("searchTerm");
 
   try {
-    // Convert query parameters to appropriate types
+    // Parse query parameters to appropriate types
     const parsedMinPrice = minPrice ? parseInt(minPrice, 10) : undefined;
     const parsedMaxPrice = maxPrice ? parseInt(maxPrice, 10) : undefined;
     const parsedMinYear = minYear ? parseInt(minYear, 10) : undefined;
     const parsedMaxYear = maxYear ? parseInt(maxYear, 10) : undefined;
 
-    // Construct filters dynamically
+    // Valid vehicle types
+    const validVehicleTypes = [
+      "CAR",
+      "VAN",
+      "JEEP",
+      "LORRY",
+      "BIKE",
+      "CREWCAB",
+      "PICKUP",
+      "BUS",
+      "TRUCK",
+      "THREEWHEEL",
+      "TRACTOR",
+      "HEAVYDUTY",
+      "OTHER",
+    ] as const;
+
+    // Ensure `type` parameter is a valid enum value
+    const vehicleTypeFilter =
+      type &&
+      validVehicleTypes.includes(type as (typeof validVehicleTypes)[number])
+        ? type
+        : undefined;
+
+    // Split search term into brand and model
+    const searchTerms = searchTerm ? searchTerm.trim().split(" ") : [];
+    const brandKeyword = searchTerms[0];
+    const modelKeywords = searchTerms.slice(1).join(" ");
+
+    // Construct main filters for ads
     const filters: any = {
-      vehicleType: type !== "ALL" ? type : undefined, // If "ALL", ignore filter
+      vehicleType: vehicleTypeFilter,
       price:
         parsedMinPrice || parsedMaxPrice
-          ? {
-              gte: parsedMinPrice,
-              lte: parsedMaxPrice,
-            }
+          ? { gte: parsedMinPrice, lte: parsedMaxPrice }
           : undefined,
       year:
         parsedMinYear || parsedMaxYear
-          ? {
-              gte: parsedMinYear,
-              lte: parsedMaxYear,
-            }
+          ? { gte: parsedMinYear, lte: parsedMaxYear }
           : undefined,
       OR: searchTerm
         ? [
-            { brand: { contains: searchTerm, mode: "insensitive" } },
-            { model: { contains: searchTerm, mode: "insensitive" } },
-          ]
+            { brand: { contains: brandKeyword, mode: "insensitive" } },
+            modelKeywords && {
+              model: { contains: modelKeywords, mode: "insensitive" },
+            },
+          ].filter(Boolean)
         : undefined,
       posted: true, // Only fetch posted ads
     };
 
-    // User filter is created separately to handle cases where both district and city might be "ALL"
+    // Construct nested user filters if district or city specified
     const userFilter: any = {
       userDistrict: district !== "ALL" ? district : undefined,
       userCity: city !== "ALL" ? city : undefined,
     };
 
-    // Remove undefined properties from the user filter
-    Object.keys(userFilter).forEach(
-      (key) => userFilter[key] === undefined && delete userFilter[key]
-    );
-
-    // Include the user filter only if it has valid entries
-    if (Object.keys(userFilter).length > 0) {
+    // Add user filters to main filter if there are any user-specific criteria
+    if (Object.values(userFilter).some((val) => val !== undefined)) {
       filters.user = userFilter;
     }
 
-    // Remove undefined filters
+    // Remove undefined or empty filters from `filters` object
     Object.keys(filters).forEach(
       (key) =>
         (filters[key] === undefined ||
@@ -71,9 +90,9 @@ export async function GET(req: NextRequest) {
         delete filters[key]
     );
 
-    // Log filters to debug
     console.log("Filters applied:", filters);
 
+    // Fetch ads with the specified filters
     const ads = await prisma.ad.findMany({
       where: filters,
       select: {
@@ -99,11 +118,11 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: {
-        postedAt: "desc", // Order by most recently posted ads
+        postedAt: "desc",
       },
     });
 
-    // Map the ads to include a promotion status field
+    // Format ads with promotion details
     const adsWithPromotionStatus = ads.map((ad) => ({
       ...ad,
       isPromoted: ad.PromotedItem.length > 0,
