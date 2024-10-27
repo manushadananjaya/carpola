@@ -57,6 +57,7 @@ export default function VehicleDetailsPage({
   useEffect(() => {
     async function fetchData() {
       try {
+       
         const data = await fetchVehicle(id);
         setVehicle(data);
         console.log("fetched vehicle:", data);
