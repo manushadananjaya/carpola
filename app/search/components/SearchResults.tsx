@@ -146,10 +146,12 @@ export default function SearchResults() {
   };
 
   useEffect(() => {
-    if (initialSearchQuery) {
+    if (initialCategory || initialSearchQuery) {
+      setSelectedType(initialCategory);
       fetchAds();
     }
-  }, []);
+  }, [initialCategory, initialSearchQuery]);
+
 
   useEffect(() => {
     if (selectedDistrict) {

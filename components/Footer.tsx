@@ -52,7 +52,7 @@ export function Footer() {
             <h2 className="text-lg font-semibold mb-4">Contact Us</h2>
             <p className="text-sm">123 Main Street, Colombo, Sri Lanka</p>
             <p className="text-sm">Phone: +94 11 234 5678</p>
-            <p className="text-sm">Email: info@vehiclemarket.lk</p>
+            <p className="text-sm">Email: info@Vahanasale.lk</p>
           </div>
           <div>
             <h2 className="text-lg font-semibold mb-4">Newsletter</h2>
@@ -70,7 +70,7 @@ export function Footer() {
         <Separator className="my-8" />
         <div className="flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm">
-            &copy; 2024 Vehicle Market. All rights reserved.
+            &copy; 2024 Vahanasale.lk. All rights reserved.
           </p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <Link href="#" aria-label="Facebook">

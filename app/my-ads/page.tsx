@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 type Ad = {
   id: string;
@@ -263,6 +264,7 @@ export default function MyAds() {
           </a>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
