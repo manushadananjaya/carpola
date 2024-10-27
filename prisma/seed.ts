@@ -1,4 +1,3 @@
-// prisma/seed.ts
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
@@ -22,7 +21,7 @@ async function main() {
     },
   });
 
-  // Create Vehicles
+  // Create Vehicles with image URLs
   const vehicle1 = await prisma.vehicle.create({
     data: {
       contactNo: "1234567890",
@@ -37,6 +36,11 @@ async function main() {
       details: "Well-maintained Toyota Corolla, only 30k miles",
       posted: true,
       userId: user1.userId,
+      image1: "https://dummyimage.com/600x400/000/fff&text=Toyota+Corolla+1",
+      image2: "https://dummyimage.com/600x400/000/fff&text=Toyota+Corolla+2",
+      image3: "https://dummyimage.com/600x400/000/fff&text=Toyota+Corolla+3",
+      image4: "https://dummyimage.com/600x400/000/fff&text=Toyota+Corolla+4",
+      image5: "https://dummyimage.com/600x400/000/fff&text=Toyota+Corolla+5",
     },
   });
 
@@ -54,10 +58,15 @@ async function main() {
       details: "Honda Civic in great condition",
       posted: true,
       userId: user2.userId,
+      image1: "https://dummyimage.com/600x400/000/fff&text=Honda+Civic+1",
+      image2: "https://dummyimage.com/600x400/000/fff&text=Honda+Civic+2",
+      image3: "https://dummyimage.com/600x400/000/fff&text=Honda+Civic+3",
+      image4: "https://dummyimage.com/600x400/000/fff&text=Honda+Civic+4",
+      image5: "https://dummyimage.com/600x400/000/fff&text=Honda+Civic+5",
     },
   });
 
-  // Create Bikes
+  // Create Bikes with image URLs
   const bike1 = await prisma.bike.create({
     data: {
       contactNo: "1234567890",
@@ -72,6 +81,11 @@ async function main() {
       details: "Yamaha FZ with 10k miles, great condition",
       posted: true,
       userId: user1.userId,
+      image1: "https://dummyimage.com/600x400/000/fff&text=Yamaha+FZ+1",
+      image2: "https://dummyimage.com/600x400/000/fff&text=Yamaha+FZ+2",
+      image3: "https://dummyimage.com/600x400/000/fff&text=Yamaha+FZ+3",
+      image4: "https://dummyimage.com/600x400/000/fff&text=Yamaha+FZ+4",
+      image5: "https://dummyimage.com/600x400/000/fff&text=Yamaha+FZ+5",
     },
   });
 
@@ -89,6 +103,11 @@ async function main() {
       details: "Suzuki Gixxer with 15k miles",
       posted: true,
       userId: user2.userId,
+      image1: "https://dummyimage.com/600x400/000/fff&text=Suzuki+Gixxer+1",
+      image2: "https://dummyimage.com/600x400/000/fff&text=Suzuki+Gixxer+2",
+      image3: "https://dummyimage.com/600x400/000/fff&text=Suzuki+Gixxer+3",
+      image4: "https://dummyimage.com/600x400/000/fff&text=Suzuki+Gixxer+4",
+      image5: "https://dummyimage.com/600x400/000/fff&text=Suzuki+Gixxer+5",
     },
   });
 
@@ -124,7 +143,7 @@ async function main() {
 }
 
 main()
-  .then(() => console.log("Seed data created!"))
+  .then(() => console.log("Seed data with image URLs created!"))
   .catch((error) => {
     console.error(error);
     process.exit(1);

@@ -7,7 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums for standardized fields
+// Enum for distinguishing vehicle types
+enum AdType {
+  CAR
+  VAN
+  JEEP
+  LORRY
+  BIKE
+  CREWCAB
+  PICKUP
+  BUS
+  TRUCK
+  THREEWHEEL
+  TRACTOR
+  HEAVYDUTY
+  OTHER
+}
+
+// Other Enums
 enum GearType {
   AUTOMATIC
   MANUAL
@@ -30,85 +47,61 @@ enum BikeType {
   FUEL
   ELECTRIC
 }
+model Ad {
+  adId        Int       @id @default(autoincrement())
+  price       Decimal   @db.Decimal(10, 2)
+  brand       String    @db.VarChar(50)
+  model       String    @db.VarChar(50)
+  year        Int      
+  mileage     Int       
+  vehicleType AdType
 
-model Vehicle {
-  vehicleId   Int     @id @default(autoincrement())
-  contactNo   String  @db.VarChar(15)
-  price       Int
-  brand       String  @db.VarChar(50)
-  model       String  @db.VarChar(50)
-  year        Int
-  mileage     Int
-  gear        GearType
-  fuelType    FuelType
-  engine      String  @db.VarChar(100)
-  details     String? @db.Text
-  posted      Boolean
-  postedAt    DateTime @default(now())
+  engine      Int  
+  details     String?   @db.Text
+  posted      Boolean   @default(false)
+  postedAt    DateTime? @default(now())
+
   userId      Int
-  user        User @relation(fields: [userId], references: [userId])
-  
-  // Index for frequently queried fields
-  @@index([postedAt])
-  @@index([price])
-  PromotedItem PromotedItem[]
-  FeaturedItem FeaturedItem[]
-}
+  user        User      @relation(fields: [userId], references: [userId])
 
-model Bike {
-  bikeId      Int     @id @default(autoincrement())
-  contactNo   String  @db.VarChar(15)
-  price       Int
-  brand       String  @db.VarChar(50)
-  model       String  @db.VarChar(50)
-  year        Int
-  mileage     Int
-  startType   StartType
-  bikeType    BikeType
-  engine      String  @db.VarChar(100)
-  details     String? @db.Text
-  posted      Boolean
-  postedAt    DateTime @default(now())
-  userId      Int
-  user        User @relation(fields: [userId], references: [userId])
+  images      String[]  @db.Text
 
-  // Index for frequently queried fields
-  @@index([postedAt])
-  @@index([price])
+  gear        GearType?
+  fuelType    FuelType?
+
+  startType   StartType?
+  bikeType    BikeType?
+
   PromotedItem PromotedItem[]
-  FeaturedItem FeaturedItem[]
+
+  @@index([posted, postedAt, price])
+  @@index([vehicleType, price])
+  @@index([year])
+  @@index([brand, model])
 }
 
 model User {
-  userId     Int      @id @default(autoincrement())
-  username   String   @db.VarChar(50)
-  userEmail  String   @unique @db.VarChar(100)
-  userPhone  String   @db.VarChar(15)
-  userCity   String   @db.VarChar(50)
-  vehicles   Vehicle[]
-  bikes      Bike[]
+  userId       Int      @id @default(autoincrement())
+  username     String   @db.VarChar(50)
+  userEmail    String   @unique @db.VarChar(100)
+  userPhone    String
+  userCity     String   @db.VarChar(50)
+  userDistrict String   @db.VarChar(50)
+  password     String?  @db.VarChar(255)
+
+  ads          Ad[]
+  isOnboarded  Boolean  @default(false)
 }
 
 model PromotedItem {
-  id         Int      @id @default(autoincrement())
-  vehicleId  Int?
-  bikeId     Int?
-  vehicle    Vehicle? @relation(fields: [vehicleId], references: [vehicleId])
-  bike       Bike?    @relation(fields: [bikeId], references: [bikeId])
-  createdAt  DateTime @default(now())
+  id                Int      @id @default(autoincrement())
+  adId              Int?
+  ad                Ad?      @relation(fields: [adId], references: [adId], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  promotionExpiresAt DateTime
+  featured          Boolean  @default(false)
+  
 
-  // Index for sorting/filtering promoted items
   @@index([createdAt])
-}
 
-model FeaturedItem {
-  id         Int      @id @default(autoincrement())
-  vehicleId  Int?
-  bikeId     Int?
-  vehicle    Vehicle? @relation(fields: [vehicleId], references: [vehicleId])
-  bike       Bike?    @relation(fields: [bikeId], references: [bikeId])
-  createdAt  DateTime @default(now())
-
-  // Index for sorting/filtering featured items
-  @@index([createdAt])
 }

@@ -1,48 +1,41 @@
+// components/LandingPageComponent.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CardContent, Card } from "@/components/ui/card";
-import { Search, Car, DollarSign, CheckCircle, Menu } from "lucide-react";
+import { Search, Car, DollarSign } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
-import { FeaturedItemsComponent } from "./FeaturedItemsComponent";
+import { Navbar } from "@/components/Navbar";
+import FeaturedCategories from "@/components/FeaturedCategories";
+import { Footer } from "@/components/Footer";
+import { Separator } from "@radix-ui/react-dropdown-menu";
+import { useRouter } from "next/navigation";
+import debounce from "lodash.debounce";
+
+import { useEffect, useState } from "react";
 
 export function LandingPageComponent() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
+
+  // Debounce the search input to avoid excessive navigation
+  const debouncedSearch = debounce((value: string) => {
+    if (value.trim()) {
+      router.push(`/search?query=${encodeURIComponent(value)}`);
+    }
+  }, 500);
+
+  useEffect(() => {
+    debouncedSearch(searchTerm);
+    // Cleanup function for debouncing on unmount
+    return () => debouncedSearch.cancel();
+  }, [searchTerm, debouncedSearch]);
+
+
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center justify-between">
-        <Link className="flex items-center justify-center" href="#">
-          <Car className="h-6 w-6" />
-          <span className="sr-only">AutoMarket</span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            Buy
-          </Link>
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            Sell
-          </Link>
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            About
-          </Link>
-          <Link
-            className="text-sm font-medium hover:underline underline-offset-4"
-            href="#"
-          >
-            Contact
-          </Link>
-        </nav>
-      </header>
+      <Navbar />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-black flex justify-center items-center">
           <div className="container px-4 md:px-6">
@@ -57,11 +50,16 @@ export function LandingPageComponent() {
                 </p>
               </div>
               <div className="w-full max-w-sm space-y-2">
-                <form className="flex space-x-2">
+                <form
+                  className="flex space-x-2"
+                  onSubmit={(e) => e.preventDefault()}
+                >
                   <Input
                     className="max-w-lg flex-1 text-white"
                     placeholder="Search by make, model, or keyword"
                     type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   <Button type="submit" variant="secondary">
                     <Search className="h-4 w-4" />
@@ -75,9 +73,9 @@ export function LandingPageComponent() {
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 justify-center items-center flex">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-8">
-              Featured Vehicles
+              Find Your Next Vehicle Today
             </h2>
-            <FeaturedItemsComponent />
+            <FeaturedCategories />
           </div>
         </section>
         <section className="w-full py-12 md:py-24 lg:py-32 justify-center items-center flex">
@@ -115,7 +113,7 @@ export function LandingPageComponent() {
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
-                  Ready to Sell Your Car?
+                  Ready to Sell Your Vehicle?
                 </h2>
                 <p className="mx-auto max-w-[600px] text-gray-500 md:text-xl lg:text-base xl:text-xl">
                   List your vehicle on AutoMarket and reach thousands of
@@ -123,25 +121,14 @@ export function LandingPageComponent() {
                 </p>
               </div>
               <Button className="w-full sm:w-auto" size="lg">
-                List Your Vehicle
+                <Link href="/post-ad">List Your Vehicle</Link>
               </Button>
             </div>
           </div>
         </section>
+
+        <Footer />
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-gray-500">
-          © 2024 AutoMarket. All rights reserved.
-        </p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Terms of Service
-          </Link>
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Privacy
-          </Link>
-        </nav>
-      </footer>
     </div>
   );
 }
