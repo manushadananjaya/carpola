@@ -45,6 +45,23 @@ const categoryIcons: Record<VehicleTypeKey, React.ReactNode> = {
   OTHER: <HelpCircle className="w-8 h-8" />,
 };
 
+// Define display labels with custom names
+const categoryLabels: Record<VehicleTypeKey, string> = {
+  CAR: "Car",
+  VAN: "Van",
+  JEEP: "Jeep/SUV", // Custom name
+  LORRY: "Lorry",
+  BIKE: "Bike",
+  CREWCAB: "Crew Cab/Double Cab", // Custom name
+  PICKUP: "Pickup",
+  BUS: "Bus",
+  TRUCK: "Truck",
+  THREEWHEEL: "Three-Wheeler",
+  TRACTOR: "Tractor",
+  HEAVYDUTY: "Heavy Duty",
+  OTHER: "Other",
+};
+
 export default function FeaturedCategories() {
   return (
     <section className="py-12 bg-gray-50">
@@ -59,7 +76,9 @@ export default function FeaturedCategories() {
               <div className="mb-2 text-primary">
                 {categoryIcons[key as VehicleTypeKey]}
               </div>
-              <span className="text-sm font-medium text-gray-900">{key}</span>
+              <span className="text-sm font-medium text-gray-900">
+                {categoryLabels[key as VehicleTypeKey]}
+              </span>
             </Link>
           ))}
         </div>
