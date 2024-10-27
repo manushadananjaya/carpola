@@ -46,7 +46,7 @@ export function LandingPageComponent() {
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl">
                   Browse thousands of cars from trusted sellers. Buy or sell
-                  with ease on AutoMarket.
+                  with ease on Vahanasale.lk.
                 </p>
               </div>
               <div className="w-full max-w-sm space-y-2">
