@@ -16,7 +16,7 @@ export function Navbar() {
     <header className="px-4 lg:px-6 h-14 flex items-center justify-between border-b">
       <Link className="flex items-center justify-center" href="/">
         <Car className="h-6 w-6" />
-        <span className="ml-2 text-lg font-semibold">AutoMarket</span>
+        <span className="ml-2 text-lg font-semibold">Vahanasale.lk</span>
       </Link>
       <nav className="flex items-center gap-4 sm:gap-6">
         <div className="hidden md:flex items-center gap-4 sm:gap-6">
