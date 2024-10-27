@@ -393,8 +393,8 @@ export default function SearchResults() {
               onValueCommit={handleFilterChange}
             />
             <div className="flex justify-between mt-2">
-              <span>${priceRange[0].toLocaleString()}</span>
-              <span>${priceRange[1].toLocaleString()}</span>
+              <span>LKR{priceRange[0].toLocaleString()}</span>
+              <span>LKR{priceRange[1].toLocaleString()}</span>
             </div>
           </div>
 
@@ -506,7 +506,7 @@ export default function SearchResults() {
                         Mileage: {vehicle.mileage.toLocaleString()} km
                       </p>
                       <p className="text-gray-600 font-semibold text-lg">
-                        Price: ${vehicle.price.toLocaleString()}
+                        Price: LKR {vehicle.price.toLocaleString()}
                       </p>
                       <p className="text-gray-600">
                         Location: {vehicle.user.userCity},{" "}
