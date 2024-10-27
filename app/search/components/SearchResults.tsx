@@ -14,13 +14,27 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Grid, List, Car, Bike, Truck, Star, Search } from "lucide-react";
+import {
+  Grid,
+  List,
+  Car,
+  Bike,
+  Truck,
+  Star,
+  Search,
+  Loader,
+} from "lucide-react";
 import axios from "axios";
 import locationData from "../../../data/sri-lanka-districts.json";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { debounce } from "lodash";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+
+// Import brand data
+import vehicleBrands from "../../../data/vehicle_brands.json";
+import motoBrands from "../../../data/moto_brands.json";
 
 // Vehicle Type Enum
 const VehicleType = {
@@ -62,7 +76,6 @@ export default function SearchResults() {
   const initialSearchQuery = searchParams.get("query") || "";
   const [loading, setLoading] = useState(false);
 
-
   const [isGridView, setIsGridView] = useState(true);
   const [selectedType, setSelectedType] = useState<string>(initialCategory);
   const [priceRange, setPriceRange] = useState([0, 10000000]);
@@ -75,14 +88,51 @@ export default function SearchResults() {
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [brandOptions, setBrandOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [adsPerPage] = useState(12);
+
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const debouncedSearch = debounce(async (value) => {
-    const trimmedValue = value.trim(); // Trim whitespace
+  useEffect(() => {
+    if (initialCategory || initialSearchQuery) {
+      setSelectedType(initialCategory);
+      fetchAds();
+    }
+  }, [initialCategory, initialSearchQuery]);
 
-    // Skip search if only whitespace or too short
-    if (trimmedValue.length < 3) {
+  useEffect(() => {
+    if (selectedDistrict) {
+      setCities(
+        locationData[selectedDistrict as keyof typeof locationData]?.cities ||
+          []
+      );
+    } else {
+      setCities([]);
+    }
+  }, [selectedDistrict]);
+
+  useEffect(() => {
+    if (selectedType === "BIKE") {
+      setBrandOptions(motoBrands.data);
+    } else {
+      setBrandOptions(vehicleBrands.data);
+    }
+    setSelectedBrand("");
+    setModelOptions([]);
+  }, [selectedType]);
+
+  const debouncedSearch = debounce(async (value: string) => {
+    const trimmedValue = value.trim();
+
+    if (trimmedValue.length < 2) {
       setSearchSuggestions([]);
       setShowSuggestions(false);
       setLoading(false);
@@ -92,10 +142,13 @@ export default function SearchResults() {
     setLoading(true);
     try {
       const response = await axios.get("/api/search-suggestions", {
-        params: { query: trimmedValue },
+        params: {
+          query: trimmedValue,
+          brand: selectedBrand,
+          type: selectedType,
+        },
       });
 
-      // Assuming API returns an array of suggestion objects with a `label` field
       const suggestions = response.data.map((item: any) => item.label || item);
       setSearchSuggestions(suggestions);
       setShowSuggestions(true);
@@ -106,10 +159,8 @@ export default function SearchResults() {
     }
   }, 300);
 
-
-
-
   const fetchAds = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("/api/ads/search", {
         params: {
@@ -121,10 +172,13 @@ export default function SearchResults() {
           minYear: yearRange[0],
           maxYear: yearRange[1],
           searchTerm,
+          brand: selectedBrand,
+          page: currentPage,
+          limit: adsPerPage,
         },
       });
 
-      const processedAds = data.map((ad: any) => ({
+      const processedAds = data.ads.map((ad: any) => ({
         ...ad,
         isFeatured:
           ad.PromotedItem?.some((item: any) => item.featured) || false,
@@ -140,52 +194,58 @@ export default function SearchResults() {
       });
 
       setAds(sortedAds);
+      setTotalPages(Math.ceil(data.total / adsPerPage));
     } catch (error) {
       console.error("Error fetching ads:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (initialCategory || initialSearchQuery) {
-      setSelectedType(initialCategory);
-      fetchAds();
-    }
-  }, [initialCategory, initialSearchQuery]);
-
-
-  useEffect(() => {
-    if (selectedDistrict) {
-      setCities(
-        locationData[selectedDistrict as keyof typeof locationData]?.cities ||
-          []
-      );
-    } else {
-      setCities([]);
-    }
-  }, [selectedDistrict]);
-
-  useEffect(() => {
-    debouncedSearch(searchTerm);
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [searchTerm]);
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/search?query=${searchTerm}`);
+    setCurrentPage(1);
+    router.push(
+      `/search?query=${searchTerm}&category=${selectedType}&brand=${selectedBrand}`
+    );
     fetchAds();
     setShowSuggestions(false);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchTerm(suggestion);
-    router.push(`/search?query=${suggestion}`);
+    setCurrentPage(1);
+    router.push(
+      `/search?query=${suggestion}&category=${selectedType}&brand=${selectedBrand}`
+    );
     fetchAds();
     setShowSuggestions(false);
   };
 
   const handleFilterChange = () => {
+    setCurrentPage(1);
+    fetchAds();
+  };
+
+  const handleBrandChange = async (brand: string) => {
+    setSelectedBrand(brand);
+    setSearchTerm("");
+    setModelOptions([]);
+
+    if (brand) {
+      try {
+        const response = await axios.get("/api/models", {
+          params: { brand, type: selectedType },
+        });
+        setModelOptions(response.data);
+      } catch (error) {
+        console.error("Error fetching models:", error);
+      }
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
     fetchAds();
   };
 
@@ -196,44 +256,6 @@ export default function SearchResults() {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Filters */}
         <div className="w-full md:w-1/4 space-y-6">
-          <div className="relative">
-            <Label htmlFor="search">Search</Label>
-            <form onSubmit={handleSearch} className="flex">
-              <Input
-                id="search"
-                ref={searchInputRef}
-                placeholder="Search by brand or model"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-grow"
-              />
-              <Button type="submit" className="ml-2">
-                <Search className="h-4 w-4" />
-              </Button>
-            </form>
-            {showSuggestions && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg">
-                {loading ? (
-                  <div className="px-4 py-2 text-gray-500">Searching...</div>
-                ) : searchSuggestions.length > 0 ? (
-                  searchSuggestions.map((suggestion, index) => (
-                    <div
-                      key={index}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion}
-                    </div>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-gray-500">
-                    No suggestions found
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
           <div>
             <Label htmlFor="type">Vehicle Type</Label>
             <Select
@@ -255,6 +277,62 @@ export default function SearchResults() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="brand">Brand</Label>
+            <Select value={selectedBrand} onValueChange={handleBrandChange}>
+              <SelectTrigger id="brand">
+                <SelectValue placeholder="Select brand" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Brands</SelectItem>
+                {brandOptions.map((brand) => (
+                  <SelectItem key={brand.id} value={brand.name}>
+                    {brand.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="relative">
+            <Label htmlFor="model">Model</Label>
+            <form onSubmit={handleSearch} className="flex">
+              <Input
+                id="model"
+                ref={searchInputRef}
+                placeholder="Search for a model"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  debouncedSearch(e.target.value);
+                }}
+                className="flex-grow"
+              />
+              <Button type="submit" className="ml-2">
+                <Search className="h-4 w-4" />
+              </Button>
+            </form>
+            {showSuggestions && (
+              <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg">
+                {loading ? (
+                  <div className="px-4 py-2 text-gray-500">Searching...</div>
+                ) : searchSuggestions.length > 0 ? (
+                  searchSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-gray-500">No Ads found</div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
@@ -360,81 +438,110 @@ export default function SearchResults() {
             </div>
           </div>
 
-          <div
-            className={`grid gap-6 ${
-              isGridView
-                ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid-cols-1"
-            }`}
-          >
-            {ads.map((vehicle) => (
-              <Link key={vehicle.adId} href={`/vehicles/${vehicle.adId}`}>
-                <div
-                  className={`bg-white rounded-lg shadow-md overflow-hidden ${
-                    isGridView ? "" : "flex"
-                  } ${
-                    vehicle.isFeatured
-                      ? "border-2 border-yellow-500 transform hover:scale-105 transition-transform duration-200"
-                      : "hover:shadow-lg transition-shadow duration-200"
-                  }`}
-                >
-                  <div className="relative">
-                    <img
-                      src={vehicle.images[0]}
-                      alt={`${vehicle.brand} ${vehicle.model}`}
-                      className={`object-cover ${
-                        isGridView ? "w-full h-48" : "w-48 h-full"
-                      }`}
-                    />
-                    {vehicle.isFeatured && (
-                      <Badge className="absolute top-2 left-2 bg-yellow-500 text-black font-bold px-2 py-1 rounded-full flex items-center">
-                        <Star className="w-4 h-4 mr-1" />
-                        Featured
-                      </Badge>
-                    )}
-                    {vehicle.isPromoted && !vehicle.isFeatured && (
-                      <Badge className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full">
-                        Sponsored
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h2 className="text-xl font-semibold mb-2">
-                      {vehicle.brand} {vehicle.model}
-                    </h2>
-                    <div className="flex items-center mb-2">
-                      {vehicle.vehicleType === "CAR" && (
-                        <Car className="w-4 h-4 mr-1" />
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <div
+              className={`grid gap-6 ${
+                isGridView
+                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  : "grid-cols-1"
+              }`}
+            >
+              {ads.map((vehicle) => (
+                <Link key={vehicle.adId} href={`/vehicles/${vehicle.adId}`}>
+                  <div
+                    className={`bg-white rounded-lg shadow-md overflow-hidden ${
+                      isGridView ? "" : "flex"
+                    } ${
+                      vehicle.isFeatured
+                        ? "border-2 border-yellow-500 transform hover:scale-105 transition-transform duration-200"
+                        : "hover:shadow-lg transition-shadow duration-200"
+                    }`}
+                  >
+                    <div className="relative">
+                      <Image
+                        src={vehicle.images[0]}
+                        alt={`${vehicle.brand} ${vehicle.model}`}
+                        width={400}
+                        height={300}
+                        className={`object-cover ${
+                          isGridView ? "w-full h-48" : "w-48 h-full"
+                        }`}
+                      />
+                      {vehicle.isFeatured && (
+                        <Badge className="absolute top-2 left-2 bg-yellow-500 text-black font-bold px-2  py-1 rounded-full flex items-center">
+                          <Star className="w-4 h-4 mr-1" />
+                          Featured
+                        </Badge>
                       )}
-                      {vehicle.vehicleType === "BIKE" && (
-                        <Bike className="w-4 h-4 mr-1" />
+                      {vehicle.isPromoted && !vehicle.isFeatured && (
+                        <Badge className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full">
+                          Sponsored
+                        </Badge>
                       )}
-                      {vehicle.vehicleType === "TRUCK" && (
-                        <Truck className="w-4 h-4 mr-1" />
-                      )}
-                      <span className="text-sm text-gray-500">
-                        {vehicle.vehicleType}
-                      </span>
                     </div>
-                    <p className="text-gray-600">Year: {vehicle.year}</p>
-                    <p className="text-gray-600">
-                      Mileage: {vehicle.mileage.toLocaleString()} km
-                    </p>
-                    <p className="text-gray-600 font-semibold text-lg">
-                      Price: ${vehicle.price.toLocaleString()}
-                    </p>
-                    <p className="text-gray-600">
-                      Location: {vehicle.user.userCity},{" "}
-                      {vehicle.user.userDistrict}
-                    </p>
+                    <div className="p-4">
+                      <h2 className="text-xl font-semibold mb-2">
+                        {vehicle.brand} {vehicle.model}
+                      </h2>
+                      <div className="flex items-center mb-2">
+                        {vehicle.vehicleType === "CAR" && (
+                          <Car className="w-4 h-4 mr-1" />
+                        )}
+                        {vehicle.vehicleType === "BIKE" && (
+                          <Bike className="w-4 h-4 mr-1" />
+                        )}
+                        {vehicle.vehicleType === "TRUCK" && (
+                          <Truck className="w-4 h-4 mr-1" />
+                        )}
+                        <span className="text-sm text-gray-500">
+                          {vehicle.vehicleType}
+                        </span>
+                      </div>
+                      <p className="text-gray-600">Year: {vehicle.year}</p>
+                      <p className="text-gray-600">
+                        Mileage: {vehicle.mileage.toLocaleString()} km
+                      </p>
+                      <p className="text-gray-600 font-semibold text-lg">
+                        Price: ${vehicle.price.toLocaleString()}
+                      </p>
+                      <p className="text-gray-600">
+                        Location: {vehicle.user.userCity},{" "}
+                        {vehicle.user.userDistrict}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          
+          <div className="mt-8 flex justify-center">
+            <div className="join space-x-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <Button
+                    key={page}
+                    className={`join-item mx-1 ${
+                      currentPage === page
+                        ? "btn-primary bg-blue-500 text-white"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </Button>
+                )
+              )}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-
 }

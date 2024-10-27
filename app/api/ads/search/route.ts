@@ -11,15 +11,17 @@ export async function GET(req: NextRequest) {
   const minYear = searchParams.get("minYear");
   const maxYear = searchParams.get("maxYear");
   const searchTerm = searchParams.get("searchTerm");
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10);
 
   try {
-    // Parse query parameters to appropriate types
+    // Parse query parameters
     const parsedMinPrice = minPrice ? parseInt(minPrice, 10) : undefined;
     const parsedMaxPrice = maxPrice ? parseInt(maxPrice, 10) : undefined;
     const parsedMinYear = minYear ? parseInt(minYear, 10) : undefined;
     const parsedMaxYear = maxYear ? parseInt(maxYear, 10) : undefined;
 
-    // Valid vehicle types
+    // Define valid vehicle types
     const validVehicleTypes = [
       "CAR",
       "VAN",
@@ -36,19 +38,14 @@ export async function GET(req: NextRequest) {
       "OTHER",
     ] as const;
 
-    // Ensure `type` parameter is a valid enum value
     const vehicleTypeFilter =
       type &&
       validVehicleTypes.includes(type as (typeof validVehicleTypes)[number])
         ? type
         : undefined;
 
-    // Split search term into brand and model
-    const searchTerms = searchTerm ? searchTerm.trim().split(" ") : [];
-    const brandKeyword = searchTerms[0];
-    const modelKeywords = searchTerms.slice(1).join(" ");
+    const searchTerms = searchTerm ? searchTerm.trim().split(/\s+/) : [];
 
-    // Construct main filters for ads
     const filters: any = {
       vehicleType: vehicleTypeFilter,
       price:
@@ -59,29 +56,27 @@ export async function GET(req: NextRequest) {
         parsedMinYear || parsedMaxYear
           ? { gte: parsedMinYear, lte: parsedMaxYear }
           : undefined,
-      OR: searchTerm
-        ? [
-            { brand: { contains: brandKeyword, mode: "insensitive" } },
-            modelKeywords && {
-              model: { contains: modelKeywords, mode: "insensitive" },
-            },
-          ].filter(Boolean)
-        : undefined,
-      posted: true, // Only fetch posted ads
+      OR:
+        searchTerms.length > 0
+          ? searchTerms.map((term) => ({
+              OR: [
+                { brand: { contains: term, mode: "insensitive" } },
+                { model: { contains: term, mode: "insensitive" } },
+              ],
+            }))
+          : undefined,
+      posted: true,
     };
 
-    // Construct nested user filters if district or city specified
     const userFilter: any = {
       userDistrict: district !== "ALL" ? district : undefined,
       userCity: city !== "ALL" ? city : undefined,
     };
 
-    // Add user filters to main filter if there are any user-specific criteria
     if (Object.values(userFilter).some((val) => val !== undefined)) {
       filters.user = userFilter;
     }
 
-    // Remove undefined or empty filters from `filters` object
     Object.keys(filters).forEach(
       (key) =>
         (filters[key] === undefined ||
@@ -90,9 +85,8 @@ export async function GET(req: NextRequest) {
         delete filters[key]
     );
 
-    console.log("Filters applied:", filters);
+    const totalAds = await prisma.ad.count({ where: filters });
 
-    // Fetch ads with the specified filters
     const ads = await prisma.ad.findMany({
       where: filters,
       select: {
@@ -104,25 +98,14 @@ export async function GET(req: NextRequest) {
         mileage: true,
         vehicleType: true,
         images: true,
-        user: {
-          select: {
-            userCity: true,
-            userDistrict: true,
-          },
-        },
-        PromotedItem: {
-          select: {
-            featured: true,
-            promotionExpiresAt: true,
-          },
-        },
+        user: { select: { userCity: true, userDistrict: true } },
+        PromotedItem: { select: { featured: true, promotionExpiresAt: true } },
       },
-      orderBy: {
-        postedAt: "desc",
-      },
+      orderBy: { postedAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
     });
 
-    // Format ads with promotion details
     const adsWithPromotionStatus = ads.map((ad) => ({
       ...ad,
       isPromoted: ad.PromotedItem.length > 0,
@@ -133,7 +116,10 @@ export async function GET(req: NextRequest) {
           : null,
     }));
 
-    return NextResponse.json(adsWithPromotionStatus, { status: 200 });
+    return NextResponse.json(
+      { ads: adsWithPromotionStatus, total: totalAds },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error fetching ads:", error);
     return NextResponse.json(

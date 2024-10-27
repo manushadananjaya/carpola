@@ -1,5 +1,6 @@
 // app/search/page.tsx
 
+import { Footer } from "@/components/Footer";
 import SearchResults from "./components/SearchResults";
 import { Navbar } from "@/components/Navbar";
 import { Suspense } from "react";
@@ -11,6 +12,7 @@ export default function SearchPage() {
         <div>
           <Navbar />
           <SearchResults />
+          <Footer />
         </div>
       </Suspense>
     );

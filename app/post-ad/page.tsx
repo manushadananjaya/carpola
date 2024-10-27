@@ -30,6 +30,8 @@ import { useSession } from "next-auth/react";
 import { X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Footer } from "@/components/Footer";
+import vehicleBrands from "../../data/vehicle_brands.json";
+import motoBrands from "../../data/moto_brands.json";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -145,6 +147,9 @@ export default function AdPostingForm() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [brandOptions, setBrandOptions] = useState<
+    { id: number; name: string }[]
+  >([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -181,6 +186,12 @@ export default function AdPostingForm() {
   }, [status, session, router, form]);
 
   const watchType = form.watch("type");
+
+  useEffect(() => {
+    setBrandOptions(
+      watchType === "BIKE" ? motoBrands.data : vehicleBrands.data
+    );
+  }, [watchType]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (typeof window === "undefined") return; // Avoid server-side code execution
@@ -342,9 +353,20 @@ export default function AdPostingForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Brand</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter brand" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a brand" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {brandOptions.map((brand) => (
+                        <SelectItem key={brand.id} value={brand.name}>
+                          {brand.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
