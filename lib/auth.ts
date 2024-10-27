@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaClient } from "@prisma/client";
@@ -24,7 +24,23 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required.");
         }
 
-        // Fetch the user from the database
+        // Check if admin is logging in with hardcoded credentials
+        if (
+          credentials.email === "admin@vahanasale.lk" &&
+          credentials.password === "admin123"
+        ) {
+          return {
+            id: 1,
+            username: "Admin",
+            email: "admin@vahanasale.lk",
+            phone: "",
+            city: "",
+            district: "",
+            isAdmin: true,
+          };
+        }
+
+        // Fetch the user from the database for non-admin users
         const user = await prisma.user.findUnique({
           where: { userEmail: credentials.email },
         });
@@ -44,6 +60,7 @@ export const authOptions: NextAuthOptions = {
               phone: user.userPhone,
               city: user.userCity,
               district: user.userDistrict,
+              isAdmin: false,
             };
           }
         }
@@ -92,6 +109,7 @@ export const authOptions: NextAuthOptions = {
         userPhone: token.phone as string,
         city: token.city as string,
         district: token.district as string,
+        isAdmin: token.isAdmin as boolean,
       };
       return session;
     },
@@ -103,6 +121,7 @@ export const authOptions: NextAuthOptions = {
         token.phone = user.phone ?? "";
         token.city = user.city;
         token.district = user.district;
+        token.isAdmin = user.isAdmin;
       } else {
         const dbUser = await prisma.user.findUnique({
           where: { userEmail: token.email },
@@ -114,6 +133,7 @@ export const authOptions: NextAuthOptions = {
           token.phone = dbUser.userPhone;
           token.city = dbUser.userCity;
           token.district = dbUser.userDistrict;
+          token.isAdmin = dbUser.userEmail === "admin@vahanasale.lk";
         }
       }
       return token;
@@ -126,6 +146,3 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
 };
-
-const handler = NextAuth(authOptions);
-export { handler as GET, handler as POST };
