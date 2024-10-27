@@ -8,8 +8,10 @@ import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/Navbar";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
+import { Badge } from "@/components/ui/badge";
+import { Star, Zap } from "lucide-react";
 
-// Type definition
+// Updated Type definition
 type Vehicle = {
   adId: number;
   contactNo: string;
@@ -33,6 +35,12 @@ type Vehicle = {
     userPhone: string;
     userCity: string;
   };
+  PromotedItem: { featured: boolean }[];
+  featured: boolean;
+  promoted: boolean;
+  vehicleType: string;
+  bikeType: string | null;
+  startType: string | null;
 };
 
 export default function VehicleDetailsPage({
@@ -42,8 +50,8 @@ export default function VehicleDetailsPage({
 }) {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false); // State to control modal visibility
-  const [selectedImage, setSelectedImage] = useState<string | null>(null); // Selected image for modal
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { id } = params;
 
   useEffect(() => {
@@ -51,6 +59,7 @@ export default function VehicleDetailsPage({
       try {
         const data = await fetchVehicle(id);
         setVehicle(data);
+        console.log("fetched vehicle:", data);
       } catch (err) {
         setError((err as Error).message);
       }
@@ -70,37 +79,56 @@ export default function VehicleDetailsPage({
   if (!vehicle)
     return <div className="text-center text-xl mt-10">Loading...</div>;
 
-  // Vehicle image array
   const images = vehicle.images || [];
 
-  // Function to handle image click
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
-    setIsOpen(true); // Open modal
+    setIsOpen(true);
   };
 
-  // Function to close modal
   const closeModal = () => {
     setIsOpen(false);
     setSelectedImage(null);
   };
 
+  const isFeatured = vehicle.PromotedItem.some((item) => item.featured);
+
   return (
     <div>
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-4xl mx-auto">
+        <Card
+          className={`max-w-4xl mx-auto ${
+            isFeatured ? "border-2 border-yellow-500" : ""
+          }`}
+        >
           <CardHeader>
-            <CardTitle className="text-3xl font-bold">
-              {vehicle.brand} {vehicle.model} ({vehicle.year})
-            </CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-3xl font-bold">
+                {vehicle.brand} {vehicle.model} ({vehicle.year})
+              </CardTitle>
+              <div className="flex gap-2">
+                {isFeatured && (
+                  <Badge className="bg-yellow-500 text-black">
+                    <Star className="w-4 h-4 mr-1" />
+                    Featured
+                  </Badge>
+                )}
+                {vehicle.promoted && !isFeatured && (
+                  <Badge className="bg-blue-500">
+                    <Zap className="w-4 h-4 mr-1" />
+                    Sponsored
+                  </Badge>
+                )}
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="mb-6">
               <ImageCarousel
                 images={images}
                 alt={`${vehicle.brand} ${vehicle.model}`}
-                onImageClick={handleImageClick} // Attach click handler
+                onImageClick={handleImageClick}
               />
             </div>
 
@@ -109,9 +137,25 @@ export default function VehicleDetailsPage({
                 <h2 className="text-2xl font-semibold mb-4">Vehicle Details</h2>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                   <dt className="font-medium text-gray-500">Price</dt>
-                  <dd className="font-semibold">${vehicle.price}</dd>
+                  <dd className="font-semibold text-xl text-green-600">
+                    ${vehicle.price.toLocaleString()}
+                  </dd>
+                  <dt className="font-medium text-gray-500">Type</dt>
+                  <dd>{vehicle.vehicleType}</dd>
+                  {vehicle.bikeType && (
+                    <>
+                      <dt className="font-medium text-gray-500">Bike Type</dt>
+                      <dd>{vehicle.bikeType}</dd>
+                    </>
+                  )}
+                  {vehicle.startType && (
+                    <>
+                      <dt className="font-medium text-gray-500">Start Type</dt>
+                      <dd>{vehicle.startType}</dd>
+                    </>
+                  )}
                   <dt className="font-medium text-gray-500">Mileage</dt>
-                  <dd>{vehicle.mileage} km</dd>
+                  <dd>{vehicle.mileage.toLocaleString()} km</dd>
                   <dt className="font-medium text-gray-500">Gear</dt>
                   <dd>{vehicle.gear || "N/A"}</dd>
                   <dt className="font-medium text-gray-500">Fuel Type</dt>
@@ -158,7 +202,6 @@ export default function VehicleDetailsPage({
           </CardContent>
         </Card>
 
-        {/* Modal for Enlarged Image */}
         <Modal open={isOpen} onClose={closeModal} center>
           {selectedImage && (
             <img

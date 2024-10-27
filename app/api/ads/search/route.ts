@@ -91,13 +91,30 @@ export async function GET(req: NextRequest) {
             userDistrict: true,
           },
         },
+        PromotedItem: {
+          select: {
+            featured: true,
+            promotionExpiresAt: true,
+          },
+        },
       },
       orderBy: {
         postedAt: "desc", // Order by most recently posted ads
       },
     });
 
-    return NextResponse.json(ads, { status: 200 });
+    // Map the ads to include a promotion status field
+    const adsWithPromotionStatus = ads.map((ad) => ({
+      ...ad,
+      isPromoted: ad.PromotedItem.length > 0,
+      isFeatured: ad.PromotedItem.some((item) => item.featured),
+      promotionExpiresAt:
+        ad.PromotedItem.length > 0
+          ? ad.PromotedItem[0].promotionExpiresAt
+          : null,
+    }));
+
+    return NextResponse.json(adsWithPromotionStatus, { status: 200 });
   } catch (error) {
     console.error("Error fetching ads:", error);
     return NextResponse.json(

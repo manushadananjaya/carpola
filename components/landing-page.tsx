@@ -8,8 +8,31 @@ import { Search, Car, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import FeaturedCategories from "@/components/FeaturedCategories";
+import { Footer } from "@/components/Footer";
+import { Separator } from "@radix-ui/react-dropdown-menu";
+import { useRouter } from "next/navigation";
+import debounce from "lodash.debounce";
+
+import { useEffect, useState } from "react";
 
 export function LandingPageComponent() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
+
+  // Debounce the search input to avoid excessive navigation
+  const debouncedSearch = debounce((value: string) => {
+    if (value.trim()) {
+      router.push(`/search?query=${encodeURIComponent(value)}`);
+    }
+  }, 500);
+
+  useEffect(() => {
+    debouncedSearch(searchTerm);
+    // Cleanup function for debouncing on unmount
+    return () => debouncedSearch.cancel();
+  }, [searchTerm, debouncedSearch]);
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -27,11 +50,16 @@ export function LandingPageComponent() {
                 </p>
               </div>
               <div className="w-full max-w-sm space-y-2">
-                <form className="flex space-x-2">
+                <form
+                  className="flex space-x-2"
+                  onSubmit={(e) => e.preventDefault()}
+                >
                   <Input
                     className="max-w-lg flex-1 text-white"
                     placeholder="Search by make, model, or keyword"
                     type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                   <Button type="submit" variant="secondary">
                     <Search className="h-4 w-4" />
@@ -93,25 +121,14 @@ export function LandingPageComponent() {
                 </p>
               </div>
               <Button className="w-full sm:w-auto" size="lg">
-                List Your Vehicle
+                <Link href="/post-ad">List Your Vehicle</Link>
               </Button>
             </div>
           </div>
         </section>
+
+        <Footer />
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-gray-500">
-          © 2024 AutoMarket. All rights reserved.
-        </p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Terms of Service
-          </Link>
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Privacy
-          </Link>
-        </nav>
-      </footer>
     </div>
   );
 }

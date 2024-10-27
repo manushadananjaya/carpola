@@ -14,10 +14,14 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Grid, List, Car, Bike, Truck } from "lucide-react";
+import { Grid, List, Car, Bike, Truck, Star } from "lucide-react";
 import axios from "axios";
 import locationData from "../../../data/sri-lanka-districts.json";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { debounce } from "lodash";
+import { useRouter } from "next/navigation";
+
 
 // Vehicle Type Enum
 const VehicleType = {
@@ -49,21 +53,35 @@ type Vehicle = {
     userDistrict: string;
     userCity: string;
   };
+  isFeatured: boolean;
+  isPromoted: boolean;
 };
 
 export default function SearchResults() {
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get("category") || "";
+  const initialSearchQuery = searchParams.get("query") || "";
 
   const [isGridView, setIsGridView] = useState(true);
   const [selectedType, setSelectedType] = useState<string>(initialCategory);
   const [priceRange, setPriceRange] = useState([0, 10000000]);
   const [yearRange, setYearRange] = useState([1980, new Date().getFullYear()]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(initialSearchQuery);
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedCity, setSelectedCity] = useState<string>("ALL");
   const [ads, setAds] = useState<Vehicle[]>([]);
   const [cities, setCities] = useState<string[]>([]);
+
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const router = useRouter();
+
+  
+  // Other state definitions for filters
+
+  // Debounce function: delays the effect until the user stops typing
+  const debouncedSearch = debounce((value) => {
+    setDebouncedSearchTerm(value);
+  }, 300);
 
   // Fetch ads from the API
   useEffect(() => {
@@ -81,7 +99,25 @@ export default function SearchResults() {
             searchTerm,
           },
         });
-        setAds(data);
+
+        // Process and sort the ads
+        const processedAds = data.map((ad: any) => ({
+          ...ad,
+          isFeatured:
+            ad.PromotedItem?.some((item: any) => item.featured) || false,
+          isPromoted: ad.PromotedItem?.length > 0 || false,
+        }));
+
+        const sortedAds = processedAds.sort((a: Vehicle, b: Vehicle) => {
+          if (a.isFeatured && !b.isFeatured) return -1;
+          if (!a.isFeatured && b.isFeatured) return 1;
+          if (a.isPromoted && !b.isPromoted) return -1;
+          if (!a.isPromoted && b.isPromoted) return 1;
+          return 0;
+        });
+
+        setAds(sortedAds);
+        console.log("Fetched ads:", sortedAds);
       } catch (error) {
         console.error("Error fetching ads:", error);
       }
@@ -108,6 +144,22 @@ export default function SearchResults() {
     }
   }, [selectedDistrict]);
 
+  useEffect(() => {
+    // Set up a new search term as the user types
+    debouncedSearch(searchTerm);
+
+    // Clean up debounce on unmount
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchTerm]);
+
+  // Effect to update the ads list based on the debounced search term
+   useEffect(() => {
+     if (debouncedSearchTerm) {
+       router.push(`/search?query=${debouncedSearchTerm}`);
+     }
+   }, [debouncedSearchTerm, router]);
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Search Results</h1>
@@ -252,18 +304,34 @@ export default function SearchResults() {
             {ads.map((vehicle) => (
               <Link key={vehicle.adId} href={`/vehicles/${vehicle.adId}`}>
                 <div
-                  key={vehicle.adId}
                   className={`bg-white rounded-lg shadow-md overflow-hidden ${
                     isGridView ? "" : "flex"
+                  } ${
+                    vehicle.isFeatured
+                      ? "border-2 border-yellow-500 transform hover:scale-105 transition-transform duration-200"
+                      : "hover:shadow-lg transition-shadow duration-200"
                   }`}
                 >
-                  <img
-                    src={vehicle.images[0]}
-                    alt={`${vehicle.brand} ${vehicle.model}`}
-                    className={`object-cover ${
-                      isGridView ? "w-full h-48" : "w-48 h-full"
-                    }`}
-                  />
+                  <div className="relative">
+                    <img
+                      src={vehicle.images[0]}
+                      alt={`${vehicle.brand} ${vehicle.model}`}
+                      className={`object-cover ${
+                        isGridView ? "w-full h-48" : "w-48 h-full"
+                      }`}
+                    />
+                    {vehicle.isFeatured && (
+                      <Badge className="absolute top-2 left-2 bg-yellow-500 text-black font-bold px-2 py-1 rounded-full flex items-center">
+                        <Star className="w-4 h-4 mr-1" />
+                        Featured
+                      </Badge>
+                    )}
+                    {vehicle.isPromoted && !vehicle.isFeatured && (
+                      <Badge className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full">
+                        Sponsored
+                      </Badge>
+                    )}
+                  </div>
                   <div className="p-4">
                     <h2 className="text-xl font-semibold mb-2">
                       {vehicle.brand} {vehicle.model}
@@ -283,8 +351,12 @@ export default function SearchResults() {
                       </span>
                     </div>
                     <p className="text-gray-600">Year: {vehicle.year}</p>
-                    <p className="text-gray-600">Mileage: {vehicle.mileage}</p>
-                    <p className="text-gray-600">Price: ${vehicle.price}</p>
+                    <p className="text-gray-600">
+                      Mileage: {vehicle.mileage} km
+                    </p>
+                    <p className="text-gray-600 font-semibold text-lg">
+                      Price: ${vehicle.price.toLocaleString()}
+                    </p>
                     <p className="text-gray-600">
                       Location: {vehicle.user.userCity},{" "}
                       {vehicle.user.userDistrict}

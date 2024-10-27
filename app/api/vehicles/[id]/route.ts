@@ -1,5 +1,3 @@
-// app/api/vehicles/[id]/route.ts
-
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -10,11 +8,16 @@ export async function GET(
   const { id } = params;
 
   try {
-    // Fetch the vehicle ad by ID
+    // Fetch the vehicle ad by ID and include promotion details
     const vehicle = await prisma.ad.findUnique({
       where: { adId: Number(id) },
       include: {
         user: true, // Include the associated user's information
+        PromotedItem: {
+          select: {
+            featured: true, // Include if the ad is featured
+          },
+        },
       },
     });
 
@@ -25,8 +28,20 @@ export async function GET(
 
     console.log("Vehicle ad found:", vehicle);
 
-    // Return the vehicle ad data if found
-    return NextResponse.json(vehicle);
+    // Determine promotion status
+    const promoted = vehicle.PromotedItem.length > 0;
+    const featured = promoted
+      ? vehicle.PromotedItem.some((item) => item.featured)
+      : false;
+
+    // Return the vehicle ad data with `promoted` and `featured` status
+    const response = {
+      ...vehicle,
+      promoted,
+      featured,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching vehicle:", error);
     return NextResponse.json(
