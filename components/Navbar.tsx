@@ -22,7 +22,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-4 sm:gap-6">
           <Link
             className="text-sm font-medium hover:underline underline-offset-4"
-            href="/buy"
+            href="/search"
           >
             Buy
           </Link>
@@ -64,7 +64,7 @@ export function Navbar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link href="/buy">Buy</Link>
+              <Link href="/search">Buy</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/my-ads">Sell</Link>

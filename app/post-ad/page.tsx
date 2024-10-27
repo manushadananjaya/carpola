@@ -30,6 +30,7 @@ import { getSession } from "next-auth/react";
 import { X } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Footer } from "@/components/Footer";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -712,6 +713,7 @@ export default function AdPostingForm() {
           </Alert>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

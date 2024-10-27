@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import districtsData from "@/data/sri-lanka-districts.json";
+import { Footer } from "@/components/Footer";
 
 type AlertType = "error" | "success" | null;
 
@@ -265,6 +266,7 @@ export default function UserProfilePage() {
         </CardFooter>
       </Card>
     </div>
+    <Footer />
     </>
   );
 }
