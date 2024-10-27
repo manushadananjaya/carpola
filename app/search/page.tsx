@@ -2,16 +2,17 @@
 
 import SearchResults from "./components/SearchResults";
 import { Navbar } from "@/components/Navbar";
+import { Suspense } from "react";
 
 export default function SearchPage() {
         
     return (
-        <>
-            <div>
-                <Navbar />
-                <SearchResults />
-            </div>
-        </>
+      <Suspense fallback={<div>Loading...</div>}>
+        <div>
+          <Navbar />
+          <SearchResults />
+        </div>
+      </Suspense>
     );
   
 }

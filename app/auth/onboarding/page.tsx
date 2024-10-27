@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,14 @@ import { toast } from "@/hooks/use-toast";
 import districtsData from "@/data/sri-lanka-districts.json";
 
 export default function OnboardingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OnboardingContent />
+    </Suspense>
+  );
+}
+
+function OnboardingContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -72,7 +80,6 @@ export default function OnboardingPage() {
           password: updatedFormData.password,
           callbackUrl: "/",
         });
-
       } else {
         const error = await response.json();
         throw new Error(error.message);
