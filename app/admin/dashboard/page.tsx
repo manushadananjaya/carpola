@@ -44,7 +44,7 @@ import { Badge } from "@/components/ui/badge";
 
 type Ad = {
   adId: string;
-  description?: string;
+  details?: string;
   price: number;
   featured: boolean;
   promoted: boolean;
@@ -123,6 +123,7 @@ export default function AdminDashboard() {
       const response = await fetch("/api/ads/approved");
       const data = await response.json();
       setAds(data);
+      console.log("Approved ads:", data);
     } catch (error) {
       console.error("Error fetching approved ads:", error);
     }
@@ -285,7 +286,7 @@ export default function AdminDashboard() {
         `${ad.brand} ${ad.model} ${ad.year}`
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        (ad.description?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+        (ad.details?.toLowerCase().includes(searchTerm.toLowerCase()) ??
           false)
     )
     .filter((ad) => {
@@ -502,7 +503,7 @@ function AdTable({
                     <DialogHeader>
                       <DialogTitle>{`${ad.brand} ${ad.model} ${ad.year}`}</DialogTitle>
                       <DialogDescription>
-                        {ad.description || "No description available"}
+                        {ad.details || "No description available"}
                       </DialogDescription>
                       <div className="text-sm text-gray-500">
                         Ad ID: {ad.adId}

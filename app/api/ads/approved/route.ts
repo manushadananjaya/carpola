@@ -7,6 +7,7 @@ export async function GET() {
     const pendingAds = await prisma.ad.findMany({
       where: { posted: true },
       include: { user: true },
+      orderBy: { postedAt: "desc" },
     });
     return NextResponse.json(pendingAds);
   } catch (error) {

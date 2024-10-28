@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"; // Ensure this path correctly matches you
 // GET method to fetch all promoted ads with related ad and user information
 export async function GET() {
   try {
-    // Fetch all promoted items from the database, including ad and user details
+    // Fetch all promoted items from the database, including ad and user details, ordered by createdAt
     const promotedItems = await prisma.promotedItem.findMany({
       include: {
         ad: {
@@ -12,6 +12,9 @@ export async function GET() {
             user: true, // Include user details related to each ad
           },
         },
+      },
+      orderBy: {
+        createdAt: "desc", // Sort by createdAt in ascending order
       },
     });
 

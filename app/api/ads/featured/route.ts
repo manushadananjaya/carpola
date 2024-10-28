@@ -19,6 +19,9 @@ export async function GET() {
           },
         },
       },
+      orderBy: {
+        createdAt: "desc", // Sort by createdAt in ascending order
+      },
     });
 
     return NextResponse.json(featuredItems);
