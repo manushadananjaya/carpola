@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     // Check if the user with the same email already exists
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ userEmail: email }, { userPhone: phone }],
+        OR: [{ userEmail: email }],
       },
     });
 

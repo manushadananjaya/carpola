@@ -105,6 +105,12 @@ export default function SignInPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" required />
               </div>
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm text-primary hover:underline"
+              >
+                Forgot Password?
+              </Link>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
