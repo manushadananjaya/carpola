@@ -177,6 +177,14 @@
       "name": "Headbanger"
     },
     {
+      "id": 121,
+      "name": "Hero"
+    },
+    {
+      "id": 122,
+      "name": "Hero Honda"
+    },
+    {
       "id": 45,
       "name": "Honda"
     },
@@ -479,6 +487,10 @@
     {
       "id": 120,
       "name": "Yamaha"
+    },
+    {
+      "id": 123,
+      "name": "Yadea"
     }
   ]
 }

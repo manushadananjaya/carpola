@@ -69,6 +69,10 @@
       "name": "Dodge"
     },
     {
+      "id": 75,
+      "name": "Dfsk"
+    },
+    {
       "id": 18,
       "name": "Eagle"
     },
@@ -169,6 +173,10 @@
       "name": "Mazda"
     },
     {
+      "id": 73,
+      "name": "Mahindra"
+    },
+    {
       "id": 43,
       "name": "McLaren"
     },
@@ -189,6 +197,10 @@
       "name": "MINI"
     },
     {
+      "id": 74,
+      "name": "Micro"
+    },
+    {
       "id": 48,
       "name": "Mitsubishi"
     },
@@ -205,6 +217,10 @@
       "name": "Peugeot"
     },
     {
+      "id": 76,
+      "name": "Perudua"
+    },
+    {
       "id": 52,
       "name": "Plymouth"
     },
@@ -216,6 +232,7 @@
       "id": 54,
       "name": "Porsche"
     },
+
     {
       "id": 55,
       "name": "RAM"
@@ -267,6 +284,10 @@
     {
       "id": 67,
       "name": "Toyota"
+    },
+    {
+      "id": 72,
+      "name": "Tata"
     },
     {
       "id": 68,
