@@ -1,4 +1,3 @@
-// components/LandingPageComponent.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { Footer } from "@/components/Footer";
 import { Separator } from "@radix-ui/react-dropdown-menu";
 import { useRouter } from "next/navigation";
 import debounce from "lodash.debounce";
+import Image from "next/image";
 
 import { useEffect, useState } from "react";
 
@@ -19,7 +19,6 @@ export function LandingPageComponent() {
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
 
-  // Debounce the search input to avoid excessive navigation
   const debouncedSearch = debounce((value: string) => {
     if (value.trim()) {
       router.push(`/search?query=${encodeURIComponent(value)}`);
@@ -28,23 +27,30 @@ export function LandingPageComponent() {
 
   useEffect(() => {
     debouncedSearch(searchTerm);
-    // Cleanup function for debouncing on unmount
     return () => debouncedSearch.cancel();
   }, [searchTerm, debouncedSearch]);
-
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-black flex justify-center items-center">
-          <div className="container px-4 md:px-6">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 flex justify-center items-center relative overflow-hidden">
+          <Image
+            src="/assets/mainImage.jpg"
+            alt="Background of cars"
+            layout="fill"
+            objectFit="cover"
+            quality={100}
+          />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-black/50 z-0"></div>
+          <div className="container px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl text-white">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl text-white drop-shadow-lg">
                   Find Your Perfect Ride
                 </h1>
-                <p className="mx-auto max-w-[700px] text-gray-300 md:text-xl">
+                <p className="mx-auto max-w-[700px] text-gray-200 md:text-xl drop-shadow-md">
                   Browse thousands of cars from trusted sellers. Buy or sell
                   with ease on Vahanasale.lk.
                 </p>
@@ -55,13 +61,17 @@ export function LandingPageComponent() {
                   onSubmit={(e) => e.preventDefault()}
                 >
                   <Input
-                    className="max-w-lg flex-1 text-white"
+                    className="max-w-lg flex-1 bg-black/80 text-white placeholder-gray-500"
                     placeholder="Search by make, model, or keyword"
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <Button type="submit" variant="secondary">
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    className="bg-black text-white border hover:text-black hover:bg-gray-200"
+                  >
                     <Search className="h-4 w-4" />
                     <span className="sr-only">Search</span>
                   </Button>
@@ -126,7 +136,6 @@ export function LandingPageComponent() {
             </div>
           </div>
         </section>
-
         <Footer />
       </main>
     </div>
