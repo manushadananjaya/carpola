@@ -11,6 +11,7 @@ import "react-responsive-modal/styles.css";
 import { Badge } from "@/components/ui/badge";
 import { Star, Zap } from "lucide-react";
 import VehicleDetailsSkeleton from "@/components/ui/vehicle-details-skeleton";
+import { Footer } from "@/components/Footer";
 
 // Updated Type definition
 type Vehicle = {
@@ -214,6 +215,7 @@ export default function VehicleDetailsPage({
           )}
         </Modal>
       </div>
+      <Footer />
     </div>
   );
 }
