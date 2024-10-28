@@ -32,7 +32,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/sell" className="text-sm hover:underline">
+                <Link href="/post-ad" className="text-sm hover:underline">
                   Sell Your Vehicle
                 </Link>
               </li>
