@@ -24,7 +24,7 @@ const VehicleType = {
   THREEWHEEL: "THREEWHEEL",
   TRACTOR: "TRACTOR",
   HEAVYDUTY: "HEAVYDUTY",
-  OTHER: "OTHER",
+  
 } as const;
 
 type VehicleTypeKey = keyof typeof VehicleType;
@@ -42,7 +42,7 @@ const categoryIcons: Record<VehicleTypeKey, React.ReactNode> = {
   THREEWHEEL: <Sailboat className="w-8 h-8" />,
   TRACTOR: <Tractor className="w-8 h-8" />,
   HEAVYDUTY: <Forklift className="w-8 h-8" />,
-  OTHER: <HelpCircle className="w-8 h-8" />,
+ 
 };
 
 // Define display labels with custom names
@@ -59,7 +59,7 @@ const categoryLabels: Record<VehicleTypeKey, string> = {
   THREEWHEEL: "Three-Wheeler",
   TRACTOR: "Tractor",
   HEAVYDUTY: "Heavy Duty",
-  OTHER: "Other",
+
 };
 
 export default function FeaturedCategories() {

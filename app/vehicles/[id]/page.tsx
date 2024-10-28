@@ -10,6 +10,7 @@ import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 import { Badge } from "@/components/ui/badge";
 import { Star, Zap } from "lucide-react";
+import VehicleDetailsSkeleton from "@/components/ui/vehicle-details-skeleton";
 
 // Updated Type definition
 type Vehicle = {
@@ -78,7 +79,7 @@ export default function VehicleDetailsPage({
       </div>
     );
   if (!vehicle)
-    return <div className="text-center text-xl mt-10">Loading...</div>;
+    return <div className="text-center text-xl mt-10"><VehicleDetailsSkeleton /></div>;
 
   const images = vehicle.images || [];
 

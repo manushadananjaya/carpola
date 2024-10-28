@@ -15,10 +15,11 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import districtsData from "@/data/sri-lanka-districts.json";
+import LoadingMessage from "@/components/ui/loading-massage";
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div><LoadingMessage /></div>}>
       <OnboardingContent />
     </Suspense>
   );
