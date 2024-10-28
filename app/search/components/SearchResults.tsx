@@ -14,23 +14,12 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import {
-  Grid,
-  List,
-  Car,
-  Bike,
-  Truck,
-  Star,
-  Search,
-  Loader,
-} from "lucide-react";
+import { Grid, List, Search, Loader } from "lucide-react";
 import axios from "axios";
 import locationData from "../../../data/sri-lanka-districts.json";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { debounce } from "lodash";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 // Import brand data
 import vehicleBrands from "../../../data/vehicle_brands.json";
@@ -69,6 +58,9 @@ type Vehicle = {
   isFeatured: boolean;
   isPromoted: boolean;
 };
+
+// Import the new VehicleCard component
+import VehicleCard from "./vehicle-card";
 
 export default function SearchResults() {
   const searchParams = useSearchParams();
@@ -446,81 +438,19 @@ export default function SearchResults() {
             <div
               className={`grid gap-6 ${
                 isGridView
-                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  ? "grid-cols-1 sm:grid-cols-2  lg:grid-cols-3"
                   : "grid-cols-1"
               }`}
             >
               {ads.map((vehicle) => (
                 <Link key={vehicle.adId} href={`/vehicles/${vehicle.adId}`}>
-                  <div
-                    className={`bg-white rounded-lg shadow-md overflow-hidden ${
-                      isGridView ? "" : "flex"
-                    } ${
-                      vehicle.isFeatured
-                        ? "border-2 border-yellow-500 transform hover:scale-105 transition-transform duration-200"
-                        : "hover:shadow-lg transition-shadow duration-200"
-                    }`}
-                  >
-                    <div className="relative">
-                      <Image
-                        src={vehicle.images[0]}
-                        alt={`${vehicle.brand} ${vehicle.model}`}
-                        width={400}
-                        height={300}
-                        className={`object-cover ${
-                          isGridView ? "w-full h-48" : "w-48 h-full"
-                        }`}
-                      />
-                      {vehicle.isFeatured && (
-                        <Badge className="absolute top-2 left-2 bg-yellow-500 text-black font-bold px-2  py-1 rounded-full flex items-center">
-                          <Star className="w-4 h-4 mr-1" />
-                          Featured
-                        </Badge>
-                      )}
-                      {vehicle.isPromoted && !vehicle.isFeatured && (
-                        <Badge className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded-full">
-                          Sponsored
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h2 className="text-xl font-semibold mb-2">
-                        {vehicle.brand} {vehicle.model}
-                      </h2>
-                      <div className="flex items-center mb-2">
-                        {vehicle.vehicleType === "CAR" && (
-                          <Car className="w-4 h-4 mr-1" />
-                        )}
-                        {vehicle.vehicleType === "BIKE" && (
-                          <Bike className="w-4 h-4 mr-1" />
-                        )}
-                        {vehicle.vehicleType === "TRUCK" && (
-                          <Truck className="w-4 h-4 mr-1" />
-                        )}
-                        <span className="text-sm text-gray-500">
-                          {vehicle.vehicleType}
-                        </span>
-                      </div>
-                      <p className="text-gray-600">Year: {vehicle.year}</p>
-                      <p className="text-gray-600">
-                        Mileage: {vehicle.mileage.toLocaleString()} km
-                      </p>
-                      <p className="text-gray-600 font-semibold text-lg">
-                        Price: ${vehicle.price.toLocaleString()}
-                      </p>
-                      <p className="text-gray-600">
-                        Location: {vehicle.user.userCity},{" "}
-                        {vehicle.user.userDistrict}
-                      </p>
-                    </div>
-                  </div>
+                  <VehicleCard vehicle={vehicle} isGridView={isGridView} />
                 </Link>
               ))}
             </div>
           )}
 
           {/* Pagination */}
-          
           <div className="mt-8 flex justify-center">
             <div className="join space-x-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(

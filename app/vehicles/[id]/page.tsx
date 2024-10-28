@@ -140,7 +140,7 @@ export default function VehicleDetailsPage({
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                   <dt className="font-medium text-gray-500">Price</dt>
                   <dd className="font-semibold text-xl text-green-600">
-                    ${vehicle.price.toLocaleString()}
+                    LKR {vehicle.price.toLocaleString()}
                   </dd>
                   <dt className="font-medium text-gray-500">Type</dt>
                   <dd>{vehicle.vehicleType}</dd>
