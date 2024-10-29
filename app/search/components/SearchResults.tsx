@@ -70,7 +70,7 @@ export default function SearchResults() {
 
   const [isGridView, setIsGridView] = useState(true);
   const [selectedType, setSelectedType] = useState<string>(initialCategory);
-  const [priceRange, setPriceRange] = useState([0, 10000000]);
+  const [priceRange, setPriceRange] = useState([0, 100000000000]);
   const [yearRange, setYearRange] = useState([1980, new Date().getFullYear()]);
   const [searchTerm, setSearchTerm] = useState(initialSearchQuery);
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
@@ -378,7 +378,7 @@ export default function SearchResults() {
             <Label>Price Range</Label>
             <Slider
               min={0}
-              max={10000000}
+              max={100000000000}
               step={100000}
               value={priceRange}
               onValueChange={setPriceRange}

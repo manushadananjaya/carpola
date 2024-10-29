@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -70,7 +72,10 @@ export default function SignInPage() {
   }
 
   return (
+    <div>
+     <Navbar />
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
+     
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
@@ -129,6 +134,9 @@ export default function SignInPage() {
           </p>
         </CardFooter>
       </Card>
+      
+    </div>
+    <Footer />
     </div>
   );
 }

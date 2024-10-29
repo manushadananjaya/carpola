@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import districtsData from "@/data/sri-lanka-districts.json";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 type AlertType = "error" | "success" | null;
 
@@ -134,7 +136,10 @@ export default function RegisterPage() {
   };
 
   return (
+    <div>
+    <Navbar />
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
@@ -255,6 +260,9 @@ export default function RegisterPage() {
           </p>
         </CardFooter>
       </Card>
+      
+    </div>
+    <Footer />
     </div>
   );
 }
