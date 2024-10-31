@@ -36,6 +36,22 @@ import motoBrands from "../../data/moto_brands.json";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+const validateImage = (file: File) => {
+  if (file.size > MAX_FILE_SIZE) {
+    return {
+      valid: false,
+      error: `File is larger than ${MAX_FILE_SIZE / (1024 * 1024)}MB`
+    };
+  }
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    return {
+      valid: false,
+      error: 'File type not supported'
+    };
+  }
+  return { valid: true };
+};
+
 const GearType = {
   AUTOMATIC: "AUTOMATIC",
   MANUAL: "MANUAL",
@@ -121,9 +137,9 @@ const formSchema = z
       message: "District is required.",
     }),
     images: z
-      .array(z.union([z.string(), z.any()]))
-      .min(1, "At least one image is required")
-      .max(5, "You can upload a maximum of 5 images"),
+      .array(z.any())
+      .refine((files) => files.length >= 1, "At least one image is required")
+      .refine((files) => files.length <= 5, "You can upload a maximum of 5 images"),
   })
   .refine(
     (data) => {
@@ -134,7 +150,7 @@ const formSchema = z
     },
     {
       message: "For bikes, start type, bike type, and engine are required.",
-      path: ["startType", "bikeType", "engine"],
+      path: ["startType", "bikeType", "engineCC"],
     }
   );
 
@@ -144,7 +160,7 @@ export default function AdPostingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [alertInfo, setAlertInfo] = useState<{
-    type: "success" | "error";
+    type: "success" | "error" | "warning";
     message: string;
   } | null>(null);
   const [brandOptions, setBrandOptions] = useState<
@@ -178,10 +194,20 @@ export default function AdPostingForm() {
     if (status === "unauthenticated") {
       router.push("/auth/signin");
     } else if (session?.user) {
-      form.setValue("contactNo", session.user.userPhone || "");
-      form.setValue("city", session.user.city || "");
-      form.setValue("district", session.user.district || "");
-      form.setValue("userId", String(session.user.id) || "");
+      const { userPhone, city, district } = session.user;
+      
+      if (!userPhone || !city || !district) {
+        setAlertInfo({
+          type: "warning",
+          message: "Please complete your profile to post a free ad.",
+        });
+        setTimeout(() => router.push("/app/user"), 3000);
+      } else {
+        form.setValue("contactNo", userPhone);
+        form.setValue("city", city);
+        form.setValue("district", district);
+        form.setValue("userId", String(session.user.id) || "");
+      }
     }
   }, [status, session, router, form]);
 
@@ -194,21 +220,34 @@ export default function AdPostingForm() {
   }, [watchType]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (typeof window === "undefined") return; // Avoid server-side code execution
-
+    if (typeof window === "undefined") return;
+    
     const files = Array.from(event.target.files || []);
     const currentImages = form.getValues("images");
     const newImages = files.slice(0, 5 - currentImages.length);
 
-    if (newImages.length > 0) {
-      const updatedImages = [...currentImages, ...newImages];
+    const validImages = newImages.filter(file => {
+      const validation = validateImage(file);
+      if (!validation.valid) {
+        toast({
+          title: "Invalid file",
+          description: validation.error,
+          variant: "destructive",
+        });
+        return false;
+      }
+      return true;
+    });
+
+    if (validImages.length > 0) {
+      const updatedImages = [...currentImages, ...validImages];
       form.setValue("images", updatedImages);
 
-      const newPreviews = newImages.map((file) => URL.createObjectURL(file));
+      const newPreviews = validImages.map((file) => URL.createObjectURL(file));
       setPreviewImages((prev) => [...prev, ...newPreviews]);
     }
 
-    if (currentImages.length + newImages.length >= 5) {
+    if (currentImages.length + validImages.length >= 5) {
       toast({
         title: "Maximum images reached",
         description: "You can upload a maximum of 5 images.",
@@ -240,10 +279,6 @@ export default function AdPostingForm() {
       // Upload images to Cloudinary
       const uploadedImageUrls = await Promise.all(
         values.images.map(async (file) => {
-          if (typeof file === "string" && file.startsWith("http")) {
-            return file;
-          }
-
           const formData = new FormData();
           formData.append("file", file);
           formData.append("upload_preset", uploadPreset);
@@ -268,9 +303,6 @@ export default function AdPostingForm() {
       const submissionData = {
         ...values,
         images: uploadedImageUrls,
-        year: parseInt(values.year.toString()),
-        price: parseFloat(values.price.toString()),
-        mileage: parseInt(values.mileage.toString()),
       };
 
       const apiResponse = await fetch("/api/post-ad", {
@@ -315,421 +347,412 @@ export default function AdPostingForm() {
       <Navbar />
       <main className="container mx-auto py-10">
         <h1 className="text-3xl font-bold mb-6">Post Your Ad</h1>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-8 bg-white p-6 rounded-lg shadow"
-          >
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.entries(VehicleType).map(([key, value]) => (
-                        <SelectItem key={key} value={value}>
-                          {key.charAt(0) + key.slice(1).toLowerCase()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="brand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a brand" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {brandOptions.map((brand) => (
-                        <SelectItem key={brand.id} value={brand.name}>
-                          {brand.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Model</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter model" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="year"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Year</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(parseFloat(e.target.value))
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="mileage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mileage</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {watchType !== "BIKE" && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="engineCC"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Engine CC</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="gearType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Gear Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gear type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(GearType).map(([key, value]) => (
-                            <SelectItem key={key} value={value}>
-                              {key.charAt(0) + key.slice(1).toLowerCase()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="fuelType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fuel Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select fuel type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(FuelType).map(([key, value]) => (
-                            <SelectItem key={key} value={value}>
-                              {key.charAt(0) + key.slice(1).toLowerCase()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-            {watchType === "BIKE" && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="engineCC"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Engine CC</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="startType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select start type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(StartType).map(([key, value]) => (
-                            <SelectItem key={key} value={value}>
-                              {key.charAt(0) + key.slice(1).toLowerCase()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="bikeType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bike Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select bike type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.entries(BikeType).map(([key, value]) => (
-                            <SelectItem key={key} value={value}>
-                              {key.charAt(0) + key.slice(1).toLowerCase()}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-            <FormField
-              control={form.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Details</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter details about your vehicle or bike"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Provide as much information as possible to attract potential
-                    buyers.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="contactNo"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Number</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your contact number"
-                      {...field}
-                      disabled
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    If you want to change contact number go to your profile
-                    settings.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>City</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter your city" {...field} disabled />
-                  </FormControl>
-                  <FormDescription>
-                    If you want to change your city, go to your profile
-                    settings.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="district"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>District</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your district"
-                      {...field}
-                      disabled
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    If you want to change your district, go to your profile
-                    settings.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="images"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Images (Max 5)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap gap-4">
-                        {previewImages.map((url, index) => (
-                          <div key={index} className="relative group">
-                            <img
-                              src={url}
-                              alt={`Preview ${index + 1}`}
-                              className="w-32 h-32 object-cover rounded-md"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveImage(index)}
-                              className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                              aria-label={`Remove image ${index + 1}`}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      {field.value.length < 5 && (
-                        <Input
-                          type="file"
-                          accept={ACCEPTED_IMAGE_TYPES.join(",")}
-                          onChange={handleImageUpload}
-                          multiple
-                        />
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormDescription>
-                    Upload up to 5 images of your vehicle or bike. Accepted
-                    formats: JPG, PNG, WebP. Max size: 5MB per image.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Posting..." : "Post Ad"}
-            </Button>
-          </form>
-        </Form>
         {alertInfo && (
           <Alert
-            variant={alertInfo.type === "success" ? "default" : "destructive"}
+            variant={alertInfo.type === "success" ? "default" : alertInfo.type === "warning" ? "default" : "destructive"}
             className="mb-6"
           >
             <AlertTitle>
-              {alertInfo.type === "success" ? "Success" : "Error"}
+              {alertInfo.type === "success" ? "Success" : alertInfo.type === "warning" ? "Warning" : "Error"}
             </AlertTitle>
             <AlertDescription>{alertInfo.message}</AlertDescription>
           </Alert>
+        )}
+        {!alertInfo && (
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-8 bg-white p-6 rounded-lg shadow"
+            >
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.entries(VehicleType).map(([key, value]) => (
+                          <SelectItem key={key} value={value}>
+                            {key.charAt(0) + key.slice(1).toLowerCase()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="brand"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Brand</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a brand" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {brandOptions.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.name}>
+                            {brand.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Model</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter model" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Year</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="mileage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mileage</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {watchType !== "BIKE" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="engineCC"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Engine CC</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gearType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Gear Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select gear type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(GearType).map(([key, value]) => (
+                              <SelectItem key={key} value={value}>
+                                {key.charAt(0) + key.slice(1).toLowerCase()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="fuelType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fuel Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select fuel type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(FuelType).map(([key, value]) => (
+                              <SelectItem key={key} value={value}>
+                                {key.charAt(0) + key.slice(1).toLowerCase()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+              {watchType === "BIKE" && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="engineCC"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Engine CC</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="startType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Start Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select start type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(StartType).map(([key, value]) => (
+                              <SelectItem key={key} value={value}>
+                                {key.charAt(0) + key.slice(1).toLowerCase()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="bikeType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bike Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select bike type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Object.entries(BikeType).map(([key, value]) => (
+                              <SelectItem key={key} value={value}>
+                                {key.charAt(0) + key.slice(1).toLowerCase()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+              <FormField
+                control={form.control}
+                name="details"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Details</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter details about your vehicle or bike"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Provide as much information as possible to attract potential buyers.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="contactNo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contact Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter your contact number"
+                        {...field}
+                        disabled
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      If you want to change contact number go to your profile settings.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your city" {...field} disabled />
+                    </FormControl>
+                    <FormDescription>
+                      If you want to change your city, go to your profile settings.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="district"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>District</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter your district"
+                        {...field}
+                        disabled
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      If you want to change your district, go to your profile settings.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="images"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Images (Max 5)</FormLabel>
+                    <FormControl>
+                      <div className="space-y-4">
+                        <div className="flex flex-wrap gap-4">
+                          {previewImages.map((url, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={url}
+                                alt={`Preview ${index + 1}`}
+                                className="w-32 h-32 object-cover rounded-md"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                aria-label={`Remove image ${index + 1}`}
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        {field.value.length < 5 && (
+                          <Input
+                            type="file"
+                            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                            onChange={handleImageUpload}
+                            multiple
+                          />
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Upload up to 5 images of your vehicle or bike. Accepted formats: JPG, PNG, WebP. Max size: 5MB per image.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Posting..." : "Post Ad"}
+              </Button>
+            </form>
+          </Form>
         )}
       </main>
       <Footer />

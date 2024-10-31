@@ -167,7 +167,7 @@ export default function MyAds() {
               />
               <CardHeader>
                 <CardTitle>{ad.title}</CardTitle>
-                <CardDescription>Price: ${ad.price}</CardDescription>
+                <CardDescription>Price: LKR {ad.price}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex space-x-2">
