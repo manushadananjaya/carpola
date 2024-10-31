@@ -75,6 +75,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
+        // Check if the user exists in the database, if not, create it
         let dbUser = await prisma.user.findUnique({
           where: { userEmail: user.email ?? "" },
         });
@@ -87,16 +88,11 @@ export const authOptions: NextAuthOptions = {
               userPhone: "",
               userCity: "",
               userDistrict: "",
-              isOnboarded: false,
             },
           });
         }
 
-        if (!dbUser.isOnboarded) {
-          return `/auth/onboarding?email=${user.email ?? ""}`;
-        }
-
-        return true;
+        return true; // Direct login without onboarding check
       }
 
       return true;
