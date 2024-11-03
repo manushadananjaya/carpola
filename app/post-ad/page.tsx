@@ -32,6 +32,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Footer } from "@/components/Footer";
 import vehicleBrands from "../../data/vehicle_brands.json";
 import motoBrands from "../../data/moto_brands.json";
+import LoadingMessage from "@/components/ui/loading-massage";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -170,7 +171,7 @@ export default function AdPostingForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "CAR",
+      type: undefined,
       brand: "",
       model: "",
       year: new Date().getFullYear(),
@@ -335,7 +336,7 @@ export default function AdPostingForm() {
   }
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return <div><LoadingMessage /></div>;
   }
 
   if (status === "unauthenticated") {

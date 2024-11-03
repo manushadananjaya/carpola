@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import Link from "next/link";
 
 type Ad = {
   id: string;
@@ -160,6 +161,7 @@ export default function MyAds() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {ads.map((ad) => (
             <Card key={ad.id} className="overflow-hidden">
+              <Link href={`/vehicles/${ad.id}`}>
               <img
                 src={ad.imageUrl}
                 alt={ad.title}
@@ -214,6 +216,7 @@ export default function MyAds() {
                   Promote
                 </Button>
               </CardFooter>
+              </Link>
             </Card>
           ))}
         </div>

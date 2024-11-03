@@ -1,46 +1,47 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { AdType } from "@prisma/client";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get("query") || "";
-  const brand = searchParams.get("brand") || "";
-  const type = searchParams.get("type") || "";
+  const url = new URL(request.url);
+  const query = url.searchParams.get("query");
 
-  // Minimum length check for query to avoid excessive DB calls
-  if (query.length < 2) {
+  // Check if the query is valid
+  if (!query || query.trim().length < 2) {
     return NextResponse.json([]);
   }
 
-  try {
-    // Construct filter object conditionally
-    const filters: any = {
-      model: {
-        contains: query,
-        mode: "insensitive",
-      },
-      ...(brand && { brand: { contains: brand, mode: "insensitive" } }),
-      ...(type && type !== "ALL" && { vehicleType: type as AdType }),
-    };
+  const queryParts = query
+    .trim()
+    .split(" ")
+    .map((part) => part.toLowerCase());
 
-    // Database query to find matching models
+  try {
     const suggestions = await prisma.ad.findMany({
-      where: filters,
+      where: {
+        AND: queryParts.map((part) => ({
+          OR: [
+            { brand: { contains: part, mode: "insensitive" } },
+            { model: { contains: part, mode: "insensitive" } },
+          ],
+        })),
+      },
       select: {
+        brand: true,
         model: true,
       },
-      distinct: ["model"],
-      take: 10, // Limit suggestions
+      take: 5, // Limit results to optimize performance
     });
 
-    const uniqueSuggestions = suggestions.map((item) => item.model);
+    // Format the suggestions with a label field
+    const formattedSuggestions = suggestions.map((suggestion) => ({
+      label: `${suggestion.brand} ${suggestion.model} `,
+    }));
 
-    return NextResponse.json(uniqueSuggestions);
+    return NextResponse.json(formattedSuggestions);
   } catch (error) {
     console.error("Error fetching search suggestions:", error);
     return NextResponse.json(
-      { error: "Failed to fetch suggestions" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
