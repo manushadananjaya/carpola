@@ -137,9 +137,8 @@ export default function SearchResults() {
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await axios.get("/api/main-search-suggestions", {
+      const response = await axios.get("/api/search-suggestions", {
         params: { query: trimmedValue },
       });
 
@@ -148,8 +147,6 @@ export default function SearchResults() {
       setShowMainSuggestions(true);
     } catch (error) {
       console.error("Error fetching main search suggestions:", error);
-    } finally {
-      setLoading(false);
     }
   }, 300);
 
@@ -162,9 +159,8 @@ export default function SearchResults() {
       return;
     }
 
-    setLoading(true);
     try {
-      const response = await axios.get("/api/model-search-suggestions", {
+      const response = await axios.get("/api/model-search/", {
         params: {
           query: trimmedValue,
           brand: selectedBrand,
@@ -177,8 +173,6 @@ export default function SearchResults() {
       setShowModelSuggestions(true);
     } catch (error) {
       console.error("Error fetching model search suggestions:", error);
-    } finally {
-      setLoading(false);
     }
   }, 300);
 
@@ -219,6 +213,7 @@ export default function SearchResults() {
 
       setAds(sortedAds);
       setTotalPages(Math.ceil(data.total / adsPerPage));
+      
     } catch (error) {
       console.error("Error fetching ads:", error);
     } finally {
@@ -309,9 +304,7 @@ export default function SearchResults() {
             />
             {showMainSuggestions && (
               <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg">
-                {loading ? (
-                  <div className="px-4 py-2 text-gray-500">Searching...</div>
-                ) : mainSearchSuggestions.length > 0 ? (
+                {mainSearchSuggestions.length > 0 ? (
                   mainSearchSuggestions.map((suggestion, index) => (
                     <div
                       key={index}
@@ -408,15 +401,11 @@ export default function SearchResults() {
                   />
                   {showModelSuggestions && (
                     <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg">
-                      {loading ? (
-                        <div className="px-4 py-2 text-gray-500">
-                          Searching...
-                        </div>
-                      ) : modelSearchSuggestions.length > 0 ? (
+                      {modelSearchSuggestions.length > 0 ? (
                         modelSearchSuggestions.map((suggestion, index) => (
                           <div
                             key={index}
-                            className="px-4 py-2  hover:bg-gray-100 cursor-pointer"
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                             onClick={() =>
                               handleModelSuggestionClick(suggestion)
                             }

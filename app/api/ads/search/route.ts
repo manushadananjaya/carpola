@@ -1,130 +1,120 @@
+// app/api/ads/search/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {prisma} from "@/lib/prisma"; // Ensure Prisma is correctly imported
+import { AdType } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const type = searchParams.get("type");
-  const district = searchParams.get("district");
-  const city = searchParams.get("city");
-  const minPrice = searchParams.get("minPrice");
-  const maxPrice = searchParams.get("maxPrice");
-  const minYear = searchParams.get("minYear");
-  const maxYear = searchParams.get("maxYear");
-  const searchTerm = searchParams.get("searchTerm");
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const url = new URL(req.url);
+
+  // Extract query parameters
+  const type = url.searchParams.get("type") || undefined;
+  const district = url.searchParams.get("district") || undefined;
+  const city = url.searchParams.get("city") || undefined;
+  const minPrice = parseFloat(url.searchParams.get("minPrice") || "0");
+  const maxPrice = parseFloat(
+    url.searchParams.get("maxPrice") || "100000000000"
+  );
+  const minYear = parseInt(url.searchParams.get("minYear") || "1980", 10);
+  const maxYear = parseInt(url.searchParams.get("maxYear") || "2024", 10);
+  const mainSearchTerm = url.searchParams.get("mainSearchTerm") || "";
+  const modelSearchTerm = url.searchParams.get("modelSearchTerm") || "";
+  const brand = url.searchParams.get("brand") || undefined;
+  const page = parseInt(url.searchParams.get("page") || "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") || "12", 10);
+  const skip = (page - 1) * limit;
+
+  console.log({
+    type,
+    district,
+    city,
+    minPrice,
+    maxPrice,
+    minYear,
+    maxYear,
+    mainSearchTerm,
+    modelSearchTerm,
+    brand,
+    page,
+    limit,
+  });
 
   try {
-    // Parse query parameters
-    const parsedMinPrice = minPrice ? parseInt(minPrice, 10) : undefined;
-    const parsedMaxPrice = maxPrice ? parseInt(maxPrice, 10) : undefined;
-    const parsedMinYear = minYear ? parseInt(minYear, 10) : undefined;
-    const parsedMaxYear = maxYear ? parseInt(maxYear, 10) : undefined;
-
-    // Define valid vehicle types
-    const validVehicleTypes = [
-      "CAR",
-      "VAN",
-      "JEEP",
-      "LORRY",
-      "BIKE",
-      "CREWCAB",
-      "PICKUP",
-      "BUS",
-      "TRUCK",
-      "THREEWHEEL",
-      "TRACTOR",
-      "HEAVYDUTY",
-      "OTHER",
-    ] as const;
-
-    const vehicleTypeFilter =
-      type &&
-      validVehicleTypes.includes(type as (typeof validVehicleTypes)[number])
-        ? type
-        : undefined;
-
-    const searchTerms = searchTerm ? searchTerm.trim().split(/\s+/) : [];
-
-    const filters: any = {
-      vehicleType: vehicleTypeFilter,
-      price:
-        parsedMinPrice || parsedMaxPrice
-          ? { gte: parsedMinPrice, lte: parsedMaxPrice }
-          : undefined,
-      year:
-        parsedMinYear || parsedMaxYear
-          ? { gte: parsedMinYear, lte: parsedMaxYear }
-          : undefined,
-      OR:
-        searchTerms.length > 0
-          ? searchTerms.map((term) => ({
-              OR: [
-                { brand: { contains: term, mode: "insensitive" } },
-                { model: { contains: term, mode: "insensitive" } },
-              ],
-            }))
-          : undefined,
-      posted: true,
-    };
-
-    const userFilter: any = {
-      userDistrict: district !== "ALL" ? district : undefined,
-      userCity: city !== "ALL" ? city : undefined,
-    };
-
-    if (Object.values(userFilter).some((val) => val !== undefined)) {
-      filters.user = userFilter;
-    }
-
-    Object.keys(filters).forEach(
-      (key) =>
-        (filters[key] === undefined ||
-          (typeof filters[key] === "object" &&
-            Object.keys(filters[key]).length === 0)) &&
-        delete filters[key]
-    );
-
-    const totalAds = await prisma.ad.count({ where: filters });
-
     const ads = await prisma.ad.findMany({
-      where: filters,
-      select: {
-        adId: true,
-        price: true,
-        brand: true,
-        model: true,
-        year: true,
-        mileage: true,
-        vehicleType: true,
-        images: true,
-        user: { select: { userCity: true, userDistrict: true } },
-        PromotedItem: { select: { featured: true, promotionExpiresAt: true } },
+      where: {
+        posted: true,
+        price: { gte: minPrice, lte: maxPrice },
+        year: { gte: minYear, lte: maxYear },
+        vehicleType: type ? { equals: type as AdType } : undefined,
+        brand: brand ? { contains: brand, mode: "insensitive" } : undefined,
+        model: modelSearchTerm
+          ? { contains: modelSearchTerm, mode: "insensitive" }
+          : undefined,
+        user: {
+          is: {
+            userDistrict: district
+              ? { equals: district, mode: "insensitive" }
+              : undefined,
+            userCity: city ? { equals: city, mode: "insensitive" } : undefined,
+          },
+        },
+        OR: mainSearchTerm
+          ? [
+              { brand: { contains: mainSearchTerm, mode: "insensitive" } },
+              { model: { contains: mainSearchTerm, mode: "insensitive" } },
+            ]
+          : undefined,
       },
-      orderBy: { postedAt: "desc" },
-      skip: (page - 1) * limit,
+      skip,
       take: limit,
+      include: { PromotedItem: true },
+      orderBy: { postedAt: "desc" },
     });
 
-    const adsWithPromotionStatus = ads.map((ad) => ({
+    const total = await prisma.ad.count({
+      where: {
+        posted: true,
+        price: { gte: minPrice, lte: maxPrice },
+        year: { gte: minYear, lte: maxYear },
+        vehicleType: type ? { equals: type as AdType } : undefined,
+        brand: brand ? { contains: brand, mode: "insensitive" } : undefined,
+        model: modelSearchTerm
+          ? { contains: modelSearchTerm, mode: "insensitive" }
+          : undefined,
+        user: {
+          is: {
+            userDistrict: district
+              ? { equals: district, mode: "insensitive" }
+              : undefined,
+            userCity: city ? { equals: city, mode: "insensitive" } : undefined,
+          },
+        },
+        OR: mainSearchTerm
+          ? [
+              { brand: { contains: mainSearchTerm, mode: "insensitive" } },
+              { model: { contains: mainSearchTerm, mode: "insensitive" } },
+            ]
+          : undefined,
+      },
+    });
+
+    const processedAds = ads.map((ad) => ({
       ...ad,
-      isPromoted: ad.PromotedItem.length > 0,
-      isFeatured: ad.PromotedItem.some((item) => item.featured),
-      promotionExpiresAt:
-        ad.PromotedItem.length > 0
-          ? ad.PromotedItem[0].promotionExpiresAt
-          : null,
+      isFeatured: ad.PromotedItem?.some((item) => item.featured) || false,
+      isPromoted: ad.PromotedItem?.length > 0 || false,
     }));
 
-    return NextResponse.json(
-      { ads: adsWithPromotionStatus, total: totalAds },
-      { status: 200 }
-    );
+    const sortedAds = processedAds.sort((a, b) => {
+      if (a.isFeatured && !b.isFeatured) return -1;
+      if (!a.isFeatured && b.isFeatured) return 1;
+      if (a.isPromoted && !b.isPromoted) return -1;
+      if (!a.isPromoted && b.isPromoted) return 1;
+      return 0;
+    });
+
+    console.log({ ads: sortedAds, total });
+    return NextResponse.json({ ads: sortedAds, total });
   } catch (error) {
     console.error("Error fetching ads:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Error fetching ads" }, { status: 500 });
   }
 }

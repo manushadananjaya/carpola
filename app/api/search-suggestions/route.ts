@@ -1,46 +1,38 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { AdType } from "@prisma/client";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get("query") || "";
-  const brand = searchParams.get("brand") || "";
-  const type = searchParams.get("type") || "";
+  const url = new URL(request.url);
+  const query = url.searchParams.get("query");
 
-  // Minimum length check for query to avoid excessive DB calls
-  if (query.length < 2) {
+  if (!query || query.trim().length < 2) {
     return NextResponse.json([]);
   }
 
   try {
-    // Construct filter object conditionally
-    const filters: any = {
-      model: {
-        contains: query,
-        mode: "insensitive",
-      },
-      ...(brand && { brand: { contains: brand, mode: "insensitive" } }),
-      ...(type && type !== "ALL" && { vehicleType: type as AdType }),
-    };
-
-    // Database query to find matching models
     const suggestions = await prisma.ad.findMany({
-      where: filters,
+      where: {
+        OR: [
+          { brand: { contains: query, mode: "insensitive" } },
+          { model: { contains: query, mode: "insensitive" } },
+        ],
+      },
       select: {
+        brand: true,
         model: true,
       },
-      distinct: ["model"],
-      take: 10, // Limit suggestions
+      take: 5, // Limit results for performance
     });
 
-    const uniqueSuggestions = suggestions.map((item) => item.model);
+    const formattedSuggestions = suggestions.map((suggestion) => ({
+      label: `${suggestion.brand} ${suggestion.model}`,
+    }));
 
-    return NextResponse.json(uniqueSuggestions);
+    return NextResponse.json(formattedSuggestions);
   } catch (error) {
-    console.error("Error fetching search suggestions:", error);
+    console.error("Error fetching main search suggestions:", error);
     return NextResponse.json(
-      { error: "Failed to fetch suggestions" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
