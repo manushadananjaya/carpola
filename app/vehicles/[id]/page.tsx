@@ -9,11 +9,10 @@ import { Navbar } from "@/components/Navbar";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 import { Badge } from "@/components/ui/badge";
-import { Star, Zap } from "lucide-react";
+import { Star, Zap, Phone, Mail, MapPin } from "lucide-react";
 import VehicleDetailsSkeleton from "@/components/ui/vehicle-details-skeleton";
 import { Footer } from "@/components/Footer";
 
-// Updated Type definition
 type Vehicle = {
   adId: number;
   contactNo: string;
@@ -59,10 +58,8 @@ export default function VehicleDetailsPage({
   useEffect(() => {
     async function fetchData() {
       try {
-       
         const data = await fetchVehicle(id);
         setVehicle(data);
-        console.log("fetched vehicle:", data);
       } catch (err) {
         setError((err as Error).message);
       }
@@ -71,8 +68,6 @@ export default function VehicleDetailsPage({
     fetchData();
   }, [id]);
 
-  console.log("fetched vehicle:", vehicle);
-
   if (error)
     return (
       <div className="text-center text-red-500 text-xl mt-10">
@@ -80,7 +75,11 @@ export default function VehicleDetailsPage({
       </div>
     );
   if (!vehicle)
-    return <div className="text-center text-xl mt-10"><VehicleDetailsSkeleton /></div>;
+    return (
+      <div className="text-center text-xl mt-10">
+        <VehicleDetailsSkeleton />
+      </div>
+    );
 
   const images = vehicle.images || [];
 
@@ -97,20 +96,20 @@ export default function VehicleDetailsPage({
   const isFeatured = vehicle.PromotedItem.some((item) => item.featured);
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8">
         <Card
           className={`max-w-4xl mx-auto ${
             isFeatured ? "border-2 border-yellow-500" : ""
           }`}
         >
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-3xl font-bold">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <CardTitle className="text-2xl sm:text-3xl font-bold">
                 {vehicle.brand} {vehicle.model} ({vehicle.year})
               </CardTitle>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {isFeatured && (
                   <Badge className="bg-yellow-500 text-black">
                     <Star className="w-4 h-4 mr-1" />
@@ -135,7 +134,7 @@ export default function VehicleDetailsPage({
               />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-6">
               <div>
                 <h2 className="text-2xl font-semibold mb-4">Vehicle Details</h2>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -172,15 +171,32 @@ export default function VehicleDetailsPage({
                 <h2 className="text-2xl font-semibold mb-4">
                   Seller Information
                 </h2>
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  <dt className="font-medium text-gray-500">Seller</dt>
-                  <dd>{vehicle.user.username}</dd>
-                  <dt className="font-medium text-gray-500">Location</dt>
-                  <dd>{vehicle.user.userCity}</dd>
-                  <dt className="font-medium text-gray-500">Phone</dt>
-                  <dd>{vehicle.user.userPhone}</dd>
-                  <dt className="font-medium text-gray-500">Email</dt>
-                  <dd className="break-all">{vehicle.user.userEmail}</dd>
+                <dl className="space-y-2">
+                  <div className="flex items-center">
+                    <dt className="font-medium text-gray-500 w-24">Seller</dt>
+                    <dd>{vehicle.user.username}</dd>
+                  </div>
+                  <div className="flex items-center">
+                    <dt className="font-medium text-gray-500 w-24 flex items-center">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Location
+                    </dt>
+                    <dd>{vehicle.user.userCity}</dd>
+                  </div>
+                  <div className="flex items-center">
+                    <dt className="font-medium text-gray-500 w-24 flex items-center">
+                      <Phone className="w-4 h-4 mr-2" />
+                      Phone
+                    </dt>
+                    <dd>{vehicle.user.userPhone}</dd>
+                  </div>
+                  <div className="flex items-center">
+                    <dt className="font-medium text-gray-500 w-24 flex items-center">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Email
+                    </dt>
+                    <dd className="break-all">{vehicle.user.userEmail}</dd>
+                  </div>
                 </dl>
               </div>
             </div>
@@ -210,11 +226,11 @@ export default function VehicleDetailsPage({
             <img
               src={selectedImage}
               alt="Enlarged vehicle"
-              className="max-w-full max-h-screen"
+              className="max-w-full max-h-[90vh] object-contain"
             />
           )}
         </Modal>
-      </div>
+      </main>
       <Footer />
     </div>
   );
