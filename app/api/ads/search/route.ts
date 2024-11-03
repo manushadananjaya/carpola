@@ -1,12 +1,10 @@
-// app/api/ads/search/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import {prisma} from "@/lib/prisma"; // Ensure Prisma is correctly imported
-import { AdType } from "@prisma/client";
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url);
+export async function GET(request: Request) {
+  const url = new URL(request.url);
 
-  // Extract query parameters
+  // Extract search parameters
   const type = url.searchParams.get("type") || undefined;
   const district = url.searchParams.get("district") || undefined;
   const city = url.searchParams.get("city") || undefined;
@@ -18,103 +16,81 @@ export async function GET(req: NextRequest) {
   const maxYear = parseInt(url.searchParams.get("maxYear") || "2024", 10);
   const mainSearchTerm = url.searchParams.get("mainSearchTerm") || "";
   const modelSearchTerm = url.searchParams.get("modelSearchTerm") || "";
-  const brand = url.searchParams.get("brand") || undefined;
+  const brand = url.searchParams.get("brand") || "";
   const page = parseInt(url.searchParams.get("page") || "1", 10);
   const limit = parseInt(url.searchParams.get("limit") || "12", 10);
-  const skip = (page - 1) * limit;
 
-  console.log({
-    type,
-    district,
-    city,
-    minPrice,
-    maxPrice,
-    minYear,
-    maxYear,
-    mainSearchTerm,
-    modelSearchTerm,
-    brand,
-    page,
-    limit,
-  });
+  // Define the filters object for Prisma query
+  const filters: any = {
+    posted: true, // Only return posted ads
+    price: {
+      gte: minPrice,
+      lte: maxPrice,
+    },
+    year: {
+      gte: minYear,
+      lte: maxYear,
+    },
+  };
+
+  // Conditional filters based on query params
+  if (type) filters.vehicleType = type.toUpperCase();
+  if (district && district !== "ALL") filters.user = { userDistrict: district };
+  if (city && city !== "ALL")
+    filters.user = { ...filters.user, userCity: city };
+  if (brand) filters.brand = { contains: brand, mode: "insensitive" };
+
+  // Search by main and model terms (partial match across brand, model, details)
+  const searchTerms = (mainSearchTerm + " " + modelSearchTerm)
+    .trim()
+    .split(" ");
+  if (searchTerms.length > 0 && searchTerms[0] !== "") {
+    filters.AND = searchTerms.map((term) => ({
+      OR: [
+        { brand: { contains: term, mode: "insensitive" } },
+        { model: { contains: term, mode: "insensitive" } },
+        { details: { contains: term, mode: "insensitive" } },
+      ],
+    }));
+  }
 
   try {
+    // Fetch ads with applied filters and pagination
     const ads = await prisma.ad.findMany({
-      where: {
-        posted: true,
-        price: { gte: minPrice, lte: maxPrice },
-        year: { gte: minYear, lte: maxYear },
-        vehicleType: type ? { equals: type as AdType } : undefined,
-        brand: brand ? { contains: brand, mode: "insensitive" } : undefined,
-        model: modelSearchTerm
-          ? { contains: modelSearchTerm, mode: "insensitive" }
-          : undefined,
-        user: {
-          is: {
-            userDistrict: district
-              ? { equals: district, mode: "insensitive" }
-              : undefined,
-            userCity: city ? { equals: city, mode: "insensitive" } : undefined,
-          },
-        },
-        OR: mainSearchTerm
-          ? [
-              { brand: { contains: mainSearchTerm, mode: "insensitive" } },
-              { model: { contains: mainSearchTerm, mode: "insensitive" } },
-            ]
-          : undefined,
+      where: filters,
+      include: {
+        PromotedItem: true, // To determine if the ad is promoted
+        user: true, // Include user information for city and district
       },
-      skip,
       take: limit,
-      include: { PromotedItem: true },
-      orderBy: { postedAt: "desc" },
-    });
-
-    const total = await prisma.ad.count({
-      where: {
-        posted: true,
-        price: { gte: minPrice, lte: maxPrice },
-        year: { gte: minYear, lte: maxYear },
-        vehicleType: type ? { equals: type as AdType } : undefined,
-        brand: brand ? { contains: brand, mode: "insensitive" } : undefined,
-        model: modelSearchTerm
-          ? { contains: modelSearchTerm, mode: "insensitive" }
-          : undefined,
-        user: {
-          is: {
-            userDistrict: district
-              ? { equals: district, mode: "insensitive" }
-              : undefined,
-            userCity: city ? { equals: city, mode: "insensitive" } : undefined,
-          },
-        },
-        OR: mainSearchTerm
-          ? [
-              { brand: { contains: mainSearchTerm, mode: "insensitive" } },
-              { model: { contains: mainSearchTerm, mode: "insensitive" } },
-            ]
-          : undefined,
+      skip: (page - 1) * limit,
+      orderBy: {
+        postedAt: "desc",
       },
     });
 
+    // Format the ads data with promotion info, safely accessing `user` properties
     const processedAds = ads.map((ad) => ({
       ...ad,
-      isFeatured: ad.PromotedItem?.some((item) => item.featured) || false,
-      isPromoted: ad.PromotedItem?.length > 0 || false,
+      isFeatured: ad.PromotedItem.some((item) => item.featured),
+      isPromoted: ad.PromotedItem.length > 0,
+      userCity: ad.user?.userCity || null,
+      userDistrict: ad.user?.userDistrict || null,
     }));
 
-    const sortedAds = processedAds.sort((a, b) => {
-      if (a.isFeatured && !b.isFeatured) return -1;
-      if (!a.isFeatured && b.isFeatured) return 1;
-      if (a.isPromoted && !b.isPromoted) return -1;
-      if (!a.isPromoted && b.isPromoted) return 1;
-      return 0;
-    });
+    // Count total ads for pagination
+    const total = await prisma.ad.count({ where: filters });
 
-    console.log({ ads: sortedAds, total });
-    return NextResponse.json({ ads: sortedAds, total });
+    // Respond with ads and pagination info
+    return NextResponse.json({
+      ads: processedAds,
+      total,
+    });
   } catch (error) {
     console.error("Error fetching ads:", error);
-    return NextResponse.json({ error: "Error fetching ads" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

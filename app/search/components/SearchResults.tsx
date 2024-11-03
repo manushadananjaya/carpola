@@ -483,14 +483,14 @@ export default function SearchResults() {
               <Slider
                 min={0}
                 max={100000000000}
-                step={100000}
+                step={1000}
                 value={priceRange}
                 onValueChange={setPriceRange}
                 onValueCommit={handleFilterChange}
               />
               <div className="flex justify-between mt-2">
-                <span>${priceRange[0].toLocaleString()}</span>
-                <span>${priceRange[1].toLocaleString()}</span>
+                <span>LKR {priceRange[0].toLocaleString()}</span>
+                <span>LKR {priceRange[1].toLocaleString()}</span>
               </div>
             </div>
 
