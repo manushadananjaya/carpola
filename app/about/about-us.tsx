@@ -35,7 +35,7 @@ export default function AboutUs() {
         </div>
         <div className="relative h-64 md:h-auto">
           <img
-            src="/placeholder.svg?height=400&width=600"
+            src="/assets/logo.jpg?height=400&width=600"
             alt="Vehicle Market Team"
             className="rounded-lg object-cover w-full h-full"
           />
