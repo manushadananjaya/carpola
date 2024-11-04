@@ -14,7 +14,17 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Grid, List, Search, Loader, Filter } from "lucide-react";
+import {
+  Grid,
+  List,
+  Search,
+  Loader,
+  Filter,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
 import locationData from "../../../data/sri-lanka-districts.json";
 import Link from "next/link";
@@ -95,10 +105,15 @@ export default function SearchResults() {
   const [adsPerPage] = useState(12);
 
   const [showFilters, setShowFilters] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const router = useRouter();
   const mainSearchInputRef = useRef<HTMLInputElement>(null);
   const modelSearchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchAds();
+  }, []);
 
   useEffect(() => {
     if (initialCategory || initialSearchQuery) {
@@ -213,7 +228,6 @@ export default function SearchResults() {
 
       setAds(sortedAds);
       setTotalPages(Math.ceil(data.total / adsPerPage));
-      
     } catch (error) {
       console.error("Error fetching ads:", error);
     } finally {
@@ -284,9 +298,23 @@ export default function SearchResults() {
     fetchAds();
   };
 
+  const handleModelInputClick = () => {
+    if (!selectedType || !selectedBrand) {
+      setAlertMessage("Please select vehicle type and brand first");
+      setTimeout(() => setAlertMessage(""), 3000);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Vehicle Search</h1>
+
+      {alertMessage && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{alertMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Main Search Bar */}
       <div className="mb-8">
@@ -398,9 +426,10 @@ export default function SearchResults() {
                     }}
                     className="w-full"
                     disabled={!selectedType || !selectedBrand}
+                    onClick={handleModelInputClick}
                   />
                   {showModelSuggestions && (
-                    <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg">
+                    <div className="absolute z-10 w-full bg-white  border border-gray-300 mt-1  rounded-md shadow-lg">
                       {modelSearchSuggestions.length > 0 ? (
                         modelSearchSuggestions.map((suggestion, index) => (
                           <div
@@ -560,24 +589,26 @@ export default function SearchResults() {
           )}
 
           {/* Pagination */}
-          <div className="mt-8 flex justify-center">
-            <div className="join space-x-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <Button
-                    key={page}
-                    className={`join-item mx-1 ${
-                      currentPage === page
-                        ? "btn-primary bg-blue-500 text-white"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </Button>
-                )
-              )}
-            </div>
+          <div className="mt-8 flex justify-center items-center space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
