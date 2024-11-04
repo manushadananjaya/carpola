@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
-
+import { Facebook, Twitter, Instagram, Linkedin, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
 export function Footer() {
   return (
@@ -52,7 +52,7 @@ export function Footer() {
             <h2 className="text-lg font-semibold mb-4">Contact Us</h2>
             <p className="text-sm">123 Main Street, Colombo, Sri Lanka</p>
             <p className="text-sm">Phone: +94 11 234 5678</p>
-            <p className="text-sm">Email: info@Vahanasale.lk</p>
+            <p className="text-sm">Email: info@Carpola.lk</p>
           </div>
           <div>
             <h2 className="text-lg font-semibold mb-4">Newsletter</h2>
@@ -68,22 +68,41 @@ export function Footer() {
           </div>
         </div>
         <Separator className="my-8" />
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm">
-            &copy; 2024 Vahanasale.lk. All rights reserved.
-          </p>
-          <div className="flex space-x-4 mt-4 md:mt-0">
+        <div className="flex flex-col items-center space-y-4 md:flex-row md:justify-between md:space-y-0">
+          <div className="flex items-center space-x-2">
+            <Image
+              src="/assets/logo-removebg.png"
+              alt="Carpola.lk"
+              width={100}
+              height={50}
+            />
+            <p className="text-sm font-medium">
+              &copy; {new Date().getFullYear()} Carpola.lk. All rights reserved.
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <p className="text-sm font-medium">Made with</p>
+            <Heart className="h-4 w-4 text-red-500" />
+            <p className="text-sm font-medium">by</p>
+            <Image
+              src="/assets/mintleaf.png"
+              alt="MintLeaf LABS"
+              width={100}
+              height={50}
+            />
+          </div>
+          <div className="flex space-x-4">
             <Link href="#" aria-label="Facebook">
-              <Facebook className="h-5 w-5" />
+              <Facebook className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
             <Link href="#" aria-label="Twitter">
-              <Twitter className="h-5 w-5" />
+              <Twitter className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
             <Link href="#" aria-label="Instagram">
-              <Instagram className="h-5 w-5" />
+              <Instagram className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
             <Link href="#" aria-label="LinkedIn">
-              <Linkedin className="h-5 w-5" />
+              <Linkedin className="h-5 w-5 text-gray-600 hover:text-gray-800" />
             </Link>
           </div>
         </div>

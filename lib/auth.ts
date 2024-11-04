@@ -26,13 +26,13 @@ export const authOptions: NextAuthOptions = {
 
         // Check if admin is logging in with hardcoded credentials
         if (
-          credentials.email === "admin@vahanasale.lk" &&
+          credentials.email === "admin@carpola.lk" &&
           credentials.password === "admin123"
         ) {
           return {
             id: 1,
             username: "Admin",
-            email: "admin@vahanasale.lk",
+            email: "admin@carpola.lk",
             phone: "",
             city: "",
             district: "",
@@ -129,7 +129,7 @@ export const authOptions: NextAuthOptions = {
           token.phone = dbUser.userPhone;
           token.city = dbUser.userCity;
           token.district = dbUser.userDistrict;
-          token.isAdmin = dbUser.userEmail === "admin@vahanasale.lk";
+          token.isAdmin = dbUser.userEmail === "admin@carpola.lk";
         }
       }
       return token;

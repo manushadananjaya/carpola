@@ -10,13 +10,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import AuthButton from "./AuthButton";
+import Image from "next/image";
 
 export function Navbar() {
   return (
     <header className="px-4 lg:px-6 h-14 flex items-center justify-between border-b">
       <Link className="flex items-center justify-center" href="/">
-        <Car className="h-6 w-6" />
-        <span className="ml-2 text-lg font-semibold">Vahanasale.lk</span>
+        <Image src="/assets/logo.jpg" width={40} height={40} alt="Carpola.lk" />
+        <span className="ml-2 text-lg font-semibold">Carpola.lk</span>
       </Link>
       <nav className="flex items-center gap-4 sm:gap-6">
         <div className="hidden md:flex items-center gap-4 sm:gap-6">
