@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,17 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { Grid, List, Search, Loader, Filter } from "lucide-react";
+import {
+  Grid,
+  List,
+  Search,
+  Loader,
+  Filter,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
 import locationData from "../../../data/sri-lanka-districts.json";
 import Link from "next/link";
@@ -95,17 +105,80 @@ export default function SearchResults() {
   const [adsPerPage] = useState(12);
 
   const [showFilters, setShowFilters] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const router = useRouter();
   const mainSearchInputRef = useRef<HTMLInputElement>(null);
   const modelSearchInputRef = useRef<HTMLInputElement>(null);
 
+  const fetchAds = useCallback(
+    async (page: number) => {
+      setLoading(true);
+      try {
+        const { data } = await axios.get("/api/ads/search", {
+          params: {
+            type: selectedType,
+            district: selectedDistrict,
+            city: selectedCity,
+            minPrice: priceRange[0],
+            maxPrice: priceRange[1],
+            minYear: yearRange[0],
+            maxYear: yearRange[1],
+            mainSearchTerm,
+            modelSearchTerm,
+            brand: selectedBrand,
+            page: page,
+            limit: adsPerPage,
+          },
+        });
+
+        const processedAds = data.ads.map((ad: any) => ({
+          ...ad,
+          isFeatured:
+            ad.PromotedItem?.some((item: any) => item.featured) || false,
+          isPromoted: ad.PromotedItem?.length > 0 || false,
+        }));
+
+        const sortedAds = processedAds.sort((a: Vehicle, b: Vehicle) => {
+          if (a.isFeatured && !b.isFeatured) return -1;
+          if (!a.isFeatured && b.isFeatured) return 1;
+          if (a.isPromoted && !b.isPromoted) return -1;
+          if (!a.isPromoted && b.isPromoted) return 1;
+          return 0;
+        });
+
+        setAds(sortedAds);
+        setTotalPages(Math.ceil(data.total / adsPerPage));
+        setCurrentPage(page);
+      } catch (error) {
+        console.error("Error fetching ads:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      selectedType,
+      selectedDistrict,
+      selectedCity,
+      priceRange,
+      yearRange,
+      mainSearchTerm,
+      modelSearchTerm,
+      selectedBrand,
+      adsPerPage,
+    ]
+  );
+
+  useEffect(() => {
+    fetchAds(1);
+  }, [fetchAds]);
+
   useEffect(() => {
     if (initialCategory || initialSearchQuery) {
       setSelectedType(initialCategory);
-      fetchAds();
+      fetchAds(1);
     }
-  }, [initialCategory, initialSearchQuery]);
+  }, [initialCategory, initialSearchQuery, fetchAds]);
 
   useEffect(() => {
     if (selectedDistrict) {
@@ -176,90 +249,40 @@ export default function SearchResults() {
     }
   }, 300);
 
-  const fetchAds = async () => {
-    setLoading(true);
-    try {
-      const { data } = await axios.get("/api/ads/search", {
-        params: {
-          type: selectedType,
-          district: selectedDistrict,
-          city: selectedCity,
-          minPrice: priceRange[0],
-          maxPrice: priceRange[1],
-          minYear: yearRange[0],
-          maxYear: yearRange[1],
-          mainSearchTerm,
-          modelSearchTerm,
-          brand: selectedBrand,
-          page: currentPage,
-          limit: adsPerPage,
-        },
-      });
-
-      const processedAds = data.ads.map((ad: any) => ({
-        ...ad,
-        isFeatured:
-          ad.PromotedItem?.some((item: any) => item.featured) || false,
-        isPromoted: ad.PromotedItem?.length > 0 || false,
-      }));
-
-      const sortedAds = processedAds.sort((a: Vehicle, b: Vehicle) => {
-        if (a.isFeatured && !b.isFeatured) return -1;
-        if (!a.isFeatured && b.isFeatured) return 1;
-        if (a.isPromoted && !b.isPromoted) return -1;
-        if (!a.isPromoted && b.isPromoted) return 1;
-        return 0;
-      });
-
-      setAds(sortedAds);
-      setTotalPages(Math.ceil(data.total / adsPerPage));
-      
-    } catch (error) {
-      console.error("Error fetching ads:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleMainSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1);
     router.push(`/search?query=${mainSearchTerm}`);
-    fetchAds();
+    fetchAds(1);
     setShowMainSuggestions(false);
   };
 
   const handleModelSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1);
     router.push(
       `/search?query=${modelSearchTerm}&category=${selectedType}&brand=${selectedBrand}`
     );
-    fetchAds();
+    fetchAds(1);
     setShowModelSuggestions(false);
   };
 
   const handleMainSuggestionClick = (suggestion: string) => {
     setMainSearchTerm(suggestion);
-    setCurrentPage(1);
     router.push(`/search?query=${suggestion}`);
-    fetchAds();
+    fetchAds(1);
     setShowMainSuggestions(false);
   };
 
   const handleModelSuggestionClick = (suggestion: string) => {
     setModelSearchTerm(suggestion);
-    setCurrentPage(1);
     router.push(
       `/search?query=${suggestion}&category=${selectedType}&brand=${selectedBrand}`
     );
-    fetchAds();
+    fetchAds(1);
     setShowModelSuggestions(false);
   };
 
   const handleFilterChange = () => {
-    setCurrentPage(1);
-    fetchAds();
+    fetchAds(1);
   };
 
   const handleBrandChange = async (brand: string) => {
@@ -280,13 +303,26 @@ export default function SearchResults() {
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    fetchAds();
+    fetchAds(page);
+  };
+
+  const handleModelInputClick = () => {
+    if (!selectedType || !selectedBrand) {
+      setAlertMessage("Please select vehicle type and brand first");
+      setTimeout(() => setAlertMessage(""), 3000);
+    }
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Vehicle Search</h1>
+
+      {alertMessage && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{alertMessage}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Main Search Bar */}
       <div className="mb-8">
@@ -398,9 +434,10 @@ export default function SearchResults() {
                     }}
                     className="w-full"
                     disabled={!selectedType || !selectedBrand}
+                    onClick={handleModelInputClick}
                   />
                   {showModelSuggestions && (
-                    <div className="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded-md shadow-lg">
+                    <div className="absolute z-10 w-full bg-white  border border-gray-300 mt-1  rounded-md shadow-lg">
                       {modelSearchSuggestions.length > 0 ? (
                         modelSearchSuggestions.map((suggestion, index) => (
                           <div
@@ -560,24 +597,26 @@ export default function SearchResults() {
           )}
 
           {/* Pagination */}
-          <div className="mt-8 flex justify-center">
-            <div className="join space-x-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <Button
-                    key={page}
-                    className={`join-item mx-1 ${
-                      currentPage === page
-                        ? "btn-primary bg-blue-500 text-white"
-                        : "bg-gray-200 text-gray-600"
-                    }`}
-                    onClick={() => handlePageChange(page)}
-                  >
-                    {page}
-                  </Button>
-                )
-              )}
-            </div>
+          <div className="mt-8 flex justify-center items-center space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

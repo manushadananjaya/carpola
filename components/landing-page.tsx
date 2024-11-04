@@ -52,7 +52,7 @@ export function LandingPageComponent() {
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-200 md:text-xl drop-shadow-md">
                   Browse thousands of cars from trusted sellers. Buy or sell
-                  with ease on Carpola.lk.
+                  with ease on Carpola.lk
                 </p>
               </div>
               <div className="w-full max-w-sm space-y-2">
