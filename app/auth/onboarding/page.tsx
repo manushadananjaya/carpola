@@ -102,7 +102,7 @@ function OnboardingContent() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-center">
-            Welcome to Vahanasale.lk
+            Welcome to Carpola.lk
           </CardTitle>
           <CardDescription className="text-center">
             Please complete your profile. We have a few steps to go.
