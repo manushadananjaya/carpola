@@ -15,9 +15,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Icon, Loader2 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { FaGoogle } from "react-icons/fa6";
+
+
 
 export default function SignInPage() {
   const router = useRouter();
@@ -73,70 +76,77 @@ export default function SignInPage() {
 
   return (
     <div>
-     <Navbar />
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-     
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Sign In
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {providers.google && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => signIn(providers.google.id)}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              Sign in with Google
-            </Button>
-          )}
-
-          <Separator className="my-4" />
-
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              {error && <p className="text-red-500 text-center">{error}</p>}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" required />
-              </div>
-              <Link
-                href="/auth/forgot-password"
-                className="text-sm text-primary hover:underline"
+      <Navbar />
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center">
+              Sign In
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {providers.google && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => signIn(providers.google.id)}
+                disabled={isLoading}
               >
-                Forgot Password?
-              </Link>
-              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                Sign in with Email and Password
+                <FaGoogle />
+                Sign in with Google
               </Button>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Not a member?{" "}
-            <Link href="/auth/signup" className="text-primary hover:underline">
-              Register now
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-      
-    </div>
-    <Footer />
+            )}
+
+            <Separator className="my-4" />
+
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                {error && <p className="text-red-500 text-center">{error}</p>}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                  />
+                </div>
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                >
+                  Forgot Password?
+                </Link>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Sign in with Email and Password
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-muted-foreground">
+              Not a member?{" "}
+              <Link
+                href="/auth/signup"
+                className="text-primary hover:underline"
+              >
+                Register now
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+      <Footer />
     </div>
   );
 }
