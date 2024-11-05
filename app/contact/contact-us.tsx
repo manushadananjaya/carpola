@@ -79,7 +79,7 @@ export default function ContactUs() {
           <div className="space-y-4">
             {[
               { icon: Phone, title: "Phone", content: "+94 11 234 5678" },
-              { icon: Mail, title: "Email", content: "info@vehiclemarket.lk" },
+              { icon: Mail, title: "Email", content: "info@carpola.lk" },
               {
                 icon: MapPin,
                 title: "Address",
