@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { fetchVehicle } from "@/services/fetchItemDetailsVehicle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,6 +94,11 @@ export default function VehicleDetailsPage({
 
   const isFeatured = vehicle.PromotedItem.some((item) => item.featured);
 
+  // Helper function to format price
+  const formatPrice = (price: number) => {
+    return `Rs. ${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -140,7 +144,7 @@ export default function VehicleDetailsPage({
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
                   <dt className="font-medium text-gray-500">Price</dt>
                   <dd className="font-semibold text-xl text-green-600">
-                    LKR {vehicle.price.toLocaleString()}
+                    {formatPrice(vehicle.price)}
                   </dd>
                   <dt className="font-medium text-gray-500">Type</dt>
                   <dd>{vehicle.vehicleType}</dd>

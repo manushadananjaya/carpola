@@ -27,6 +27,11 @@ export default function VehicleCard({
   vehicle: Vehicle;
   isGridView: boolean;
 }) {
+  // Helper function to format the price
+  const formatPrice = (price: number) => {
+    return `Rs. ${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  };
+
   return (
     <Card
       className={`overflow-hidden rounded-lg shadow-lg transition-all duration-200 ${
@@ -103,8 +108,7 @@ export default function VehicleCard({
 
           {/* Price */}
           <div className="flex items-center text-primary text-base font-semibold col-span-2 sm:col-span-1">
-            
-            <span>LKR {vehicle.price.toLocaleString()}</span>
+            <span>{formatPrice(vehicle.price)}</span>
           </div>
         </div>
       </CardContent>
