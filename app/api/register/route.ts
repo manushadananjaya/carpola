@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { sendVerificationEmail } from "@/lib/email"; // import the email helper
 
 export async function POST(req: Request) {
   try {
-    const { username, email, phone, city, password, district, isOnboarded } =
+    const { username, email, phone, city, password, district } =
       await req.json();
 
     // Validate required fields
@@ -17,60 +19,44 @@ export async function POST(req: Request) {
 
     // Check if the user with the same email already exists
     const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ userEmail: email }],
-      },
+      where: { userEmail: email },
     });
 
     if (existingUser) {
-      if (password) {
-        return NextResponse.json(
-          { message: "User-already-exists", error: "User-already-exists" },
-          { status: 409 }
-        );
-      }
-
-      // For Google sign-in, update the existing user's profile
-      const updatedUser = await prisma.user.update({
-        where: { userEmail: email },
-        data: {
-          username,
-          userPhone: phone,
-          userCity: city,
-          userDistrict: district,
-          isOnboarded: true,
-        },
-      });
-
       return NextResponse.json(
-        { message: "User profile updated successfully", user: updatedUser },
-        { status: 200 }
+        { message: "User already exists", error: "User already exists" },
+        { status: 409 }
       );
     }
 
-    // If a password is provided, hash it
+    // Generate a unique verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
     let hashedPassword = null;
     if (password) {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    // Create a new user
-    const newUser = await prisma.user.create({
+    // Store user with verification token, but set `isVerified` to false
+    const user = await prisma.user.create({
       data: {
         username,
         userEmail: email,
         userPhone: phone,
         userCity: city,
         userDistrict: district,
-        password: hashedPassword, // Set password as null if not provided
-        isOnboarded,
+        password: hashedPassword,
+        isOnboarded: false,
+        isVerified: false,
+        verificationToken,
       },
     });
 
-    // Return success response, handle sign-in on client-side
+    // Send the verification email
+    await sendVerificationEmail(email, verificationToken);
+
     return NextResponse.json(
-      { message: "User registered successfully", user: newUser },
-      { status: 201 }
+      { message: "Verification email sent. Please check your inbox." },
+      { status: 200 }
     );
   } catch (error) {
     console.error(error);

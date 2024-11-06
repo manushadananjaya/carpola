@@ -93,6 +93,9 @@ model User {
 
   ads                Ad[]
   isOnboarded        Boolean  @default(false)
+  isVerified         Boolean  @default(false)
+  verificationToken String?
+
 }
 
 

@@ -6,7 +6,6 @@ import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-// Configure the NextAuth options
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -24,7 +23,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required.");
         }
 
-        // Check if admin is logging in with hardcoded credentials
+        // Admin login bypass
         if (
           credentials.email === "admin@carpola.lk" &&
           credentials.password === "admin123"
@@ -40,18 +39,24 @@ export const authOptions: NextAuthOptions = {
           };
         }
 
-        // Fetch the user from the database for non-admin users
+        // Find user in database
         const user = await prisma.user.findUnique({
           where: { userEmail: credentials.email },
         });
 
-        if (user && user.password) {
-          // Verify the password using bcrypt
+        if (!user) throw new Error("No user found with this email.");
+
+        // Check email verification status
+        if (!user.isVerified) {
+          throw new Error("Please verify your email to proceed.");
+        }
+
+        // Verify password
+        if (user.password) {
           const isValid = await bcrypt.compare(
             credentials.password,
             user.password
           );
-
           if (isValid) {
             return {
               id: user.userId,
@@ -88,11 +93,12 @@ export const authOptions: NextAuthOptions = {
               userPhone: "",
               userCity: "",
               userDistrict: "",
+              isVerified: true, // Mark as verified for Google users
             },
           });
         }
 
-        return true; // Direct login without onboarding check
+        return true; // Allow direct login
       }
 
       return true;

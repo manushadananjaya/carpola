@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,8 @@ export default function RegisterPage() {
     title: "",
     message: "",
   });
+  const [isWaitingForVerification, setIsWaitingForVerification] =
+    useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -109,9 +111,10 @@ export default function RegisterPage() {
         setAlert({
           type: "success",
           title: "Success",
-          message: "Registration successful. Please sign in.",
+          message:
+            "Registration successful. Please check your email to verify your account.",
         });
-        setTimeout(() => router.push("/auth/signin"), 2000);
+        setIsWaitingForVerification(true); 
       } else {
         if (data.error === "User-already-exists") {
           setAlert({
@@ -135,134 +138,161 @@ export default function RegisterPage() {
     }
   };
 
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (isWaitingForVerification) {
+      intervalId = setInterval(async () => {
+        try {
+          const response = await fetch("/api/check-verification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: formData.email }),
+          });
+          const data = await response.json();
+
+          if (data.isVerified) {
+            clearInterval(intervalId);
+            router.push("/auth/signin");
+          }
+        } catch (error) {
+          console.error("Verification check failed:", error);
+        }
+      }, 5000); 
+    }
+
+    return () => clearInterval(intervalId);
+  }, [isWaitingForVerification, formData.email, router]);
+
   return (
     <div>
-    <Navbar />
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Register
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CustomAlert {...alert} />
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                name="username"
-                type="text"
-                required
-                maxLength={50}
-                value={formData.username}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                maxLength={100}
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                maxLength={15}
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="district">District</Label>
-              <select
-                id="district"
-                name="district"
-                required
-                value={formData.district}
-                onChange={handleChange}
-                className="block w-full border border-gray-300 rounded-md p-2"
+      <Navbar />
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center">
+              Register
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CustomAlert {...alert} />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  maxLength={50}
+                  value={formData.username}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  maxLength={100}
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  maxLength={15}
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="district">District</Label>
+                <select
+                  id="district"
+                  name="district"
+                  required
+                  value={formData.district}
+                  onChange={handleChange}
+                  className="block w-full border border-gray-300 rounded-md p-2"
+                >
+                  <option value="">Select District</option>
+                  {Object.keys(districtsData).map((district) => (
+                    <option key={district} value={district}>
+                      {district}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <select
+                  id="city"
+                  name="city"
+                  required
+                  value={formData.city}
+                  onChange={handleChange}
+                  disabled={!formData.district}
+                  className="block w-full border border-gray-300 rounded-md p-2"
+                >
+                  <option value="">Select City</option>
+                  {cities.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  minLength={8}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Registering..." : "Register"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                href="/auth/signin"
+                className="text-primary hover:underline"
               >
-                <option value="">Select District</option>
-                {Object.keys(districtsData).map((district) => (
-                  <option key={district} value={district}>
-                    {district}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <select
-                id="city"
-                name="city"
-                required
-                value={formData.city}
-                onChange={handleChange}
-                disabled={!formData.district}
-                className="block w-full border border-gray-300 rounded-md p-2"
-              >
-                <option value="">Select City</option>
-                {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                required
-                minLength={8}
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                minLength={8}
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Registering..." : "Register"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/auth/signin" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-      
-    </div>
-    <Footer />
+                Sign in
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+      <Footer />
     </div>
   );
 }
