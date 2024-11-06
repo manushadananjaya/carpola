@@ -162,11 +162,12 @@ export default function MyAds() {
           {ads.map((ad) => (
             <Card key={ad.id} className="overflow-hidden">
               <Link href={`/vehicles/${ad.id}`}>
-              <img
-                src={ad.imageUrl}
-                alt={ad.title}
-                className="w-full h-48 object-cover"
-              />
+                <img
+                  src={ad.imageUrl}
+                  alt={ad.title}
+                  className="w-full h-48 object-cover"
+                />
+              </Link>
               <CardHeader>
                 <CardTitle>{ad.title}</CardTitle>
                 <CardDescription>Price: LKR {ad.price}</CardDescription>
@@ -216,7 +217,6 @@ export default function MyAds() {
                   Promote
                 </Button>
               </CardFooter>
-              </Link>
             </Card>
           ))}
         </div>
