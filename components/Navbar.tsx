@@ -25,7 +25,7 @@ export function Navbar() {
             className="text-sm font-medium hover:underline underline-offset-4"
             href="/search"
           >
-            Buy
+            Find Your Vehicle
           </Link>
           <Link
             className="text-sm font-medium hover:underline underline-offset-4"
@@ -65,7 +65,7 @@ export function Navbar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link href="/search">Buy</Link>
+              <Link href="/search">Find Your Vehicle</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/my-ads">Sell</Link>

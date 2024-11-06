@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Search,
   Check,
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
     };
   }, [ads]);
 
-  const fetchAds = async () => {
+  const fetchAds = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/ads/pending");
@@ -116,20 +116,19 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchApproved = async () => {
+  const fetchApproved = useCallback(async () => {
     try {
       const response = await fetch("/api/ads/approved");
       const data = await response.json();
       setAds(data);
-      console.log("Approved ads:", data);
     } catch (error) {
       console.error("Error fetching approved ads:", error);
     }
-  };
+  }, []);
 
-  const fetchFeatured = async () => {
+  const fetchFeatured = useCallback(async () => {
     try {
       const response = await fetch("/api/ads/featured");
       const data = await response.json();
@@ -142,40 +141,40 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching featured ads:", error);
     }
-  };
+  }, []);
 
-  const fetchPromoted = async () => {
+  const fetchPromoted = useCallback(async () => {
     try {
       const response = await fetch("/api/ads/promoted");
       const data = await response.json();
       const currentDate = new Date();
 
-      // Format and filter out duplicates based on a unique ad identifier (adId)
       const formattedAds = data
-        .map((promotedAd: { promotionExpiresAt: any; ad: any; featured: any; }) => {
-          const { promotionExpiresAt, ad, featured } = promotedAd;
-          const isExpired = new Date(promotionExpiresAt) < currentDate;
-          return {
-            ...ad,
-            promoted: true,
-            featured, // retain the 'featured' status as a property
-            promotionExpiryDate: promotionExpiresAt,
-            promotionExpired: isExpired,
-          };
-        })
+        .map(
+          (promotedAd: { promotionExpiresAt: any; ad: any; featured: any }) => {
+            const { promotionExpiresAt, ad, featured } = promotedAd;
+            const isExpired = new Date(promotionExpiresAt) < currentDate;
+            return {
+              ...ad,
+              promoted: true,
+              featured,
+              promotionExpiryDate: promotionExpiresAt,
+              promotionExpired: isExpired,
+            };
+          }
+        )
         .filter(
-          (ad: { adId: any; }, index: any, self: any[]) =>
-            index === self.findIndex((a: { adId: any; }) => a.adId === ad.adId)
+          (ad: { adId: any }, index: any, self: any[]) =>
+            index === self.findIndex((a: { adId: any }) => a.adId === ad.adId)
         );
 
       setAds(formattedAds);
     } catch (error) {
       console.error("Error fetching promoted ads:", error);
     }
-  };
+  }, []);
 
-
-  const fetchExpired = async () => {
+  const fetchExpired = useCallback(async () => {
     try {
       const response = await fetch("/api/ads/expired");
       const data = await response.json();
@@ -188,7 +187,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching expired ads:", error);
     }
-  };
+  }, []);
 
   const handleApprove = async (adId: string) => {
     try {
@@ -280,23 +279,44 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredAds = ads
-    .filter(
-      (ad) =>
-        `${ad.brand} ${ad.model} ${ad.year}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (ad.details?.toLowerCase().includes(searchTerm.toLowerCase()) ??
-          false)
-    )
-    .filter((ad) => {
-      if (activeTab === "pending") return !ad.promoted && !ad.featured;
-      if (activeTab === "approved") return !ad.promoted && !ad.featured;
-      if (activeTab === "promoted") return ad.promoted && !ad.promotionExpired;
-      if (activeTab === "featured") return ad.featured;
-      if (activeTab === "expired") return ad.promotionExpired;
-      return true;
-    });
+  const filteredAds = useMemo(() => {
+    return ads
+      .filter(
+        (ad) =>
+          `${ad.brand} ${ad.model} ${ad.year}`
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (ad.details?.toLowerCase().includes(searchTerm.toLowerCase()) ??
+            false)
+      )
+      .filter((ad) => {
+        if (activeTab === "pending") return !ad.promoted && !ad.featured;
+        if (activeTab === "approved") return !ad.promoted && !ad.featured;
+        if (activeTab === "promoted")
+          return ad.promoted && !ad.promotionExpired;
+        if (activeTab === "featured") return ad.featured;
+        if (activeTab === "expired") return ad.promotionExpired;
+        return true;
+      });
+  }, [ads, searchTerm, activeTab]);
+
+  const handleTabChange = useCallback(
+    (value: string) => {
+      setActiveTab(value);
+      if (value === "approved") {
+        fetchApproved();
+      } else if (value === "pending") {
+        fetchAds();
+      } else if (value === "promoted") {
+        fetchPromoted();
+      } else if (value === "featured") {
+        fetchFeatured();
+      } else if (value === "expired") {
+        fetchExpired();
+      }
+    },
+    [fetchApproved, fetchAds, fetchPromoted, fetchFeatured, fetchExpired]
+  );
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -367,23 +387,7 @@ export default function AdminDashboard() {
             className="max-w-sm"
           />
         </div>
-        <Tabs
-          defaultValue="pending"
-          onValueChange={(value) => {
-            setActiveTab(value);
-            if (value === "approved") {
-              fetchApproved();
-            } else if (value === "pending") {
-              fetchAds();
-            } else if (value === "promoted") {
-              fetchPromoted();
-            } else if (value === "featured") {
-              fetchFeatured();
-            } else if (value === "expired") {
-              fetchExpired();
-            }
-          }}
-        >
+        <Tabs defaultValue="pending" onValueChange={handleTabChange}>
           <TabsList>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="approved">Approved</TabsTrigger>
@@ -610,7 +614,6 @@ function AdTable({
                   </DropdownMenu>
                 )}
 
-                {/* Show "Feature" button if the ad is not already featured */}
                 {!ad.featured && (
                   <Button
                     size="sm"
