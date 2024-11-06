@@ -200,9 +200,9 @@ export default function AdPostingForm() {
       if (!userPhone || !city || !district) {
         setAlertInfo({
           type: "warning",
-          message: "Please complete your profile to post a free ad.",
+          message: "Please complete your profile to post a free ad. If you have already completed your profile, please refresh this page.",
         });
-        setTimeout(() => router.push("/app/user"), 3000);
+        setTimeout(() => router.push("/user"), 3000);
       } else {
         form.setValue("contactNo", userPhone);
         form.setValue("city", city);
