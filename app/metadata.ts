@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 // Define the metadata for Carpola.lk
 export const metadata: Metadata = {
-  title: "Carpola.lk - Buy and Sell Vehicles in Sri Lanka",
+  title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
   description:
     "Carpola.lk is Sri Lanka's leading vehicle marketplace for buying and selling cars, bikes, and other vehicles. Explore thousands of listings and find your perfect vehicle today.",
   keywords: [
