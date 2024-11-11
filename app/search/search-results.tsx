@@ -46,8 +46,11 @@ export default function SearchResults() {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", page.toString());
       params.set("limit", adsPerPage.toString());
+      
 
       const { data } = await axios.get("/api/ads/search", { params });
+
+      
 
       const processedAds = data.ads.map((ad: any) => ({
         ...ad,

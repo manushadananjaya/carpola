@@ -42,8 +42,8 @@ export default function SearchFilters({
 }) {
   const searchParams = useSearchParams();
   const [selectedType, setSelectedType] = useState<string>(initialCategory);
-  const [priceRange, setPriceRange] = useState([0, 100000000000]);
-  const [yearRange, setYearRange] = useState([1980, new Date().getFullYear()]);
+  const [priceRange, setPriceRange] = useState([0, 100000000]);
+  const [yearRange, setYearRange] = useState([1930, 2024]);
   const [selectedDistrict, setSelectedDistrict] = useState<string>("ALL");
   const [selectedCity, setSelectedCity] = useState<string>("ALL");
   const [cities, setCities] = useState<string[]>([]);
@@ -60,13 +60,11 @@ export default function SearchFilters({
     setSelectedCity(searchParams.get("city") || "ALL");
     setPriceRange([
       parseInt(searchParams.get("minPrice") || "0"),
-      parseInt(searchParams.get("maxPrice") || "100000000000"),
+      parseInt(searchParams.get("maxPrice") || "100000000"),
     ]);
     setYearRange([
-      parseInt(searchParams.get("minYear") || "1980"),
-      parseInt(
-        searchParams.get("maxYear") || new Date().getFullYear().toString()
-      ),
+      parseInt(searchParams.get("minYear") || "1930"),
+      parseInt(searchParams.get("maxYear") || "2024"),
     ]);
   }, [searchParams, initialCategory, initialBrand]);
 
@@ -109,8 +107,8 @@ export default function SearchFilters({
     setSelectedBrand("ALL");
     setSelectedDistrict("ALL");
     setSelectedCity("ALL");
-    setPriceRange([0, 100000000000]);
-    setYearRange([1980, new Date().getFullYear()]);
+    setPriceRange([0, 100000000]);
+    setYearRange([1930, 2024]);
     router.push("/search");
   };
 
@@ -154,50 +152,10 @@ export default function SearchFilters({
       </div>
 
       <div>
-        <Label htmlFor="district">District</Label>
-        <Select
-          value={selectedDistrict}
-          onValueChange={(value) => {
-            setSelectedDistrict(value);
-            setSelectedCity("ALL");
-          }}
-        >
-          <SelectTrigger id="district">
-            <SelectValue placeholder="Select district" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Sri Lanka</SelectItem>
-            {Object.keys(locationData).map((district) => (
-              <SelectItem key={district} value={district}>
-                {district}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="city">City</Label>
-        <Select value={selectedCity} onValueChange={setSelectedCity}>
-          <SelectTrigger id="city">
-            <SelectValue placeholder="Select city" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All Cities</SelectItem>
-            {cities.map((city) => (
-              <SelectItem key={city} value={city}>
-                {city}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label>Price Range</Label>
+        <Label>Price Range (LKR)</Label>
         <Slider
           min={0}
-          max={100000000000}
+          max={100000000}
           step={1000}
           value={priceRange}
           onValueChange={setPriceRange}
@@ -211,8 +169,8 @@ export default function SearchFilters({
       <div>
         <Label>Year Range</Label>
         <Slider
-          min={1980}
-          max={new Date().getFullYear()}
+          min={1930}
+          max={2024}
           step={1}
           value={yearRange}
           onValueChange={setYearRange}

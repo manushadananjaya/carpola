@@ -31,6 +31,7 @@ type Vehicle = {
     userEmail: string;
     userPhone: string;
     userCity: string;
+    userDistrict: string;
   };
   PromotedItem: { featured: boolean }[];
   featured: boolean;
@@ -154,7 +155,8 @@ export default function VehicleDetailsClient({
                     <MapPin className="w-4 h-4 mr-2" />
                     Location
                   </dt>
-                  <dd>{vehicle.user.userCity}</dd>
+                  <dd>{vehicle.user.userCity}</dd> <span> - </span>
+                  <dd>{vehicle.user.userDistrict}</dd>
                 </div>
                 <div className="flex items-center">
                   <dt className="font-medium text-gray-500 w-24 flex items-center">

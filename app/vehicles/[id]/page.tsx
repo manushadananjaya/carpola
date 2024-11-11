@@ -13,7 +13,7 @@ export async function generateMetadata({
 
   if (!vehicle) {
     return {
-      title: "Vehicle Not Found - Carpola.lk",
+      title: "Vehicle Not Found - Carpola",
       description: "The requested vehicle listing could not be found.",
     };
   }
@@ -23,8 +23,8 @@ export async function generateMetadata({
     .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 
   return {
-    title: `${vehicle.brand} ${vehicle.model} (${vehicle.year}) - ${formattedPrice}`,
-    description: `Find details about the ${vehicle.brand} ${vehicle.model} from ${vehicle.year}. Available for ${formattedPrice}. in Sri Lanka.`,
+    title: `${vehicle.brand} ${vehicle.model} (${vehicle.year}) - ${formattedPrice} - ${vehicle.user.userCity} - ${vehicle.user.userDistrict} - Carpola`,
+    description: `Find details about the ${vehicle.brand} ${vehicle.model} from ${vehicle.year}. Available for ${formattedPrice}. in ${vehicle.user.userCity} - ${vehicle.user.userDistrict} Sri Lanka.`,
     openGraph: {
       title: `${vehicle.brand} ${vehicle.model} - ${formattedPrice}`,
       description: `Check out this ${vehicle.brand} ${
