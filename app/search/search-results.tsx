@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Grid, List, Loader, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
-import VehicleCard from "./vehicle-card";
+import VehicleCard from "./components/vehicle-card";
 
 type Vehicle = {
   adId: number;
