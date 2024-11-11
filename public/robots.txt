@@ -1,0 +1,14 @@
+# *
+User-agent: *
+Allow: /
+
+# *
+User-agent: *
+Disallow: /admin
+Disallow: /dashboard
+
+# Host
+Host: https://www.carpola.lk
+
+# Sitemaps
+Sitemap: https://www.carpola.lk/sitemap.xml

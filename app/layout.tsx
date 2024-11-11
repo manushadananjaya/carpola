@@ -18,9 +18,9 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Carpola.lk - Buy and Sell Vehicles in Sri Lanka",
+  title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
   description:
-    "Carpola.lk is Sri Lanka's leading vehicle marketplace for buying and selling cars, bikes, and other vehicles. Explore thousands of listings and find your perfect vehicle today.",
+    "Carpola is Sri Lanka's leading vehicle marketplace for buying and selling cars, bikes, and other vehicles. Explore thousands of listings and find your perfect vehicle today.",
   keywords: [
     "Carpola.lk",
     "buy cars Sri Lanka",

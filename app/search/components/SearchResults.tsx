@@ -33,6 +33,47 @@ import { useRouter } from "next/navigation";
 
 import vehicleBrands from "../../../data/vehicle_brands.json";
 import motoBrands from "../../../data/moto_brands.json";
+import { Metadata } from "next";
+
+
+interface SearchPageProps {
+  params: {
+    query: string;
+    category: string;
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: SearchPageProps): Promise<Metadata> {
+  const { query, category } = params;
+
+  return {
+    title: query
+      ? `Results for "${query}" in ${category} - carpola`
+      : "Search Vehicles - carpola",
+    description: `Explore the best options for ${category} vehicles ${
+      query ? `matching "${query}"` : ""
+    }. Discover listings, compare prices, and more.`,
+    openGraph: {
+      title: `Results for "${query}" in ${category} - Your App Name`,
+      description: `Explore the best options for ${category} vehicles ${
+        query ? `matching "${query}"` : ""
+      }. Find out more at our website.`,
+      url: `https://carpola.lk/search?category=${category}&query=${query}`,
+      images: [
+        {
+          url: `https://carpola.lk/images/vehicle-search-${category}.png`,
+          width: 800,
+          height: 600,
+          alt: `${category} Vehicles Search`,
+        },
+      ],
+      type: "website",
+    },
+  };
+}
+
 
 const VehicleType = {
   CAR: "CAR",
