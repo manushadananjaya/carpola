@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Grid, List, Loader, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
-import VehicleCard from "./vehicle-card";
+import VehicleCard from "./components/vehicle-card";
 
 type Vehicle = {
   adId: number;
@@ -46,8 +46,11 @@ export default function SearchResults() {
       const params = new URLSearchParams(searchParams.toString());
       params.set("page", page.toString());
       params.set("limit", adsPerPage.toString());
+      
 
       const { data } = await axios.get("/api/ads/search", { params });
+
+      
 
       const processedAds = data.ads.map((ad: any) => ({
         ...ad,
