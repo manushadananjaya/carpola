@@ -1,35 +1,73 @@
-"use client";
-
+import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CardContent, Card } from "@/components/ui/card";
 import { Search, Car, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import FeaturedCategories from "@/components/FeaturedCategories";
 import { Footer } from "@/components/Footer";
-import { Separator } from "@radix-ui/react-dropdown-menu";
-import { useRouter } from "next/navigation";
-import debounce from "lodash.debounce";
 import Image from "next/image";
 
-import { useEffect, useState } from "react";
+export const metadata: Metadata = {
+  title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
+  description:
+    "Browse thousands of cars from trusted sellers. Buy or sell with ease on Carpola.lk, Sri Lanka's premier online automotive marketplace.",
+  keywords: [
+    "Carpola.lk",
+    "buy cars Sri Lanka",
+    "sell cars Sri Lanka",
+    "vehicle marketplace",
+    "cars for sale",
+    "motorbikes",
+    "vans",
+    "trucks",
+    "Sri Lanka vehicles",
+    "automobiles",
+    "vehicles",
+    "buy vehicles",
+    "Price in Sri Lanka",
+    "car prices in Sri Lanka",
+    "bike prices in Sri Lanka",
+    "truck prices in Sri Lanka",
+    "vehicle prices in Sri Lanka",
+    "Sri Lanka vehicle marketplace",
+    "Sri Lanka vehicle listings",
+    "Sri Lanka vehicle promotions",
+    "toyota cars",
+    "honda cars",
+    "bajaj bikes",
+    "yamaha bikes",
+    "nissan trucks",
+    "mitsubishi trucks",
+    "suzuki vans",
+    "car prices",
+  ],
+  openGraph: {
+    title: "Carpola.lk - Find Your Perfect Ride",
+    description:
+      "Browse thousands of cars from trusted sellers. Buy or sell with ease on Carpola.lk",
+    url: "https://www.carpola.lk",
+    siteName: "Carpola.lk",
+    images: [
+      {
+        url: "https://www.carpola.lk/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Carpola.lk - Sri Lanka's Premier Automotive Marketplace",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Carpola.lk - Find Your Perfect Ride",
+    description:
+      "Browse thousands of cars from trusted sellers. Buy or sell with ease on Carpola.lk",
+    images: ["https://www.carpola.lk/twitter-image.jpg"],
+  },
+};
 
-export function LandingPageComponent() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const router = useRouter();
-
-  const debouncedSearch = debounce((value: string) => {
-    if (value.trim()) {
-      router.push(`/search?query=${encodeURIComponent(value)}`);
-    }
-  }, 500);
-
-  useEffect(() => {
-    debouncedSearch(searchTerm);
-    return () => debouncedSearch.cancel();
-  }, [searchTerm, debouncedSearch]);
-
+export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -56,26 +94,15 @@ export function LandingPageComponent() {
                 </p>
               </div>
               <div className="w-full max-w-sm space-y-2">
-                <form
-                  className="flex space-x-2"
-                  onSubmit={(e) => e.preventDefault()}
-                >
-                  <Input
-                    className="max-w-lg flex-1 bg-black/80 text-white placeholder-gray-500"
-                    placeholder="Search by make, model, or keyword"
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                <Link href="/search" passHref>
                   <Button
-                    type="submit"
-                    variant="secondary"
-                    className="bg-black text-white border hover:text-black hover:bg-gray-200"
+                    className="w-full bg-black text-white border hover:text-black hover:bg-gray-200"
+                    size="lg"
                   >
-                    <Search className="h-4 w-4" />
-                    <span className="sr-only">Search</span>
+                    <Search className="h-4 w-4 mr-2" />
+                    Find Your Vehicle
                   </Button>
-                </form>
+                </Link>
               </div>
             </div>
           </div>
@@ -136,8 +163,8 @@ export function LandingPageComponent() {
             </div>
           </div>
         </section>
-        <Footer />
       </main>
+      <Footer />
     </div>
   );
 }

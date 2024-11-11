@@ -1,5 +1,41 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy - Carpola",
+  description: "Learn more about how we protect your privacy at Carpola.lk",
+  keywords: [
+    "privacy policy",
+    "data protection",
+    "personal data",
+    "Carpola",
+    "Sri Lanka",
+    "buy",
+    "sell",
+    "vehicles",
+    "automobiles",
+    "cars",
+    "motorbikes",
+    "trucks",
+    "vans",
+    "marketplace",
+  ],
+  openGraph: {
+    title: "Privacy Policy - Carpola",
+    description: "Learn more about how we protect your privacy at Carpola.lk",
+    url: "https://carpola.lk/privacy-policy",
+    images: [
+      {
+        url: "https://carpola.lk/images/privacy-policy-og.png",
+        width: 800,
+        height: 600,
+        alt: "Privacy Policy",
+      },
+    ],
+    type: "website",
+  },
+};
 
 export default function PrivacyPolicy() {
   return (

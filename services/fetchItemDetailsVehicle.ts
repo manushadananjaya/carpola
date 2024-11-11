@@ -2,7 +2,10 @@
 
 export async function fetchVehicle(id: string) {
   try {
-    const response = await fetch(`/api/vehicles/${id}`);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/vehicles/${id}`
+    );
+
     const data = await response.json();
 
     if (!response.ok) {
