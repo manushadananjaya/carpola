@@ -8,7 +8,7 @@ import LoadingMessage from "@/components/ui/loading-massage";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Search Vehicles - carpola",
+  title: "Search Vehicles - Carpola",
   description: "Find the best vehicles across different categories and brands",
   keywords: [
     "vehicles",
@@ -17,9 +17,18 @@ export const metadata: Metadata = {
     "trucks",
     "motorcycles",
     "Sri Lanka",
+    "buy",
+    "sell",
+    "Bikes",
+    "Vans",
+    "Motorbikes",
+    "top vehicles",
+    "best vehicles",
+    "price range",
+    "price in Sri Lanka",
   ],
   openGraph: {
-    title: "Search Vehicles - Your App Name",
+    title: "Search Vehicles - Carpola",
     description: "Discover a wide variety of vehicles available for sale.",
     url: "https://carpola.lk/search",
     images: [

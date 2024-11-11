@@ -51,12 +51,12 @@ export async function generateMetadata({
   return {
     title: query
       ? `Results for "${query}" in ${category} - carpola`
-      : "Search Vehicles - carpola",
+      : "Search Vehicles - Carpola",
     description: `Explore the best options for ${category} vehicles ${
       query ? `matching "${query}"` : ""
-    }. Discover listings, compare prices, and more.`,
+    }. Discover Ads, compare price in Sri Lanka, and more.`,
     openGraph: {
-      title: `Results for "${query}" in ${category} - Your App Name`,
+      title: `Results for "${query}" in ${category} - Carpola`,
       description: `Explore the best options for ${category} vehicles ${
         query ? `matching "${query}"` : ""
       }. Find out more at our website.`,
