@@ -87,7 +87,7 @@ export default function LandingPage() {
                 <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl text-white drop-shadow-lg">
                   Find Your Perfect Ride
                 </h1>
-                <p className="mx-auto max-w-[700px] text-[#ffb703] md:text-xl drop-shadow-md">
+                <p className="mx-auto max-w-[700px] text-[#FFBA08] md:text-xl drop-shadow-md">
                   Browse thousands of cars from trusted sellers. Buy or sell
                   with ease on Carpola.lk
                 </p>
@@ -95,7 +95,7 @@ export default function LandingPage() {
               <div className="w-full max-w-sm space-y-2">
                 <Link href="/search" passHref>
                   <Button
-                    className="w-full bg-black text-white border hover:bg-[#023047] transition-colors duration-300"
+                    className="w-full bg-black text-white border hover:bg-[#370617] transition-colors duration-300"
                     size="lg"
                   >
                     <Search className="h-4 w-4 mr-2" />
@@ -146,7 +146,7 @@ export default function LandingPage() {
                     key={item.title}
                     className="flex flex-col items-center"
                   >
-                    <item.icon className="h-12 w-12 mb-4 text-[#219ebc]" />
+                    <item.icon className="h-12 w-12 mb-4 text-[#9D0208]" />
                     <h3 className="text-xl font-bold mb-2 text-[#333333]">
                       {item.title}
                     </h3>
@@ -157,7 +157,7 @@ export default function LandingPage() {
             </AnimatedSection>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-black flex justify-center items-center">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-[#03071E] flex justify-center items-center">
           <div className="container px-4 md:px-6">
             <AnimatedSection className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
@@ -170,7 +170,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <Button
-                className="w-full sm:w-auto bg-black text-white hover:bg-[#023047] border-white border transition-colors duration-300"
+                className="w-full sm:w-auto bg-[#03071E] text-white hover:bg-[#370617] border-white border transition-colors duration-300"
                 size="lg"
               >
                 <Link href="/post-ad">List Your Vehicle</Link>

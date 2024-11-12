@@ -14,12 +14,12 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="bg-[#023047] text-white">
+    <footer className="bg-[#03071E] text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About Us Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4 text-[#ffb703]">
+            <h2 className="text-xl font-semibold mb-4 text-[#FFBA08]">
               About Us
             </h2>
             <p className="text-sm leading-relaxed">
@@ -31,7 +31,7 @@ export function Footer() {
 
           {/* Quick Links Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4 text-[#ffb703]">
+            <h2 className="text-xl font-semibold mb-4 text-[#FFBA08]">
               Quick Links
             </h2>
             <ul className="space-y-2">
@@ -39,7 +39,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/"
-                  className="text-sm hover:text-[#8ecae6] transition-colors duration-200 group flex items-center"
+                  className="text-sm hover:text-[#F48C06] transition-colors duration-200 group flex items-center"
                 >
                   <ArrowRight className="h-4 w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   Home
@@ -48,7 +48,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/search"
-                  className="text-sm hover:text-[#8ecae6] transition-colors duration-200 group flex items-center"
+                  className="text-sm hover:text-[#F48C06] transition-colors duration-200 group flex items-center"
                 >
                   <ArrowRight className="h-4 w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   Search
@@ -57,7 +57,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/post-ad"
-                  className="text-sm hover:text-[#8ecae6] transition-colors duration-200 group flex items-center"
+                  className="text-sm hover:text-[#F48C06] transition-colors duration-200 group flex items-center"
                 >
                   <ArrowRight className="h-4 w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   Sell Your Vehicle
@@ -66,7 +66,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/about"
-                  className="text-sm hover:text-[#8ecae6] transition-colors duration-200 group flex items-center"
+                  className="text-sm hover:text-[#F48C06] transition-colors duration-200 group flex items-center"
                 >
                   <ArrowRight className="h-4 w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   About Us
@@ -75,7 +75,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="text-sm hover:text-[#8ecae6] transition-colors duration-200 group flex items-center"
+                  className="text-sm hover:text-[#F48C06] transition-colors duration-200 group flex items-center"
                 >
                   <ArrowRight className="h-4 w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   Contact
@@ -84,7 +84,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/privacy-policy"
-                  className="text-sm hover:text-[#8ecae6] transition-colors duration-200 group flex items-center"
+                  className="text-sm hover:text-[#F48C06] transition-colors duration-200 group flex items-center"
                 >
                   <ArrowRight className="h-4 w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   Privacy Policy
@@ -93,7 +93,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/terms-and-conditions"
-                  className="text-sm hover:text-[#8ecae6] transition-colors duration-200 group flex items-center"
+                  className="text-sm hover:text-[#F48C06] transition-colors duration-200 group flex items-center"
                 >
                   <ArrowRight className="h-4 w-4 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   Terms & Conditions
@@ -104,7 +104,7 @@ export function Footer() {
 
           {/* Contact Us Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4 text-[#ffb703]">
+            <h2 className="text-xl font-semibold mb-4 text-[#FFBA08]">
               Contact Us
             </h2>
             <p className="text-sm">123 Main Street, Colombo, Sri Lanka</p>
@@ -114,7 +114,7 @@ export function Footer() {
 
           {/* Newsletter Section */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4 text-[#ffb703]">
+            <h2 className="text-xl font-semibold mb-4 text-[#FFBA08]">
               Newsletter
             </h2>
             <p className="text-sm mb-2">Stay updated with our latest offers</p>
@@ -122,12 +122,12 @@ export function Footer() {
               <Input
                 type="email"
                 placeholder="Your email"
-                className="flex-grow bg-white text-[#333333]"
+                className="flex-grow bg-black text-white"
                 required
               />
               <Button
                 type="submit"
-                className="bg-[#219ebc] hover:bg-[#023047] text-white transition-colors duration-200"
+                className="bg-[#370617] hover:bg-[#F48C06] text-white transition-colors duration-200"
               >
                 Subscribe
               </Button>
@@ -135,7 +135,7 @@ export function Footer() {
           </div>
         </div>
 
-        <Separator className="my-8 bg-[#8ecae6]" />
+        <Separator className="my-8 bg-[#F48C06]" />
 
         {/* Footer Bottom Section */}
         <div className="flex flex-col items-center space-y-4 md:flex-row md:justify-between md:space-y-0">
@@ -169,16 +169,16 @@ export function Footer() {
           {/* Social Media Icons */}
           <div className="flex space-x-4">
             <Link href="https://www.facebook.com" aria-label="Facebook">
-              <Facebook className="h-5 w-5 text-[#00B8D9] hover:text-[#ffb703] transition-colors duration-200 transform hover:scale-110" />
+              <Facebook className="h-5 w-5 text-[#F48C06] hover:text-[#F48C06] transition-colors duration-200 transform hover:scale-110" />
             </Link>
             <Link href="https://www.twitter.com" aria-label="Twitter">
-              <Twitter className="h-5 w-5 text-[#00B8D9] hover:text-[#ffb703] transition-colors duration-200 transform hover:scale-110" />
+              <Twitter className="h-5 w-5 text-[#F48C06] hover:text-[#FFBA08] transition-colors duration-200 transform hover:scale-110" />
             </Link>
             <Link href="https://www.instagram.com" aria-label="Instagram">
-              <Instagram className="h-5 w-5 text-[#00B8D9] hover:text-[#ffb703] transition-colors duration-200 transform hover:scale-110" />
+              <Instagram className="h-5 w-5 text-[#F48C06] hover:text-[#FFBA08] transition-colors duration-200 transform hover:scale-110" />
             </Link>
             <Link href="https://www.linkedin.com" aria-label="LinkedIn">
-              <Linkedin className="h-5 w-5 text-[#00B8D9] hover:text-[#ffb703] transition-colors duration-200 transform hover:scale-110" />
+              <Linkedin className="h-5 w-5 text-[#F48C06] hover:text-[#FFBA08] transition-colors duration-200 transform hover:scale-110" />
             </Link>
           </div>
         </div>

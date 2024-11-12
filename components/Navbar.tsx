@@ -27,7 +27,7 @@ export function Navbar() {
   return (
     <header
       className={`px-4 lg:px-6 h-16 flex items-center justify-between text-white shadow-md fixed w-full top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-[#023047]" : "bg-black"
+        isScrolled ? "bg-[#370617]" : "bg-[#03071E]"
       }`}
     >
       <Link
@@ -36,14 +36,10 @@ export function Navbar() {
       >
         <Image
           src="/assets/logo.jpg"
-          width={48}
-          height={48}
+          width={208}
+          height={208}
           alt="Carpola.lk"
-          className="rounded-full border-2 border-[#219ebc]"
         />
-        <span className="ml-2 text-xl font-bold tracking-tight">
-          Carpola.lk
-        </span>
       </Link>
 
       <nav className="flex items-center gap-4 sm:gap-6">
@@ -51,36 +47,36 @@ export function Navbar() {
           {/* Specific Links for Desktop */}
           <Link
             href="/search"
-            className="text-sm font-medium hover:text-[#8ecae6] transition-colors duration-200 relative group"
+            className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             Find Your Vehicle
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#ffb703] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
           </Link>
           <Link
             href="/my-ads"
-            className="text-sm font-medium hover:text-[#8ecae6] transition-colors duration-200 relative group"
+            className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             Sell
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#ffb703] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
           </Link>
           <Link
             href="/about"
-            className="text-sm font-medium hover:text-[#8ecae6] transition-colors duration-200 relative group"
+            className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             About
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#ffb703] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
           </Link>
           <Link
             href="/contact"
-            className="text-sm font-medium hover:text-[#8ecae6] transition-colors duration-200 relative group"
+            className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             Contact
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#ffb703] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
           </Link>
           <Link href="/post-ad">
             <Button
               variant="outline"
-              className="bg-[#ffb703] hover:bg-[#fb8500] text-black hover:text-white border-[#ffb703] hover:border-[#fb8500] font-semibold px-4 py-2 rounded-full transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+              className="bg-[#FFBA08] hover:bg-[#F48C06] text-black hover:text-white border-[#FFBA08] hover:border-[#fb8500] font-semibold px-4 py-2 rounded-full transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Post Free Ad
@@ -95,7 +91,7 @@ export function Navbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-white hover:bg-[#023047] transition-colors duration-200"
+              className="md:hidden text-white hover:bg-[#023047] border border-white transition-colors duration-200"
             >
               <Car className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
@@ -103,13 +99,13 @@ export function Navbar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-56 bg-[#023047] text-white border-[#8ecae6]"
+            className="w-56 bg-[#03071E] text-white border-gray-700"
           >
             {/* Specific Links for Mobile */}
             <DropdownMenuItem asChild>
               <Link
                 href="/search"
-                className="hover:bg-[#00B8D9] py-2 px-4 transition-colors duration-200"
+                className="hover:bg-[#370617] py-2 px-4 transition-colors duration-200"
               >
                 Find Your Vehicle
               </Link>
@@ -117,7 +113,7 @@ export function Navbar() {
             <DropdownMenuItem asChild>
               <Link
                 href="/my-ads"
-                className="hover:bg-[#00B8D9] py-2 px-4 transition-colors duration-200"
+                className="hover:bg-[#370617] py-2 px-4 transition-colors duration-200"
               >
                 Sell
               </Link>
@@ -125,7 +121,7 @@ export function Navbar() {
             <DropdownMenuItem asChild>
               <Link
                 href="/about"
-                className="hover:bg-[#00B8D9] py-2 px-4 transition-colors duration-200"
+                className="hover:bg-[#370617] py-2 px-4 transition-colors duration-200"
               >
                 About
               </Link>
@@ -133,7 +129,7 @@ export function Navbar() {
             <DropdownMenuItem asChild>
               <Link
                 href="/contact"
-                className="hover:bg-[#00B8D9] py-2 px-4 transition-colors duration-200"
+                className="hover:bg-[#370617] py-2 px-4 transition-colors duration-200"
               >
                 Contact
               </Link>
@@ -141,7 +137,7 @@ export function Navbar() {
             <DropdownMenuItem asChild>
               <Link
                 href="/post-ad"
-                className="flex items-center bg-[#ffb703] hover:bg-[#fb8500] text-black hover:text-white py-2 px-4 mt-2 transition-colors duration-200"
+                className="flex items-center bg-[#FFBA08] hover:bg-[#F48C06] text-black hover:text-white py-2 px-4 mt-2 transition-colors duration-200"
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 <span className="font-semibold">Post Free Ad</span>
