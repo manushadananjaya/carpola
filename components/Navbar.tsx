@@ -17,6 +17,7 @@ export function Navbar() {
     <header
       className="px-4 lg:px-6 h-16 flex items-center justify-between text-white shadow-md relative w-full z-50 bg-gradient-to-r from-[#03071E] via-[#370617] to-[#9D0208]"
       style={{
+        minHeight: "calc(4rem + env(safe-area-inset-top))",
         paddingTop: "env(safe-area-inset-top)",
       }}
     >
