@@ -1,20 +1,22 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import { Providers } from "@/components/Providers"; 
+import { Providers } from "@/components/Providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Metadata } from "next";
 
-// Load custom local fonts
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
+  display: "swap", 
 });
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
+  display: "swap", 
 });
 
 export const metadata: Metadata = {
@@ -42,13 +44,13 @@ export const metadata: Metadata = {
     "Sri Lanka vehicle marketplace",
     "Sri Lanka vehicle listings",
     "Sri Lanka vehicle promotions",
-    "toyota cars",
-    "honda cars",
-    "bajaj bikes",
-    "yamaha bikes",
-    "nissan trucks",
-    "mitsubishi trucks",
-    "suzuki vans",
+    "Toyota cars",
+    "Honda cars",
+    "Bajaj bikes",
+    "Yamaha bikes",
+    "Nissan trucks",
+    "Mitsubishi trucks",
+    "Suzuki vans",
     "car prices",
   ],
   openGraph: {
@@ -59,7 +61,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/assets/logo.jpg", // Replace with your cover image path
+        url: "https://www.carpola.lk/assets/logo.jpg", 
         width: 1200,
         height: 630,
         alt: "Carpola.lk - Buy and Sell Vehicles in Sri Lanka",
@@ -71,15 +73,19 @@ export const metadata: Metadata = {
     title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
     description:
       "Explore a wide range of cars, bikes, and trucks in Sri Lanka on Carpola.lk. Buy or sell your vehicle with ease!",
-    images: ["/assets/logo.jpg"], // Replace with your cover image path
+    images: ["https://www.carpola.lk/assets/logo.jpg"], 
   },
   robots: "index, follow",
   icons: {
     icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  alternates: {
+    canonical: "https://www.carpola.lk",
   },
 };
 
-// RootLayout component that wraps the application
+
 export default function RootLayout({
   children,
 }: {
@@ -87,11 +93,26 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Search Console Verification Meta Tag */}
+        <meta
+          name="google-site-verification"
+          content="Xx7TLgjj_xPx3k43ykTw6PkqKZuik8m9UJhGaXNyH9Q"
+        />
+
+        <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Wrap children with the client-side Providers */}
         <Providers>{children}</Providers>
+
         <SpeedInsights />
         <Analytics />
       </body>
