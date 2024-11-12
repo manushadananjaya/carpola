@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
 import {
   Card,
   CardHeader,
@@ -16,10 +15,10 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle, Info } from "lucide-react";
 import districtsData from "@/data/sri-lanka-districts.json";
 
-type AlertType = "error" | "success" | null;
+type AlertType = "error" | "success" | "info" | null;
 
 interface AlertProps {
   type: AlertType;
@@ -30,16 +29,21 @@ interface AlertProps {
 const CustomAlert: React.FC<AlertProps> = ({ type, title, message }) => {
   if (!type) return null;
 
+  const Icon =
+    type === "error" ? AlertCircle : type === "success" ? CheckCircle : Info;
+
   return (
     <Alert
-      variant={type === "error" ? "destructive" : "default"}
+      variant={
+        type === "error"
+          ? "destructive"
+          : type === "info"
+          ? "default"
+          : "default"
+      }
       className="mb-4"
     >
-      {type === "error" ? (
-        <AlertCircle className="h-4 w-4" />
-      ) : (
-        <CheckCircle className="h-4 w-4" />
-      )}
+      <Icon className="h-4 w-4" />
       <AlertTitle>{title}</AlertTitle>
       <AlertDescription>{message}</AlertDescription>
     </Alert>
@@ -103,11 +107,6 @@ export default function UserProfilePage() {
         }),
       });
 
-      // Log response for debugging
-      console.log("Response Status:", response.status);
-      console.log("Response:", response);
-
-      // Parse the JSON response
       const data = await response.json();
 
       if (response.ok) {
@@ -117,10 +116,8 @@ export default function UserProfilePage() {
           message: "Profile updated successfully.",
         });
         setIsEditing(false);
-
         router.refresh();
       } else {
-        // Handle the case when the response is not ok
         setAlert({
           type: "error",
           title: "Error",
@@ -140,7 +137,6 @@ export default function UserProfilePage() {
     }
   };
 
-
   if (status === "loading" || isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -150,7 +146,6 @@ export default function UserProfilePage() {
   }
 
   return (
-    <>
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -165,6 +160,13 @@ export default function UserProfilePage() {
         </CardHeader>
         <CardContent>
           <CustomAlert {...alert} />
+          {isEditing && (
+            <CustomAlert
+              type="info"
+              title="Email Cannot Be Changed"
+              message="Your email address is verified and cannot be edited."
+            />
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
@@ -189,7 +191,7 @@ export default function UserProfilePage() {
                 maxLength={100}
                 value={formData.email}
                 onChange={handleChange}
-                disabled={!isEditing}
+                disabled={true}
               />
             </div>
             <div className="space-y-2">
@@ -264,7 +266,5 @@ export default function UserProfilePage() {
         </CardFooter>
       </Card>
     </div>
-
-    </>
   );
 }

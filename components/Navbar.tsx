@@ -15,23 +15,43 @@ import Image from "next/image";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      const scrolled = window.scrollY > 10;
+      setIsScrolled(scrolled);
+
+      // Calculate scroll progress
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled25 = Math.min((winScroll / height) * 4, 1);
+      setScrollProgress(scrolled25);
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <header
-      className={`px-4 lg:px-6 h-16 flex items-center justify-between text-white shadow-md fixed w-full top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-[#370617]" : "bg-[#03071E]"
+      className={`px-4 lg:px-6 h-16 flex items-center justify-between text-white shadow-md fixed w-full top-0 left-0 right-0 z-50 transition-all duration-300 overflow-hidden ${
+        isScrolled
+          ? "bg-gradient-to-r from-[#370617] via-[#6A040F] to-[#03071E]"
+          : "bg-gradient-to-r from-[#370617] via-[#6A040F] to-[#03071E]"
       }`}
     >
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-[#03071E] via-[#001219] to-[#D00000] transition-transform duration-300 ease-in-out"
+        style={{
+          transform: `translateX(${-100 + scrollProgress * 100}%)`,
+        }}
+      />
       <Link
-        className="flex items-center justify-center transition-transform duration-300 hover:scale-105"
+        className="flex items-center justify-center transition-transform duration-300 hover:scale-105 z-10"
         href="/"
       >
         <Image
@@ -42,36 +62,35 @@ export function Navbar() {
         />
       </Link>
 
-      <nav className="flex items-center gap-4 sm:gap-6">
+      <nav className="flex items-center gap-4 sm:gap-6 z-10">
         <div className="hidden md:flex items-center gap-6">
-          {/* Specific Links for Desktop */}
           <Link
             href="/search"
             className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             Find Your Vehicle
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
           </Link>
           <Link
             href="/my-ads"
             className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             Sell
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
           </Link>
           <Link
             href="/about"
             className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             About
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
           </Link>
           <Link
             href="/contact"
             className="text-sm font-medium hover:text-[#FAA307] transition-colors duration-200 relative group"
           >
             Contact
-            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></span>
+            <span className="absolute left-0 bottom-0 w-full h-0.5 bg-[#D00000] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200" />
           </Link>
           <Link href="/post-ad">
             <Button
@@ -85,7 +104,6 @@ export function Navbar() {
         </div>
         <AuthButton />
 
-        {/* Mobile Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -101,7 +119,6 @@ export function Navbar() {
             align="end"
             className="w-56 bg-[#03071E] text-white border-gray-700"
           >
-            {/* Specific Links for Mobile */}
             <DropdownMenuItem asChild>
               <Link
                 href="/search"
