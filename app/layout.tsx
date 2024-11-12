@@ -108,13 +108,13 @@ export default function RootLayout({
         />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="min-h-screen bg-[#F7F8FA] text-[#2C3E50] antialiased">
         <Providers>
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow pt-16">{children}</main>
+            <Footer />
+          </div>
         </Providers>
         <SpeedInsights />
         <Analytics />
