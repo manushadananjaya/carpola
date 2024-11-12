@@ -3,8 +3,6 @@ import { Metadata } from "next";
 import SearchFilters from "./search-filters";
 import SearchResults from "./search-results";
 import MainSearch from "./main-search";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { PropagateLoader } from "react-spinners";
 
 interface SearchPageProps {
@@ -94,7 +92,7 @@ export async function generateMetadata({
 export default function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div>
-      <Navbar />
+      
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Vehicle Search</h1>
         <Suspense
@@ -134,7 +132,7 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
           </div>
         </div>
       </div>
-      <Footer />
+     
     </div>
   );
 }

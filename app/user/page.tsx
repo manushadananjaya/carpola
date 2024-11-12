@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Navbar } from "@/components/Navbar";
+
 import {
   Card,
   CardHeader,
@@ -18,7 +18,6 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import districtsData from "@/data/sri-lanka-districts.json";
-import { Footer } from "@/components/Footer";
 
 type AlertType = "error" | "success" | null;
 
@@ -152,7 +151,6 @@ export default function UserProfilePage() {
 
   return (
     <>
-    <Navbar />
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader>
@@ -266,7 +264,7 @@ export default function UserProfilePage() {
         </CardFooter>
       </Card>
     </div>
-    <Footer />
+
     </>
   );
 }

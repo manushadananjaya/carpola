@@ -4,6 +4,8 @@ import { Providers } from "@/components/Providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Metadata } from "next";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 
 const geistSans = localFont({
@@ -94,12 +96,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Google Search Console Verification Meta Tag */}
         <meta
           name="google-site-verification"
           content="Xx7TLgjj_xPx3k43ykTw6PkqKZuik8m9UJhGaXNyH9Q"
         />
-
         <link rel="icon" href="/favicon.ico" />
         <link
           rel="apple-touch-icon"
@@ -111,8 +111,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
-
+        <Providers>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </Providers>
         <SpeedInsights />
         <Analytics />
       </body>

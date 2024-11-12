@@ -25,11 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Navbar } from "@/components/Navbar";
+
 import { useSession } from "next-auth/react";
 import { X } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Footer } from "@/components/Footer";
+
 import vehicleBrands from "../../data/vehicle_brands.json";
 import motoBrands from "../../data/moto_brands.json";
 import LoadingMessage from "@/components/ui/loading-massage";
@@ -345,7 +345,6 @@ export default function AdPostingForm() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
       <main className="container mx-auto py-10">
         <h1 className="text-3xl font-bold mb-6">Post Your Ad</h1>
         {alertInfo && (
@@ -756,7 +755,7 @@ export default function AdPostingForm() {
           </Form>
         )}
       </main>
-      <Footer />
+     
     </div>
   );
 }

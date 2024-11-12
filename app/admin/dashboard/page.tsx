@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Navbar } from "@/components/Navbar";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -320,7 +320,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar />
+
       {successMessage && (
         <div className="max-w-md mx-auto my-4 p-4 bg-green-100 text-green-700 rounded-lg shadow-lg">
           {successMessage}
