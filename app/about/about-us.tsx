@@ -12,18 +12,16 @@ import Link from "next/link";
 export default function AboutUs() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">
-        About Carpola.lk
-      </h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">About Carpola.lk</h1>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         <div>
           <h2 className="text-2xl font-semibold mb-4">Our Story</h2>
           <p className="text-gray-600 mb-4">
-            Carpola.lk was founded in 2024 with a simple mission: to create
-            a seamless and trustworthy platform for buying and selling vehicles
-            in Sri Lanka. Our team of automotive enthusiasts and tech experts
-            came together to revolutionize the way people trade vehicles online.
+            Carpola.lk was founded in 2024 with a simple mission: to create a
+            seamless and trustworthy platform for buying and selling vehicles in
+            Sri Lanka. Our team of automotive enthusiasts and tech experts came
+            together to revolutionize the way people trade vehicles online.
           </p>
           <p className="text-gray-600">
             Since our inception, we've helped thousands of buyers find their
@@ -35,9 +33,9 @@ export default function AboutUs() {
         </div>
         <div className="relative h-64 md:h-auto">
           <img
-            src="/assets/logo.jpg?height=400&width=600"
-            alt="carpola Team"
-            className="rounded-lg object-cover w-full h-full"
+            src="/assets/carpolaTeamLogo.png"
+            alt="Carpola Team"
+            className="rounded-lg object-contain w-full h-full max-h-64 md:max-h-80"
           />
         </div>
       </div>
