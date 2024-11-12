@@ -5,6 +5,7 @@ import SearchResults from "./search-results";
 import MainSearch from "./main-search";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { PropagateLoader } from "react-spinners";
 
 interface SearchPageProps {
   searchParams: {
@@ -96,12 +97,24 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Vehicle Search</h1>
-        <Suspense fallback={<div>Loading main search...</div>}>
+        <Suspense
+          fallback={
+            <div>
+              <PropagateLoader />
+            </div>
+          }
+        >
           <MainSearch />
         </Suspense>
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/4">
-            <Suspense fallback={<div>Loading filters...</div>}>
+            <Suspense
+              fallback={
+                <div>
+                  <PropagateLoader />
+                </div>
+              }
+            >
               <SearchFilters
                 initialCategory={searchParams.category || ""}
                 initialBrand={searchParams.brand || ""}
@@ -109,7 +122,13 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
             </Suspense>
           </div>
           <div className="w-full md:w-3/4">
-            <Suspense fallback={<div>Loading results...</div>}>
+            <Suspense
+              fallback={
+                <div>
+                  <PropagateLoader />
+                </div>
+              }
+            >
               <SearchResults />
             </Suspense>
           </div>
