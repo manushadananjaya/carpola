@@ -16,8 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Icon, Loader2 } from "lucide-react";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+
 import { FaGoogle } from "react-icons/fa6";
 
 
@@ -76,7 +75,7 @@ export default function SignInPage() {
 
   return (
     <div>
-      <Navbar />
+      
       <div className="flex justify-center items-center min-h-screen bg-gray-100">
         <Card className="w-full max-w-md">
           <CardHeader>
@@ -146,7 +145,7 @@ export default function SignInPage() {
           </CardFooter>
         </Card>
       </div>
-      <Footer />
+     
     </div>
   );
 }

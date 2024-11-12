@@ -1,10 +1,9 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+
 
 export default function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+    
       <main className="container mx-auto py-8 px-4">
         <h1 className="text-4xl font-bold mb-8">Terms and Conditions</h1>
         <div className="prose prose-gray max-w-none">
@@ -150,7 +149,7 @@ export default function TermsAndConditions() {
           </section>
         </div>
       </main>
-      <Footer />
+    
     </div>
   );
 }

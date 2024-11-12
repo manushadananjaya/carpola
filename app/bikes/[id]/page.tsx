@@ -5,7 +5,7 @@ import { fetchBike } from "@/services/fetchItemDetailsBike";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageCarousel } from "@/components/ui/image-carousel";
 import { Separator } from "@/components/ui/separator";
-import { Navbar } from "@/components/Navbar";
+
 
 // Type definition
 type Bike = {
@@ -77,7 +77,7 @@ export default function BikeDetailsPage({
 
   return (
     <div>
-      <Navbar />
+  
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>

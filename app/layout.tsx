@@ -1,9 +1,11 @@
 import localFont from "next/font/local";
 import "./globals.css";
-import { Providers } from "@/components/Providers"; 
+import { Providers } from "@/components/Providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Metadata } from "next";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 // Load custom local fonts
 const geistSans = localFont({
@@ -59,7 +61,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/assets/logo.jpg", // Replace with your cover image path
+        url: "/assets/logo.jpg",
         width: 1200,
         height: 630,
         alt: "Carpola.lk - Buy and Sell Vehicles in Sri Lanka",
@@ -71,7 +73,7 @@ export const metadata: Metadata = {
     title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
     description:
       "Explore a wide range of cars, bikes, and trucks in Sri Lanka on Carpola.lk. Buy or sell your vehicle with ease!",
-    images: ["/assets/logo.jpg"], // Replace with your cover image path
+    images: ["/assets/logo.jpg"],
   },
   robots: "index, follow",
   icons: {
@@ -79,19 +81,21 @@ export const metadata: Metadata = {
   },
 };
 
-// RootLayout component that wraps the application
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* Wrap children with the client-side Providers */}
-        <Providers>{children}</Providers>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="min-h-screen bg-[#F7F8FA] text-[#2C3E50] antialiased">
+        <Providers>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow pt-16">{children}</main>
+            <Footer />
+          </div>
+        </Providers>
         <SpeedInsights />
         <Analytics />
       </body>
