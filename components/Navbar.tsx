@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Car, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,42 +13,8 @@ import AuthButton from "./AuthButton";
 import Image from "next/image";
 
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrolled = window.scrollY > 10;
-      setIsScrolled(scrolled);
-
-      // Calculate scroll progress
-      const winScroll =
-        document.body.scrollTop || document.documentElement.scrollTop;
-      const height =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
-      const scrolled25 = Math.min((winScroll / height) * 4, 1);
-      setScrollProgress(scrolled25);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <header
-      className={`px-4 lg:px-6 h-16 flex items-center justify-between text-white shadow-md fixed w-full top-0 left-0 right-0 z-50 transition-all duration-300 overflow-hidden ${
-        isScrolled
-          ? "bg-gradient-to-r from-[#370617] via-[#6A040F] to-[#03071E]"
-          : "bg-gradient-to-r from-[#370617] via-[#6A040F] to-[#03071E]"
-      }`}
-    >
-      <div
-        className="absolute inset-0 bg-gradient-to-r from-[#03071E] via-[#001219] to-[#D00000] transition-transform duration-300 ease-in-out"
-        style={{
-          transform: `translateX(${-100 + scrollProgress * 100}%)`,
-        }}
-      />
+    <header className="px-4 lg:px-6 h-16 flex items-center justify-between text-white shadow-md relative w-full z-50 bg-gradient-to-r from-[#370617] via-[#6A040F] to-[#03071E]">
       <Link
         className="flex items-center justify-center transition-transform duration-300 hover:scale-105 z-10"
         href="/"
