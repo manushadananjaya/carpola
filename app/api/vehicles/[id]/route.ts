@@ -26,7 +26,7 @@ export async function GET(
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
 
-    console.log("Vehicle ad found:", vehicle);
+    
 
     // Determine promotion status
     const promoted = vehicle.PromotedItem.length > 0;

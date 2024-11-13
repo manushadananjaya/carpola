@@ -76,7 +76,7 @@ export default function FeaturedCategories() {
               <div className="mb-2 text-primary">
                 {categoryIcons[key as VehicleTypeKey]}
               </div>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm text-center font-medium text-gray-900">
                 {categoryLabels[key as VehicleTypeKey]}
               </span>
             </Link>
