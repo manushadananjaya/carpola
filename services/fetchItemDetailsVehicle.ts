@@ -1,4 +1,4 @@
-// app/services/fetchVehicleOrBike.ts
+
 
 export async function fetchVehicle(id: string) {
   try {
