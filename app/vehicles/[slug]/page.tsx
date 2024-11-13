@@ -1,14 +1,20 @@
 import { fetchVehicle } from "@/services/fetchItemDetailsVehicle";
+import VehicleDetailsClient from "../vehicleDetails";
 import { Metadata } from "next";
 
-import VehicleDetailsClient from "../vehicleDetails";
+// Extract ID from slug
+function getIdFromSlug(slug: string): string {
+  return slug.split("-").pop() || "";
+}
 
+// Metadata generation for SEO
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }): Promise<Metadata> {
-  const vehicle = await fetchVehicle(params.id);
+  const id = getIdFromSlug(params.slug);
+  const vehicle = await fetchVehicle(id);
 
   if (!vehicle) {
     return {
@@ -23,7 +29,7 @@ export async function generateMetadata({
 
   return {
     title: `${vehicle.brand} ${vehicle.model} (${vehicle.year}) - ${formattedPrice} - ${vehicle.user.userCity} - ${vehicle.user.userDistrict} - Carpola`,
-    description: `Find details about the ${vehicle.brand} ${vehicle.model} from ${vehicle.year}. Available for ${formattedPrice}. in ${vehicle.user.userCity} - ${vehicle.user.userDistrict} Sri Lanka.`,
+    description: `Find details about the ${vehicle.brand} ${vehicle.model} from ${vehicle.year}. Available for ${formattedPrice} in ${vehicle.user.userCity} - ${vehicle.user.userDistrict}, Sri Lanka.`,
     openGraph: {
       title: `${vehicle.brand} ${vehicle.model} - ${formattedPrice}`,
       description: `Check out this ${vehicle.brand} ${
@@ -52,9 +58,10 @@ export async function generateMetadata({
 export default async function VehicleDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: { slug: string };
 }) {
-  const vehicle = await fetchVehicle(params.id);
+  const id = getIdFromSlug(params.slug);
+  const vehicle = await fetchVehicle(id);
 
   if (!vehicle) {
     return (
@@ -66,11 +73,9 @@ export default async function VehicleDetailsPage({
 
   return (
     <div className="min-h-screen flex flex-col">
-   
       <main className="flex-grow container mx-auto px-4 py-8">
         <VehicleDetailsClient vehicle={vehicle} />
       </main>
-     
     </div>
   );
 }
