@@ -28,6 +28,6 @@ export async function GET(req: Request) {
   });
 
   // Redirect to the thank you page after successful verification
-  const thankYouPageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/thank-you`; // Adjust this to your actual thank-you page URL
+  const thankYouPageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/thank-you`; // Adjust this to your actual thank-you page URL
   return NextResponse.redirect(thankYouPageUrl);
 }

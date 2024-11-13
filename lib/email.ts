@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 
 export async function sendVerificationEmail(email: string, token: string) {
-  const verificationUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify?token=${token}`;
+  const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify?token=${token}`;
 
   const transporter = nodemailer.createTransport({
     service: "Gmail",
