@@ -1,8 +1,9 @@
 import { fetchVehicle } from "@/services/fetchItemDetailsVehicle";
 import VehicleDetailsClient from "../vehicleDetails";
 import { Metadata } from "next";
+import React from "react";
 
-// Extract ID from slug
+// Utility to extract ID from slug
 function getIdFromSlug(slug: string): string {
   return slug.split("-").pop() || "";
 }
@@ -71,11 +72,54 @@ export default async function VehicleDetailsPage({
     );
   }
 
+  // Structured Data (JSON-LD) for SEO
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Car",
+    name: `${vehicle.brand} ${vehicle.model} (${vehicle.year})`,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    vehicleIdentificationNumber: vehicle.adId.toString(),
+    priceCurrency: "LKR",
+    price: vehicle.price,
+    mileageFromOdometer: `${vehicle.mileage} km`,
+    fuelType: vehicle.fuelType || "unknown",
+    datePosted: vehicle.postedAt,
+    offers: {
+      "@type": "Offer",
+      price: vehicle.price,
+      priceCurrency: "LKR",
+      url: `https://yourwebsite.com/vehicles/${params.slug}`,
+    },
+    seller: {
+      "@type": "Person",
+      name: vehicle.user.username,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: vehicle.user.userCity,
+        addressRegion: vehicle.user.userDistrict,
+      },
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: vehicle.user.userPhone,
+        email: vehicle.user.userEmail,
+      },
+    },
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow container mx-auto px-4 py-8">
         <VehicleDetailsClient vehicle={vehicle} />
       </main>
+
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData),
+        }}
+      />
     </div>
   );
 }
