@@ -105,6 +105,13 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  icons: {
+    icon: [
+      { url: "/public/favicon.ico" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/public/apple-touch-icon.png" }],
+  },
   manifest: "/site.webmanifest",
   alternates: {
     canonical: "https://www.carpola.lk",
