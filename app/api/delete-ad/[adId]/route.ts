@@ -49,12 +49,12 @@ export async function DELETE(
 
     // Deleting the images from Cloudinary
     if (ad.images && ad.images.length > 0) {
-      console.log("Deleting images from Cloudinary:", ad.images);
+   
 
       // Map the images to extract public_id and delete them
       const deletePromises = ad.images.map((imageUrl) => {
         const publicId = extractPublicIdFromUrl(imageUrl);
-        console.log("Deleting image with public_id:", publicId);
+       
         if (publicId) { // Add null check
           return cloudinary.uploader.destroy(publicId);
         }

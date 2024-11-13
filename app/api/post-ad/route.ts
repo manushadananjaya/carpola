@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     // Parse the request body
     const body = await req.json();
 
-    console.log("Creating ad with body:", body);
+  
 
     // Extract the data fields for the ad
     const {
