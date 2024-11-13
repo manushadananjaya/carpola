@@ -1,4 +1,3 @@
-// components/ui/image-carousel.tsx
 "use client";
 
 import * as React from "react";
@@ -15,7 +14,7 @@ import {
 interface ImageCarouselProps {
   images: string[];
   alt: string;
-  onImageClick?: (imageUrl: string) => void; // Make sure to include this prop in the interface
+  onImageClick?: (imageUrl: string) => void;
 }
 
 export function ImageCarousel({
@@ -24,27 +23,27 @@ export function ImageCarousel({
   onImageClick,
 }: ImageCarouselProps) {
   return (
-    <Carousel className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
+    <Carousel className="w-full max-w-[300px] sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl mx-auto">
       <CarouselContent>
         {images.map((src, index) => (
           <CarouselItem key={index}>
-            <Card>
+            <Card className="border-none shadow-none">
               <CardContent className="flex aspect-square items-center justify-center p-0">
                 <Image
                   src={src}
                   alt={`${alt} - Image ${index + 1}`}
                   width={800}
                   height={600}
-                  className="object-cover w-full h-full rounded-lg cursor-pointer" // Added cursor-pointer for better UX
-                  onClick={() => onImageClick && onImageClick(src)} // Use the correct variable name for the image URL
+                  className="object-cover w-full h-full rounded-lg cursor-pointer transition-transform duration-300 hover:scale-105"
+                  onClick={() => onImageClick && onImageClick(src)}
                 />
               </CardContent>
             </Card>
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
+      <CarouselPrevious className="hidden sm:flex" />
+      <CarouselNext className="hidden sm:flex" />
     </Carousel>
   );
 }
