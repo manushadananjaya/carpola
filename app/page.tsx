@@ -5,6 +5,7 @@ import Link from "next/link";
 import FeaturedCategories from "@/components/FeaturedCategories";
 import Image from "next/image";
 import { AnimatedSection } from "@/components/animation-section";
+import FeaturedAds from "@/components/FeaturedAds";
 
 export const metadata: Metadata = {
   title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
@@ -116,6 +117,17 @@ export default function LandingPage() {
             </AnimatedSection>
           </div>
         </section>
+        <section className="w-full pb-24 md:pb-32 lg:pb-32 sm:pb-4 bg-[#F5F5F5] justify-center items-center flex">
+          <div className="container px-4 md:px-6">
+            <AnimatedSection>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-8 text-[#333333]">
+                Our Featured Ads
+              </h2>
+              <FeaturedAds />
+            </AnimatedSection>
+          </div>
+        </section>
+
         <section className="w-full py-12 md:py-24 lg:py-32 justify-center items-center flex bg-white">
           <div className="container px-4 md:px-6">
             <AnimatedSection>
