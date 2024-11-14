@@ -44,12 +44,19 @@ export default function VehicleCard({
 
   // Helper function to format the date
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    const postDate = new Date(dateString);
+    const now = new Date();
+    const timeDifference = Math.floor(
+      (now.getTime() - postDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (timeDifference === 0) {
+      return "Today";
+    } else if (timeDifference === 1) {
+      return "1 day ago";
+    } else {
+      return `${timeDifference} days ago`;
+    }
   };
 
   return (
