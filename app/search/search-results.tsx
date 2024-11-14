@@ -25,6 +25,7 @@ type Vehicle = {
   };
   isFeatured: boolean;
   isPromoted: boolean;
+  postedAt: string;
 };
 
 export default function SearchResults() {
