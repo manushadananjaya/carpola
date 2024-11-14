@@ -29,7 +29,8 @@ export function Navbar() {
           src="/assets/logo.jpg"
           width={208}
           height={208}
-          alt="Carpola.lk"
+          alt="Carpola.lk" 
+          priority 
         />
       </Link>
 
