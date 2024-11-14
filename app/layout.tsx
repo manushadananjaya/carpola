@@ -146,8 +146,25 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        <style>{`
+          /* Ensure the layout respects the safe area insets */
+          html, body {
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            -webkit-overflow-scrolling: touch;
+          }
+          body {
+            background-color: #F7F8FA;
+            color: #2C3E50;
+          }
+          .navbar {
+            padding-top: env(safe-area-inset-top);
+          }
+        `}</style>
       </head>
-      <body className="min-h-screen bg-[#F7F8FA] text-[#2C3E50] antialiased">
+      <body className="min-h-screen antialiased">
         <Providers>
           <div className="flex flex-col min-h-screen">
             <Navbar />
@@ -157,6 +174,17 @@ export default function RootLayout({
         </Providers>
         <SpeedInsights />
         <Analytics />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+          function setAppHeight() {
+            document.documentElement.style.setProperty('--app-height', \`\${window.innerHeight}px\`);
+          }
+          window.addEventListener('resize', setAppHeight);
+          setAppHeight();
+        `,
+          }}
+        />
       </body>
     </html>
   );
