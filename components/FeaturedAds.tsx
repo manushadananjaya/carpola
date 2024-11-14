@@ -57,19 +57,19 @@ export default function FeaturedAds() {
 
   if (!featuredAds) {
     return (
-      <Card className="w-full p-4">
+       <section className="py-11 p-3 bg-gray-50">
         <h2 className="text-2xl font-bold mb-4">Featured Ads</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, index) => (
             <Skeleton key={index} className="h-[300px] w-full rounded-lg" />
           ))}
         </div>
-      </Card>
+      </section>
     );
   }
 
   return (
-    <Card className="w-full p-4">
+    <section className="py-11 p-3 bg-gray-50">
       <Carousel
         opts={{
           align: "start",
@@ -91,7 +91,11 @@ export default function FeaturedAds() {
             </CarouselItem>
           ))}
         </CarouselContent>
+        <div className="relative top-5">
+          <CarouselPrevious className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white rounded-full shadow-lg p-2 z-10" />
+          <CarouselNext className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white rounded-full shadow-lg p-2 z-10" />
+        </div>
       </Carousel>
-    </Card>
+    </section>
   );
 }

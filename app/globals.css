@@ -76,3 +76,16 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes carousel {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-1 * (var(--total-width) - var(--viewport-width))));
+  }
+}
+
+.animate-carousel {
+  animation: carousel var(--animation-duration) linear infinite;
+}
