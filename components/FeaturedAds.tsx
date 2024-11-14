@@ -31,6 +31,7 @@ type Vehicle = {
   };
   isFeatured: boolean;
   isPromoted: boolean;
+  postedAt: string;
 };
 
 
