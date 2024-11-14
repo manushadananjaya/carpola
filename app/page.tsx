@@ -80,6 +80,7 @@ export default function LandingPage() {
             layout="fill"
             objectFit="cover"
             quality={100}
+            priority
           />
           <div className="absolute inset-0 bg-black/70 z-0"></div>
           <div className="container px-4 md:px-6 relative z-10">
