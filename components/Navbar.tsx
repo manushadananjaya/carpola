@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Car, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,34 +13,11 @@ import AuthButton from "./AuthButton";
 import Image from "next/image";
 
 export function Navbar() {
-  const [isVisible, setIsVisible] = useState(true);
-  let lastScrollY = 0;
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > lastScrollY) {
-        // Scrolling down
-        setIsVisible(false);
-      } else {
-        // Scrolling up
-        setIsVisible(true);
-      }
-      lastScrollY = window.scrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   return (
     <header
-      className={`fixed top-0 left-0 right-0 px-4 lg:px-6 flex items-center justify-between text-white shadow-md z-50 bg-gradient-to-r from-[#03071E] via-[#370617] to-[#9D0208] transition-transform duration-300 ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
-      }`}
+      className="px-4 lg:px-6 h-16 flex items-center justify-between text-white shadow-md relative w-full z-50 bg-gradient-to-r from-[#03071E] via-[#370617] to-[#9D0208]"
       style={{
-        height: "calc(4rem + env(safe-area-inset-top))",
+        minHeight: "calc(4rem + env(safe-area-inset-top))",
         paddingTop: "env(safe-area-inset-top)",
       }}
     >
@@ -53,8 +29,8 @@ export function Navbar() {
           src="/assets/logo.jpg"
           width={208}
           height={208}
-          alt="Carpola.lk"
-          priority
+          alt="Carpola.lk" 
+          priority 
         />
       </Link>
 
