@@ -147,7 +147,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen mt-16 bg-[#F7F8FA] text-[#2C3E50] antialiased">
+      <body className="min-h-screen bg-[#F7F8FA] text-[#2C3E50] antialiased">
         <Providers>
           <div className="flex flex-col min-h-screen">
             <Navbar />
