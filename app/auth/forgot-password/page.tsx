@@ -79,7 +79,7 @@ export default function ForgotPassword() {
           <p className="text-sm text-gray-600">
             If you cannot remember your email or did not receive the reset
             password link, please call us immediately. We’re here to help you!
-            Contact - <strong>0712770284</strong>
+            Contact - <strong>0787770284</strong>
           </p>
         </CardFooter>
       </Card>

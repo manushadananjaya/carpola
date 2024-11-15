@@ -39,7 +39,6 @@ export const metadata: Metadata = {
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-background">
-     
       <main className="container mx-auto py-8 px-4">
         <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
         <div className="prose prose-gray max-w-none">
@@ -151,7 +150,7 @@ export default function PrivacyPolicy() {
               contact us at:
             </p>
             <ul className="list-none pl-6 mb-4">
-              <li>Email: info@carpola.lk</li>
+              <li>Email: carpola.lk@gmail.com</li>
               <li>Address: No08,DevotaRoad,Nupe,Matara, Sri Lanka</li>
               <li>Phone: +94712770284</li>
             </ul>
