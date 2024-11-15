@@ -1,4 +1,4 @@
-import { Metadata, Viewport } from "next";
+import { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { GeistSans } from "geist/font/sans";
@@ -17,41 +17,17 @@ export const metadata: Metadata = {
     template: "%s | Carpola.lk",
   },
   description:
-    "Carpola is Sri Lanka's leading vehicle marketplace for buying and selling cars, bikes, and other vehicles. Explore thousands of listings and find your perfect vehicle today.",
+    "Carpola is Sri Lanka's leading vehicle marketplace for buying and selling cars, bikes, and other vehicles.",
   keywords: [
     "Carpola.lk",
     "buy cars Sri Lanka",
     "sell cars Sri Lanka",
     "vehicle marketplace",
-    "cars for sale",
-    "motorbikes",
-    "vans",
-    "trucks",
-    "Sri Lanka vehicles",
-    "automobiles",
-    "vehicles",
-    "buy vehicles",
-    "Price in Sri Lanka",
-    "car prices in Sri Lanka",
-    "bike prices in Sri Lanka",
-    "truck prices in Sri Lanka",
-    "vehicle prices in Sri Lanka",
-    "Sri Lanka vehicle marketplace",
-    "Sri Lanka vehicle listings",
-    "Sri Lanka vehicle promotions",
-    "Toyota cars",
-    "Honda cars",
-    "Bajaj bikes",
-    "Yamaha bikes",
-    "Nissan trucks",
-    "Mitsubishi trucks",
-    "Suzuki vans",
-    "car prices",
   ],
   openGraph: {
     title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
     description:
-      "Find the best deals on cars, bikes, vans, and trucks at Carpola.lk. Sri Lanka's top platform for vehicle listings and promotions.",
+      "Find the best deals on cars, bikes, vans, and trucks at Carpola.lk.",
     url: "https://www.carpola.lk",
     siteName: "Carpola.lk",
     locale: "en_US",
@@ -69,9 +45,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
     description:
-      "Explore a wide range of cars, bikes, and trucks in Sri Lanka on Carpola.lk. Buy or sell your vehicle with ease!",
+      "Explore a wide range of cars, bikes, and trucks in Sri Lanka on Carpola.lk.",
     images: ["https://www.carpola.lk/assets/twitter-image.jpg"],
-    creator: "@carpola_lk",
   },
   robots: {
     index: true,
@@ -88,15 +63,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.carpola.lk",
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+  },
   verification: {
     google: "Xx7TLgjj_xPx3k43ykTw6PkqKZuik8m9UJhGaXNyH9Q",
   },
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
 };
 
 const jsonLd = {
@@ -106,10 +80,7 @@ const jsonLd = {
   url: "https://www.carpola.lk",
   potentialAction: {
     "@type": "SearchAction",
-    target: {
-      "@type": "EntryPoint",
-      urlTemplate: "https://www.carpola.lk/search?q={search_term_string}",
-    },
+    target: "https://www.carpola.lk/search?q={search_term_string}",
     "query-input": "required name=search_term_string",
   },
 };
@@ -122,24 +93,27 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-96x96.png"
-          sizes="96x96"
-        />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
-        />
-        <meta name="apple-mobile-web-app-title" content="Carpola" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
+        <meta name="apple-mobile-web-app-title" content="Carpola" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-VXPVFPQGJH"
+        ></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-VXPVFPQGJH');
+          `,
+          }}
         />
       </head>
       <body className="min-h-screen bg-[#F7F8FA] text-[#2C3E50] antialiased">
