@@ -94,7 +94,7 @@ export default function ContactUs() {
           <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
           <div className="space-y-4">
             {[
-              { icon: Phone, title: "Phone", content: "+94 11 234 5678" },
+              { icon: Phone, title: "Phone", content: "+94 78 777 0284" },
               { icon: Mail, title: "Email", content: "carpola.lk@gmail.com" },
               {
                 icon: MapPin,
