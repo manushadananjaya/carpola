@@ -108,7 +108,7 @@ export function Footer() {
               Contact Us
             </h2>
             <p className="text-sm">123 Main Street, Colombo, Sri Lanka</p>
-            <p className="text-sm">Phone: +94 11 234 5678</p>
+            <p className="text-sm">Phone: +94 78 777 0284</p>
             <p className="text-sm">Email: carpola.lk@gmail.com</p>
           </div>
 
