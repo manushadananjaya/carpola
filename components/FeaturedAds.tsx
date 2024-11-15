@@ -1,7 +1,5 @@
 "use client";
-
-import React from "react";
-import useSWR from "swr";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import VehicleCard from "../app/search/components/vehicle-card";
 import {
@@ -34,16 +32,29 @@ type Vehicle = {
   postedAt: string;
 };
 
-
-
-// Fetch function for SWR
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
-
 export default function FeaturedAds() {
-  const { data: featuredAds, error } = useSWR<Vehicle[]>(
-    "/api/featured-ads",
-    fetcher
-  );
+  const [featuredAds, setFeaturedAds] = useState<Vehicle[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchFeaturedAds = async () => {
+      try {
+        const response = await fetch("/api/featured-ads");
+        if (!response.ok) {
+          throw new Error("Failed to fetch");
+        }
+        const data = await response.json();
+        setFeaturedAds(data);
+      } catch (err) {
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedAds();
+  }, []);
 
   if (error) {
     return (
@@ -56,9 +67,9 @@ export default function FeaturedAds() {
     );
   }
 
-  if (!featuredAds) {
+  if (loading) {
     return (
-       <section className="py-11 p-3 bg-gray-50">
+      <section className="py-11 p-3 bg-gray-50">
         <h2 className="text-2xl font-bold mb-4">Featured Ads</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, index) => (
@@ -79,7 +90,7 @@ export default function FeaturedAds() {
         className="w-full"
       >
         <CarouselContent>
-          {featuredAds.map((vehicle) => (
+          {featuredAds && featuredAds.map((vehicle) => (
             <CarouselItem
               key={vehicle.adId}
               className="md:basis-1/2 lg:basis-1/3"
