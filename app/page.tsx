@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     "Carpola is Sri Lanka's leading vehicle marketplace for buying and selling cars, bikes, and other vehicles. Explore thousands of listings and find your perfect vehicle today.",
   keywords: [
     "Carpola.lk",
+    "carpola",
+    "Carpola Sri Lanka",
+    "Carpola",
     "buy cars Sri Lanka",
     "sell cars Sri Lanka",
     "vehicle marketplace",

@@ -20,9 +20,27 @@ export const metadata: Metadata = {
     "Carpola is Sri Lanka's leading vehicle marketplace for buying and selling cars, bikes, and other vehicles.",
   keywords: [
     "Carpola.lk",
+    "carpola",
+    "Carpola Sri Lanka",
+    "Carpola",
+    "Vehicle sales",
+    "Nissan price in Sri Lanka",
+    "Toyota price in Sri Lanka",
+    "Honda price in Sri Lanka",
+    "Bajaj price in Sri Lanka",
+    "Yamaha price in Sri Lanka",
+    "Suzuki price in Sri Lanka",
+    "Mitsubishi price in Sri Lanka",
+    "car prices in Sri Lanka",
+    "bike prices in Sri Lanka",
+    "truck prices in Sri Lanka",
+    "vehicle prices in Sri Lanka",
     "buy cars Sri Lanka",
     "sell cars Sri Lanka",
     "vehicle marketplace",
+    "tipper for sale",
+    "vehicle selling sites",
+    "piaggio ape for sale",
   ],
   openGraph: {
     title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
@@ -63,11 +81,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.carpola.lk",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    viewportFit: "cover",
-  },
   verification: {
     google: "Xx7TLgjj_xPx3k43ykTw6PkqKZuik8m9UJhGaXNyH9Q",
   },
@@ -97,6 +110,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="apple-mobile-web-app-title" content="Carpola" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
