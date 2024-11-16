@@ -41,7 +41,6 @@ export const metadata: Metadata = {
     "tipper for sale",
     "vehicle selling sites",
     "piaggio ape for sale",
-    
   ],
   openGraph: {
     title: "Carpola - Buy and Sell Vehicles in Sri Lanka",
@@ -82,11 +81,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.carpola.lk",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    viewportFit: "cover",
-  },
   verification: {
     google: "Xx7TLgjj_xPx3k43ykTw6PkqKZuik8m9UJhGaXNyH9Q",
   },
@@ -116,6 +110,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="apple-mobile-web-app-title" content="Carpola" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
