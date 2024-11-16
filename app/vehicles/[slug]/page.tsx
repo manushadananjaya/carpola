@@ -89,7 +89,7 @@ export default async function VehicleDetailsPage({
       "@type": "Offer",
       price: vehicle.price,
       priceCurrency: "LKR",
-      url: `https://yourwebsite.com/vehicles/${params.slug}`,
+      url: `https://carpola.lk/vehicles/${params.slug}`,
     },
     seller: {
       "@type": "Person",

@@ -168,16 +168,19 @@ export function Footer() {
 
           {/* Social Media Icons */}
           <div className="flex space-x-4">
-            <Link href="https://www.facebook.com" aria-label="Facebook">
+            <Link
+              href="https://www.facebook.com/carpola.lk"
+              aria-label="Facebook"
+            >
               <Facebook className="h-5 w-5 text-[#F48C06] hover:text-[#F48C06] transition-colors duration-200 transform hover:scale-110" />
             </Link>
-            <Link href="https://www.twitter.com" aria-label="Twitter">
+            <Link href="/" aria-label="Twitter">
               <Twitter className="h-5 w-5 text-[#F48C06] hover:text-[#FFBA08] transition-colors duration-200 transform hover:scale-110" />
             </Link>
-            <Link href="https://www.instagram.com" aria-label="Instagram">
+            <Link href="/" aria-label="Instagram">
               <Instagram className="h-5 w-5 text-[#F48C06] hover:text-[#FFBA08] transition-colors duration-200 transform hover:scale-110" />
             </Link>
-            <Link href="https://www.linkedin.com" aria-label="LinkedIn">
+            <Link href="/" aria-label="LinkedIn">
               <Linkedin className="h-5 w-5 text-[#F48C06] hover:text-[#FFBA08] transition-colors duration-200 transform hover:scale-110" />
             </Link>
           </div>
