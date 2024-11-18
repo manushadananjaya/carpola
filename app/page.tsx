@@ -98,7 +98,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="w-full max-w-sm space-y-2">
-                <Link href="/search" passHref>
+                <Link href="/search/all/all-brands/sri-lanka" passHref>
                   <Button
                     className="w-full bg-black text-white border hover:bg-[#370617] transition-colors duration-300"
                     size="lg"

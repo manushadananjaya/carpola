@@ -7,6 +7,14 @@ const nextConfig = {
       "res.cloudinary.com",
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "https://your-api-domain.com/api/:path*",
+      },
+    ];
+  },
   async headers() {
     return [
       {
