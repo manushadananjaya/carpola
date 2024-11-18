@@ -1,74 +1,61 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
-import SearchFilters from "./search-filters";
-import SearchResults from "./search-results";
-import MainSearch from "./main-search";
+import SearchFilters from "../search-filters";
+import SearchResults from "../search-results";
+import MainSearch from "../main-search";
 import { Loader2, Search, SlidersHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface SearchPageProps {
+  params: { slug: string[] };
   searchParams: {
     query?: string;
-    category?: string;
-    brand?: string;
     page?: string;
+    minPrice?: string;
+    maxPrice?: string;
+    minYear?: string;
+    maxYear?: string;
   };
 }
 
 export async function generateMetadata({
+  params,
   searchParams,
 }: SearchPageProps): Promise<Metadata> {
-  const { query, category, brand } = searchParams;
+  const { slug } = params;
+  const { query } = searchParams;
+
+  const category = slug[0] || "all";
+  const brand = slug[1] || "all-brands";
+  const location = slug[2] || "sri-lanka";
 
   const title = query
-    ? `Search Results for "${query}" in ${
-        category || "All Categories"
-      } - Carpola`
-    : `Explore ${category || "All"} Vehicles for Sale in Sri Lanka - Carpola`;
+    ? `${query} - ${category} ${brand} in ${location} | Carpola`
+    : `${category} ${brand} for Sale in ${location} | Carpola`;
 
   const description = query
-    ? `Find the best deals on ${
-        category || "vehicles"
-      } matching "${query}". Discover top brands like ${
-        brand || "Toyota, Nissan, Honda"
-      } and compare prices on Carpola.`
-    : `Explore a wide range of ${
-        category || "vehicles"
-      } for sale in Sri Lanka. Browse top brands, compare prices, and find your next vehicle with Carpola.`;
-
-  const openGraphTitle = query
-    ? `Results for "${query}" in ${category || "All Categories"}`
-    : `Explore ${category || "All"} Vehicles for Sale`;
-
-  const openGraphDescription = query
-    ? `Looking for ${
-        category || "vehicles"
-      }? See results for "${query}". Find top deals, compare prices, and explore vehicle options on Carpola.`
-    : `Discover a variety of ${
-        category || "vehicles"
-      } for sale in Sri Lanka. Find top brands, best prices, and your next vehicle on Carpola.`;
+    ? `Find the best deals on ${category} ${brand} matching "${query}" in ${location}. Compare prices and options on Carpola.`
+    : `Explore a wide range of ${category} ${brand} for sale in ${location}. Browse top brands, compare prices, and find your next vehicle with Carpola.`;
 
   const ogImageUrl = `https://carpola.lk/api/og?title=${encodeURIComponent(
-    openGraphTitle
-  )}&description=${encodeURIComponent(
-    openGraphDescription
-  )}&category=${encodeURIComponent(category || "")}`;
+    title
+  )}&description=${encodeURIComponent(description)}`;
 
   return {
     title,
     description,
     openGraph: {
-      title: openGraphTitle,
-      description: openGraphDescription,
-      url: `https://carpola.lk/search?${new URLSearchParams(
-        searchParams
-      ).toString()}`,
+      title,
+      description,
+      url: `https://carpola.lk/search/${slug.join("/")}${
+        query ? `?query=${query}` : ""
+      }`,
       images: [
         {
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${category || "Vehicle"} Search Results`,
+          alt: `${category} ${brand} Search Results`,
         },
       ],
       type: "website",
@@ -76,22 +63,31 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: openGraphTitle,
-      description: openGraphDescription,
+      title,
+      description,
       images: [ogImageUrl],
     },
     alternates: {
-      canonical: `https://carpola.lk/search?${new URLSearchParams(
-        searchParams
-      ).toString()}`,
+      canonical: `https://carpola.lk/search/${slug.join("/")}${
+        query ? `?query=${query}` : ""
+      }`,
     },
   };
 }
 
-export default function SearchPage({ searchParams }: SearchPageProps) {
+export default function SearchPage({ params, searchParams }: SearchPageProps) {
+  const { slug } = params;
+  const category = slug[0] || "all";
+  const brand = slug[1] || "all-brands";
+  const location = slug[2] || "sri-lanka";
+
+  const [district, city] = location.split("-in-");
+
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Vehicle Search</h1>
+      <h1 className="text-3xl font-bold mb-8">
+        {category} {brand} in {location.replace("-", " ")}
+      </h1>
       <Suspense fallback={<MainSearchSkeleton />}>
         <MainSearch />
       </Suspense>
@@ -99,8 +95,11 @@ export default function SearchPage({ searchParams }: SearchPageProps) {
         <aside className="w-full md:w-1/4">
           <Suspense fallback={<FiltersSkeleton />}>
             <SearchFilters
-              initialCategory={searchParams.category || ""}
-              initialBrand={searchParams.brand || ""} initialDistrict={""} initialCity={""}            />
+              initialCategory={category}
+              initialBrand={brand}
+              initialDistrict={district}
+              initialCity={city}
+            />
           </Suspense>
         </aside>
         <section className="w-full md:w-3/4">

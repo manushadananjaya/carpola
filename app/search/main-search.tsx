@@ -1,63 +1,77 @@
-'use client'
+"use client";
 
-import { useState, useRef, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
-import axios from 'axios'
-import { debounce } from 'lodash'
+import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
+import axios from "axios";
+import { debounce } from "lodash";
 
 export default function MainSearch() {
-  const searchParams = useSearchParams()
-  const [mainSearchTerm, setMainSearchTerm] = useState(searchParams.get('query') || '')
-  const [mainSearchSuggestions, setMainSearchSuggestions] = useState<string[]>([])
-  const [showMainSuggestions, setShowMainSuggestions] = useState(false)
-  const router = useRouter()
-  const mainSearchInputRef = useRef<HTMLInputElement>(null)
+  const searchParams = useSearchParams();
+  const [mainSearchTerm, setMainSearchTerm] = useState(
+    searchParams.get("query") || ""
+  );
+  const [mainSearchSuggestions, setMainSearchSuggestions] = useState<string[]>(
+    []
+  );
+  const [showMainSuggestions, setShowMainSuggestions] = useState(false);
+  const router = useRouter();
+  const mainSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setMainSearchTerm(searchParams.get('query') || '')
-  }, [searchParams])
+    setMainSearchTerm(searchParams.get("query") || "");
+  }, [searchParams]);
 
   const debouncedMainSearch = debounce(async (value: string) => {
-    const trimmedValue = value.trim()
+    const trimmedValue = value.trim();
 
     if (trimmedValue.length < 2) {
-      setMainSearchSuggestions([])
-      setShowMainSuggestions(false)
-      return
+      setMainSearchSuggestions([]);
+      setShowMainSuggestions(false);
+      return;
     }
 
     try {
       const response = await axios.get("/api/search-suggestions", {
         params: { query: trimmedValue },
-      })
+      });
 
-      const suggestions = response.data.map((item: any) => item.label || item)
-      setMainSearchSuggestions(suggestions)
-      setShowMainSuggestions(true)
+      const suggestions = response.data.map((item: any) => item.label || item);
+      setMainSearchSuggestions(suggestions);
+      setShowMainSuggestions(true);
     } catch (error) {
-      console.error("Error fetching main search suggestions:", error)
+      console.error("Error fetching main search suggestions:", error);
     }
-  }, 300)
+  }, 300);
 
   const handleMainSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    performSearch(mainSearchTerm)
-  }
+    e.preventDefault();
+    performSearch(mainSearchTerm);
+  };
 
   const handleMainSuggestionClick = (suggestion: string) => {
-    setMainSearchTerm(suggestion)
-    performSearch(suggestion)
-  }
+    setMainSearchTerm(suggestion);
+    performSearch(suggestion);
+  };
 
   const performSearch = (query: string) => {
-    const currentSearchParams = new URLSearchParams(searchParams.toString())
-    currentSearchParams.set('query', query)
-    router.push(`/search?${currentSearchParams.toString()}`)
-    setShowMainSuggestions(false)
-  }
+    const currentSearchParams = new URLSearchParams(searchParams.toString());
+    currentSearchParams.set("query", query);
+    const category = currentSearchParams.get("category") || "all";
+    const brand = currentSearchParams.get("brand") || "all-brands";
+    const location = currentSearchParams.get("district")
+      ? `${currentSearchParams.get("district")?.toLowerCase()}-in-${
+          currentSearchParams.get("city")?.toLowerCase() || "sri-lanka"
+        }`
+      : "sri-lanka";
+
+    router.push(
+      `/search/${category}/${brand}/${location}?${currentSearchParams.toString()}`
+    );
+    setShowMainSuggestions(false);
+  };
 
   return (
     <div className="mb-8">
@@ -67,8 +81,8 @@ export default function MainSearch() {
             placeholder="Search for any brand, model, or keyword"
             value={mainSearchTerm}
             onChange={(e) => {
-              setMainSearchTerm(e.target.value)
-              debouncedMainSearch(e.target.value)
+              setMainSearchTerm(e.target.value);
+              debouncedMainSearch(e.target.value);
             }}
             className="w-full"
             ref={mainSearchInputRef}
@@ -99,5 +113,5 @@ export default function MainSearch() {
         </Button>
       </form>
     </div>
-  )
+  );
 }

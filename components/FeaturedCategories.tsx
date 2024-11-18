@@ -7,24 +7,22 @@ import {
   Package,
   Tractor,
   Forklift,
-  HelpCircle,
   Sailboat,
 } from "lucide-react";
 
 const VehicleType = {
-  CAR: "CAR",
-  VAN: "VAN",
-  JEEP: "JEEP",
-  LORRY: "LORRY",
-  BIKE: "BIKE",
-  CREWCAB: "CREWCAB",
-  PICKUP: "PICKUP",
-  BUS: "BUS",
-  TRUCK: "TRUCK",
-  THREEWHEEL: "THREEWHEEL",
-  TRACTOR: "TRACTOR",
-  HEAVYDUTY: "HEAVYDUTY",
-  
+  CAR: "car",
+  VAN: "van",
+  JEEP: "jeep",
+  LORRY: "lorry",
+  BIKE: "bike",
+  CREWCAB: "crewcab",
+  PICKUP: "pickup",
+  BUS: "bus",
+  TRUCK: "truck",
+  THREEWHEEL: "threewheel",
+  TRACTOR: "tractor",
+  HEAVYDUTY: "heavyduty",
 } as const;
 
 type VehicleTypeKey = keyof typeof VehicleType;
@@ -42,24 +40,21 @@ const categoryIcons: Record<VehicleTypeKey, React.ReactNode> = {
   THREEWHEEL: <Sailboat className="w-8 h-8" />,
   TRACTOR: <Tractor className="w-8 h-8" />,
   HEAVYDUTY: <Forklift className="w-8 h-8" />,
- 
 };
 
-// Define display labels with custom names
 const categoryLabels: Record<VehicleTypeKey, string> = {
   CAR: "Car",
   VAN: "Van",
-  JEEP: "Jeep/SUV", // Custom name
+  JEEP: "Jeep/SUV",
   LORRY: "Lorry",
   BIKE: "Bike",
-  CREWCAB: "Crew Cab/Double Cab", // Custom name
+  CREWCAB: "Crew Cab/Double Cab",
   PICKUP: "Pickup",
   BUS: "Bus",
   TRUCK: "Truck",
   THREEWHEEL: "Three-Wheeler",
   TRACTOR: "Tractor",
   HEAVYDUTY: "Heavy Duty",
-
 };
 
 export default function FeaturedCategories() {
@@ -70,7 +65,7 @@ export default function FeaturedCategories() {
           {Object.entries(VehicleType).map(([key, value]) => (
             <Link
               key={key}
-              href={`/search?category=${value}`}
+              href={`/search/${value}/all-brands/sri-lanka`}
               className="flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-md transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
             >
               <div className="mb-2 text-primary">
@@ -81,6 +76,7 @@ export default function FeaturedCategories() {
               </span>
             </Link>
           ))}
+          
         </div>
       </div>
     </section>
