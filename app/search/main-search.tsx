@@ -8,11 +8,13 @@ import { Search } from "lucide-react";
 import axios from "axios";
 import { debounce } from "lodash";
 
-export default function MainSearch() {
+export default function MainSearch({
+  initialQuery = "",
+}: {
+  initialQuery?: string;
+}) {
   const searchParams = useSearchParams();
-  const [mainSearchTerm, setMainSearchTerm] = useState(
-    searchParams.get("query") || ""
-  );
+  const [mainSearchTerm, setMainSearchTerm] = useState(initialQuery);
   const [mainSearchSuggestions, setMainSearchSuggestions] = useState<string[]>(
     []
   );
@@ -21,8 +23,8 @@ export default function MainSearch() {
   const mainSearchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setMainSearchTerm(searchParams.get("query") || "");
-  }, [searchParams]);
+    setMainSearchTerm(initialQuery || searchParams.get("query") || "");
+  }, [initialQuery, searchParams]);
 
   const debouncedMainSearch = debounce(async (value: string) => {
     const trimmedValue = value.trim();
