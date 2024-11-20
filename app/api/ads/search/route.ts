@@ -1,125 +1,125 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import {
-  AdType,
-  GearType,
-  FuelType,
-  StartType,
-  BikeType,
-} from "@prisma/client";
+import { AdType } from "@prisma/client";
 
 export async function GET(request: Request) {
-  const url = new URL(request.url);
+  console.log("Request URL: ", request.url);
 
-  // Extract search parameters
-  const category = url.searchParams.get("category") as AdType | null;
-  const brand = url.searchParams.get("brand") || undefined;
-  const district = url.searchParams.get("district") || undefined;
-  const city = url.searchParams.get("city") || undefined;
-  const minPrice = parseFloat(url.searchParams.get("minPrice") || "0");
-  const maxPrice = parseFloat(
-    url.searchParams.get("maxPrice") || "100000000000"
-  );
-  const minYear = parseInt(url.searchParams.get("minYear") || "1980", 10);
-  const maxYear = parseInt(url.searchParams.get("maxYear") || "2024", 10);
-  const query = url.searchParams.get("query") || "";
-  const page = parseInt(url.searchParams.get("page") || "1", 10);
-  const limit = parseInt(url.searchParams.get("limit") || "12", 10);
-  const gear = url.searchParams.get("gear") as GearType | null;
-  const fuelType = url.searchParams.get("fuelType") as FuelType | null;
-  const startType = url.searchParams.get("startType") as StartType | null;
-  const bikeType = url.searchParams.get("bikeType") as BikeType | null;
+  const { searchParams } = new URL(request.url);
 
-  // Define the filters object for Prisma query
-  const filters: any = {
+  // Extract query parameters
+  const query = searchParams.get("query")?.trim() || "";
+  let category = searchParams.get("category") || "all";
+  const brand = searchParams.get("brand") || "all-brands";
+  let location = searchParams.get("location") || "sri-lanka";
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const limit = Math.max(1, Number(searchParams.get("limit")) || 12);
+
+  // Default filters
+  let minPrice = 0;
+  let maxPrice = 100000000;
+  let minYear = 1930;
+  let maxYear = new Date().getFullYear();
+
+  const filters = query.toLowerCase().split("+");
+
+  // Parse filters
+  filters.forEach((filter) => {
+    if (Object.values(AdType).includes(filter.toUpperCase() as AdType)) {
+      if (category === "all") {
+        category = filter;
+      }
+    } else if (filter.includes("in")) {
+      const locParts = filter.split("in").map((part) => part.trim());
+      if (locParts[1]) {
+        location = locParts[1].replace(/\s+/g, "-");
+      }
+    } else if (!isNaN(Number(filter))) {
+      const value = Number(filter);
+      if (value >= 1930 && value <= maxYear) {
+        minYear = value;
+      } else if (value >= 0 && value <= maxPrice) {
+        minPrice = value;
+      }
+    }
+  });
+
+  const [district, city] = location.split("-in-").map((part) => part.trim());
+
+  // Construct the Prisma `where` filter
+  const where: any = {
     posted: true,
-    price: {
-      gte: minPrice,
-      lte: maxPrice,
-    },
-    year: {
-      gte: minYear,
-      lte: maxYear,
-    },
+    price: { gte: minPrice, lte: maxPrice },
+    year: { gte: minYear, lte: maxYear },
   };
 
-  // Apply vehicle category filter if specified
-  if (category) filters.vehicleType = category;
-
-  // Apply brand filter if specified
-  if (brand) filters.brand = { contains: brand, mode: "insensitive" };
-
-  // Apply district and city filters
-  if (district && district !== "ALL") filters.user = { userDistrict: district };
-  if (city && city !== "ALL") {
-    filters.user = { ...filters.user, userCity: city };
+  if (category !== "all") {
+    where.vehicleType = category.toUpperCase();
   }
 
-  // Apply gear, fuelType, startType, and bikeType filters
-  if (gear) filters.gear = gear;
-  if (fuelType) filters.fuelType = fuelType;
-  if (startType) filters.startType = startType;
-  if (bikeType) filters.bikeType = bikeType;
-
-  // Handle general search queries across multiple fields
-  const searchTerms = query.trim().split(" ");
-  if (searchTerms.length > 0 && searchTerms[0] !== "") {
-    filters.AND = searchTerms.map((term) => ({
-      OR: [
-        { brand: { contains: term, mode: "insensitive" } },
-        { model: { contains: term, mode: "insensitive" } },
-        { details: { contains: term, mode: "insensitive" } },
-      ],
-    }));
+  // Exclude the brand filter if "all-brands" is specified
+  if (brand !== "all-brands") {
+    where.brand = { equals: brand, mode: "insensitive" };
   }
+
+  if (district && district !== "sri-lanka") {
+    where.user = { userDistrict: district };
+    if (city && city !== "all") {
+      where.user.userCity = city;
+    }
+  }
+
+  // Refine the query to avoid irrelevant model filters
+  if (query) {
+    const queryParts = query.split(" ");
+    const possibleBrand = queryParts[0];
+    const possibleModel = queryParts.slice(1).join(" ").trim();
+
+    // Apply model filter only if it seems meaningful
+    const modelFilter =
+      possibleModel &&
+      !possibleModel.toLowerCase().includes("in") && // Avoid irrelevant terms
+      possibleModel.length > 2 // Ensure it's a valid model name
+        ? { model: { contains: possibleModel, mode: "insensitive" } }
+        : null;
+
+    where.AND = [
+      // Match the brand if not "all-brands"
+      brand === "all-brands"
+        ? {}
+        : { brand: { contains: possibleBrand, mode: "insensitive" } },
+      // Include model filter only if valid
+      modelFilter || {},
+    ].filter((condition) => Object.keys(condition).length > 0); // Remove empty conditions
+  }
+
+  console.log("Generated `where` filter: ", JSON.stringify(where, null, 2));
 
   try {
-    // Fetch ads with applied filters and pagination
-    const ads = await prisma.ad.findMany({
-      where: filters,
-      include: {
-        PromotedItem: true,
-        user: {
-          select: {
-            userCity: true,
-            userDistrict: true,
+    const [ads, total] = await Promise.all([
+      prisma.ad.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              userDistrict: true,
+              userCity: true,
+            },
           },
+          PromotedItem: true,
         },
-      },
-      take: limit,
-      skip: (page - 1) * limit,
-      orderBy: [
-        {
-          PromotedItem: {
-            _count: "desc",
-          },
-        },
-        {
-          postedAt: "desc",
-        },
-      ],
-    });
+        orderBy: [{ PromotedItem: { _count: "desc" } }, { postedAt: "desc" }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.ad.count({ where }),
+    ]);
 
-    // Count total ads for pagination
-    const totalAds = await prisma.ad.count({ where: filters });
-    const totalPages = Math.ceil(totalAds / limit);
+    if (!ads.length) {
+      console.warn("No results found for the provided query.");
+    }
 
-    // Format the ads data with promotion info
-    const processedAds = ads.map((ad) => ({
-      ...ad,
-      isFeatured: ad.PromotedItem.some((item) => item.featured),
-      isPromoted: ad.PromotedItem.length > 0,
-      userCity: ad.user.userCity,
-      userDistrict: ad.user.userDistrict,
-    }));
-
-    // Respond with ads and pagination info
-    return NextResponse.json({
-      ads: processedAds,
-      total: totalAds,
-      totalPages,
-      currentPage: page,
-    });
+    return NextResponse.json({ ads, total, page, limit });
   } catch (error) {
     console.error("Error fetching ads:", error);
     return NextResponse.json(
