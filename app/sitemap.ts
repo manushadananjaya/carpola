@@ -1,28 +1,19 @@
 import { PrismaClient } from "@prisma/client";
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 
 const prisma = new PrismaClient();
 
 // Function to generate vehicle slug based on the given ad details
-function generateVehicleSlug(ad: {
-  brand: string;
-  model: string;
-  year: number;
-  adId: number;
-}): string {
+function generateVehicleSlug(ad: any): string {
+  // Create a slug like "toyota-corolla-2012-price-in-sri-lanka-123"
   return `${ad.brand}-${ad.model}-${ad.year}-price-in-sri-lanka-${ad.adId}`
     .toLowerCase()
     .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
+    .replace(/[^a-z0-9-]/g, ""); // Remove any special characters
 }
 
-// Function to generate sitemap entries for a specific page
-export async function generateSitemapEntries(
-  page: number
-): Promise<MetadataRoute.Sitemap> {
-  const pageSize = 5000; // Adjust based on your needs
-  const skip = page * pageSize;
-
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Fetch ads data from your Prisma database
   const ads = await prisma.ad.findMany({
     where: { posted: true },
     select: {
@@ -32,70 +23,58 @@ export async function generateSitemapEntries(
       year: true,
       postedAt: true,
     },
-    skip,
-    take: pageSize,
   });
 
-  return ads.map((ad) => ({
+  // Generate URLs for each ad
+  const adUrls = ads.map((ad) => ({
     url: `https://carpola.lk/vehicles/${generateVehicleSlug(ad)}`,
-    lastModified: ad.postedAt ?? new Date(),
-    changeFrequency: "daily",
+    // Handle null `postedAt` with a fallback to the current date
+    lastModified: ad.postedAt ? new Date(ad.postedAt) : new Date(),
+    changeFrequency: "daily" as const, // Explicitly type the change frequency
     priority: 0.8,
   }));
-}
 
-// Static URLs for your website pages
-const staticUrls: MetadataRoute.Sitemap = [
-  {
-    url: "https://carpola.lk/",
-    lastModified: new Date(),
-    changeFrequency: "daily",
-    priority: 1,
-  },
-  {
-    url: "https://carpola.lk/about",
-    lastModified: new Date(),
-    changeFrequency: "monthly",
-    priority: 0.8,
-  },
-  {
-    url: "https://carpola.lk/search",
-    lastModified: new Date(),
-    changeFrequency: "daily",
-    priority: 0.9,
-  },
-  {
-    url: "https://carpola.lk/contact",
-    lastModified: new Date(),
-    changeFrequency: "monthly",
-    priority: 0.8,
-  },
-  {
-    url: "https://carpola.lk/privacy-policy",
-    lastModified: new Date(),
-    changeFrequency: "monthly",
-    priority: 0.5,
-  },
-  {
-    url: "https://carpola.lk/terms-and-conditions",
-    lastModified: new Date(),
-    changeFrequency: "monthly",
-    priority: 0.5,
-  },
-];
+  // Static URLs for your website pages
+  const staticUrls = [
+    {
+      url: "https://carpola.lk/",
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 1,
+    },
+    {
+      url: "https://carpola.lk/about",
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    },
+    {
+        url:"https://carpola.lk/search",
+        lastModified: new Date(),
+        changeFrequency: "daily" as const,
+        priority: 0.8,
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  return staticUrls;
-}
+    },
+    {
+      url: "https://carpola.lk/contact",
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    },
+    {
+      url: "https://carpola.lk/privacy-policy",
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
+    {
+      url: "https://carpola.lk/terms-and-conditions",
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
+  ];
 
-export async function generateSitemaps(): Promise<MetadataRoute.Sitemap> {
-  const totalAds = await prisma.ad.count({ where: { posted: true } });
-  const totalPages = Math.ceil(totalAds / 5000);
-
-  return Array.from({ length: totalPages }, (_, i) => ({
-    url: `https://carpola.lk/sitemap-${i}.xml`, 
-    lastModified: new Date(),
-    changeFrequency: "daily",
-    priority: 0.5,
-  }));
+  // Combine both dynamic and static URLs
+  return [...adUrls, ...staticUrls];
 }
