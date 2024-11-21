@@ -4,7 +4,7 @@ export function generateVehicleSlug(vehicle: {
   year: number;
   adId: number;
 }) {
-  return `${vehicle.brand.toLowerCase()}-${vehicle.model.toLowerCase()}-${
-    vehicle.year
-  }-${vehicle.adId}`;
+  return `${vehicle.brand.toLowerCase()}-${vehicle.model
+    .toLowerCase()
+    .replace(/\s+/g, "-")}-${vehicle.year}-${vehicle.adId}`;
 }

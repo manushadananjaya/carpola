@@ -1,4 +1,3 @@
-import { fetchVehicle } from "@/services/fetchItemDetailsVehicle";
 import VehicleDetailsClient from "../vehicleDetails";
 import { Metadata } from "next";
 import React from "react";
@@ -8,14 +7,30 @@ function getIdFromSlug(slug: string): string {
   return slug.split("-").pop() || "";
 }
 
+// Shared function to fetch vehicle data
+async function fetchVehicleData(slug: string) {
+  const id = getIdFromSlug(slug);
+  
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/vehicles/${id}`
+  );
+
+  if (!response.ok) {
+    console.error("Error fetching vehicle data:", response.statusText);
+    return null;
+  }
+
+  
+  return response.json();
+}
+
 // Metadata generation for SEO
 export async function generateMetadata({
   params,
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const id = getIdFromSlug(params.slug);
-  const vehicle = await fetchVehicle(id);
+  const vehicle = await fetchVehicleData(params.slug);
 
   if (!vehicle) {
     return {
@@ -56,13 +71,13 @@ export async function generateMetadata({
   };
 }
 
+// Page component
 export default async function VehicleDetailsPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  const id = getIdFromSlug(params.slug);
-  const vehicle = await fetchVehicle(id);
+  const vehicle = await fetchVehicleData(params.slug);
 
   if (!vehicle) {
     return (

@@ -7,40 +7,67 @@ export async function GET(
 ) {
   const { id } = params;
 
+  console.log("Fetching vehicle ad with ID:", id);
+
   try {
-    // Fetch the vehicle ad by ID and include promotion details
     const vehicle = await prisma.ad.findUnique({
       where: { adId: Number(id) },
       include: {
-        user: true, // Include the associated user's information
+        user: true,
         PromotedItem: {
           select: {
-            featured: true, // Include if the ad is featured
+            featured: true,
+            promotionExpiresAt: true,
           },
         },
       },
     });
 
-    // If the vehicle ad is not found, return a 404 response
     if (!vehicle) {
+      console.error("Vehicle not found:", id);
       return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
     }
 
-    
-
-    // Determine promotion status
+    // Determine if the ad is promoted and featured
     const promoted = vehicle.PromotedItem.length > 0;
     const featured = promoted
-      ? vehicle.PromotedItem.some((item) => item.featured)
+      ? vehicle.PromotedItem.some(
+          (item) =>
+            item.featured && new Date(item.promotionExpiresAt) > new Date() // Check if promotion is still valid
+        )
       : false;
 
-    // Return the vehicle ad data with `promoted` and `featured` status
+    // Construct the response
     const response = {
-      ...vehicle,
+      adId: vehicle.adId,
+      price: vehicle.price,
+      brand: vehicle.brand,
+      model: vehicle.model,
+      year: vehicle.year,
+      mileage: vehicle.mileage,
+      vehicleType: vehicle.vehicleType,
+      engine: vehicle.engine,
+      details: vehicle.details,
+      posted: vehicle.posted,
+      postedAt: vehicle.postedAt,
+      images: vehicle.images,
+      gear: vehicle.gear,
+      fuelType: vehicle.fuelType,
+      startType: vehicle.startType,
+      bikeType: vehicle.bikeType,
+      user: {
+        userId: vehicle.user.userId,
+        username: vehicle.user.username,
+        userEmail: vehicle.user.userEmail,
+        userPhone: vehicle.user.userPhone,
+        userCity: vehicle.user.userCity,
+        userDistrict: vehicle.user.userDistrict,
+      },
       promoted,
       featured,
     };
 
+    console.log("Returning vehicle data:", response);
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching vehicle:", error);

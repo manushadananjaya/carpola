@@ -11,20 +11,21 @@ import { Star, Zap, Phone, Mail, MapPin } from "lucide-react";
 
 type Vehicle = {
   adId: number;
-  contactNo: string;
-  price: number;
+  price: string;
   brand: string;
   model: string;
   year: number;
   mileage: number;
-  gear: string | null;
-  fuelType: string | null;
+  vehicleType: string;
   engine: number;
-  details: string | null;
+  details: string;
   posted: boolean;
-  postedAt: string | null;
-  userId: number;
+  postedAt: string;
   images: string[];
+  gear: string;
+  fuelType: string;
+  startType: string | null;
+  bikeType: string | null;
   user: {
     userId: number;
     username: string;
@@ -33,12 +34,8 @@ type Vehicle = {
     userCity: string;
     userDistrict: string;
   };
-  PromotedItem: { featured: boolean }[];
-  featured: boolean;
   promoted: boolean;
-  vehicleType: string;
-  bikeType: string | null;
-  startType: string | null;
+  featured: boolean;
 };
 
 export default function VehicleDetailsClient({
@@ -61,21 +58,18 @@ export default function VehicleDetailsClient({
 
   const formatDate = (date: string) => {
     const parsedDate = new Date(date);
-    return parsedDate.toLocaleDateString("en-GB"); 
+    return parsedDate.toLocaleDateString("en-GB");
   };
 
-
-  const isFeatured = vehicle.PromotedItem.some((item) => item.featured);
-
-  const formatPrice = (price: number) => {
-    return `Rs. ${price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  const formatPrice = (price: string) => {
+    return `Rs. ${parseInt(price).toLocaleString()}`;
   };
 
   return (
     <>
       <Card
         className={`max-w-4xl mx-auto ${
-          isFeatured ? "border-2 border-yellow-500" : ""
+          vehicle.featured ? "border-2 border-yellow-500" : ""
         }`}
       >
         <CardHeader>
@@ -84,13 +78,13 @@ export default function VehicleDetailsClient({
               {vehicle.brand} {vehicle.model} ({vehicle.year})
             </CardTitle>
             <div className="flex flex-wrap gap-2">
-              {isFeatured && (
+              {vehicle.featured && (
                 <Badge className="bg-yellow-500 text-black">
                   <Star className="w-4 h-4 mr-1" />
                   Featured
                 </Badge>
               )}
-              {vehicle.promoted && !isFeatured && (
+              {vehicle.promoted && !vehicle.featured && (
                 <Badge className="bg-blue-500">
                   <Zap className="w-4 h-4 mr-1" />
                   Sponsored
@@ -180,7 +174,7 @@ export default function VehicleDetailsClient({
 
           <div>
             <h2 className="text-2xl font-semibold mb-2">Description</h2>
-            <p className="text-gray-700">
+            <p className="text-gray-700 whitespace-pre-line">
               {vehicle.details || "No details provided."}
             </p>
           </div>
